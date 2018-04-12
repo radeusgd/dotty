@@ -9,12 +9,19 @@ import { ExtensionContext } from 'vscode';
 import * as vscode from 'vscode';
 import { LanguageClient, LanguageClientOptions, ServerOptions } from 'vscode-languageclient';
 
+import { DottyDebugConfigurationProvider } from "./configurationProvider";
+
 let extensionContext: ExtensionContext
 let outputChannel: vscode.OutputChannel
 
 export function activate(context: ExtensionContext) {
   extensionContext = context
   outputChannel = vscode.window.createOutputChannel('Dotty Language Client');
+
+  context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider("dotty", new DottyDebugConfigurationProvider()));
+  context.subscriptions.push(vscode.commands.registerCommand("DottyDebug.SpecifyProgramArgs", async () => {
+    return specifyProgramArguments(context);
+  }));
 
   const artifactFile = `${vscode.workspace.rootPath}/.dotty-ide-artifact`
   fs.readFile(artifactFile, (err, data) => {
@@ -104,4 +111,28 @@ function run(serverOptions: ServerOptions) {
   // Push the disposable to the context's subscriptions so that the
   // client can be deactivated on extension deactivation
   extensionContext.subscriptions.push(client.start());
+  
+}
+
+function specifyProgramArguments(context: vscode.ExtensionContext): Thenable<string> {
+    const dottyDebugProgramArgsKey = "DottyDebugProgramArgs";
+
+    const options: vscode.InputBoxOptions = {
+        ignoreFocusOut: true,
+        placeHolder: "Enter program arguments or leave empty to pass no args",
+    };
+
+    const prevArgs = context.workspaceState.get(dottyDebugProgramArgsKey, "");
+    if (prevArgs.length > 0) {
+        options.value = prevArgs;
+    }
+
+    return vscode.window.showInputBox(options).then((text) => {
+        // When user cancels the input box (by pressing Esc), the text value is undefined.
+        if (text !== undefined) {
+            context.workspaceState.update(dottyDebugProgramArgsKey, text);
+        }
+
+        return text || " ";
+    });
 }
