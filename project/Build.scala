@@ -788,6 +788,7 @@ object Build {
       fork in Test := true,
       libraryDependencies ++= Seq(
         "org.eclipse.lsp4j" % "org.eclipse.lsp4j" % "0.3.0",
+        "com.microsoft.java" % "com.microsoft.java.debug.core" % "0.8.0",
         Dependencies.`jackson-databind`
       ),
       javaOptions := (javaOptions in `dotty-compiler-bootstrapped`).value,

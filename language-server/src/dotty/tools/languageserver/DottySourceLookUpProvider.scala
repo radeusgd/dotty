@@ -14,13 +14,15 @@ import java.util.logging.Logger
 import dotc.core.Symbols.NoSymbol
 import dotc.interactive.Interactive
 
+import org.eclipse.lsp4j
+
 class DottySourceLookUpProvider(languageServer: DottyLanguageServer) extends ISourceLookUpProvider {
   val logger = Logger.getLogger("java-debug")
 
   override def getFullyQualifiedName(uriString: String, lines: Array[Int], optionalColumns: Array[Int]): Array[String] =
     languageServer.synchronized {
       val uri = new URI(uriString)
-      val driver = languageServer.debugDriverFor(uri)
+      val driver: dotc.interactive.InteractiveDriver = ??? //languageServer.debugDriverFor(uri)
       val sourceCode = getSourceContents(uriString)
       val diags = driver.run(uri, sourceCode)
       println("diags: " + diags)
@@ -29,7 +31,7 @@ class DottySourceLookUpProvider(languageServer: DottyLanguageServer) extends ISo
 
       val columns =
         if (optionalColumns == null)
-          List.fill(lines.length)(0).toArray
+          lines.map(_ => 0)
         else
           optionalColumns
 
@@ -48,7 +50,7 @@ class DottySourceLookUpProvider(languageServer: DottyLanguageServer) extends ISo
           // val cls = ctx.atPhase(ctx.typerPhase) { implicit ctx =>
           //   sym.enclosingClass
           // }
-          ctx.atPhase(ctx.terminalPhase) { implicit ctx =>
+          ctx.atPhase(ctx.genBCodePhase) { implicit ctx =>
             val c = defSym.enclosingClass.fullName.mangledString
             println("c: " + c)
             c

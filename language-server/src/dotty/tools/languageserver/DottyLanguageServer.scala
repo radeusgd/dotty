@@ -393,10 +393,13 @@ object DottyLanguageServer {
   final val IDE_CONFIG_FILE = ".dotty-ide.json"
 
   /** Convert an lsp4j.Position to a SourcePosition */
-  def sourcePosition(driver: InteractiveDriver, uri: URI, pos: lsp4j.Position): SourcePosition = {
+  def sourcePosition(driver: InteractiveDriver, uri: URI, pos: lsp4j.Position): SourcePosition =
+    sourcePosition(driver, uri, pos.getLine, pos.getCharacter)
+
+  def sourcePosition(driver: InteractiveDriver, uri: URI, line: Int, column: Int): SourcePosition = {
     val source = driver.openedFiles(uri)
     if (source.exists) {
-      val p = Positions.Position(source.lineToOffset(pos.getLine) + pos.getCharacter)
+      val p = Positions.Position(source.lineToOffset(line) + column)
       new SourcePosition(source, p)
     }
     else NoSourcePosition
