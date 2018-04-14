@@ -6,7 +6,7 @@ import { Commands } from "./commands";
 
 export class DottyDebugConfigurationProvider implements vscode.DebugConfigurationProvider {
     private isUserSettingsDirty: boolean = true;
-    constructor() {
+    constructor(private outputChannel: vscode.OutputChannel) {
         vscode.workspace.onDidChangeConfiguration((event) => {
             if (vscode.debug.activeDebugSession) {
                 this.isUserSettingsDirty = false;
@@ -33,9 +33,12 @@ export class DottyDebugConfigurationProvider implements vscode.DebugConfiguratio
         return vscode.window.withProgress({location: vscode.ProgressLocation.Window}, (p) => {
             return new Promise((resolve, reject) => {
                 p.report({message: "Auto generating configuration..."});
+                this.outputChannel.appendLine("Start");
                 resolveMainClass(folder ? folder.uri : undefined).then((res: IMainClassOption []) => {
+                  this.outputChannel.appendLine(`Done: ${res[0]}`);
                   let cache: { [name: string]: number } = {};
                     const launchConfigs = res.map((item) => {
+                      this.outputChannel.appendLine(`item: ${item}`);
                         return {
                             type: "dotty",
                             name: this.constructLaunchConfigName(item.mainClass, item.projectName || "", cache),
@@ -49,6 +52,7 @@ export class DottyDebugConfigurationProvider implements vscode.DebugConfiguratio
                             args: "",
                         };
                     });
+                  this.outputChannel.appendLine(`launchConfigs: ${launchConfigs}`);
                     resolve([...launchConfigs, {
                         type: "dotty",
                         name: "Debug (Attach)",
@@ -173,12 +177,15 @@ export class DottyDebugConfigurationProvider implements vscode.DebugConfiguratio
     }
 
     private async chooseMainClass(folder: vscode.WorkspaceFolder | undefined): Promise<IMainClassOption | undefined> {
+      this.outputChannel.appendLine("Hello");
         const res = await resolveMainClass(folder ? folder.uri : undefined);
         if (res.length === 0) {
             vscode.window.showErrorMessage(
                 "Cannot find a class with the main method.");
             return undefined;
         }
+      this.outputChannel.appendLine(`Done: ${res}`);
+
         const pickItems = res.map((item) => {
             let name = item.mainClass;
             let details = `main class: ${item.mainClass}`;

@@ -219,6 +219,7 @@ object DottyIDEPlugin extends AutoPlugin {
       val sourceDirectories = (unmanagedSourceDirectories in config).value ++ (managedSourceDirectories in config).value
       val depClasspath = Attributed.data((dependencyClasspath in config).value)
       val classDir = (classDirectory in config).value
+      val mainClasses = (discoveredMainClasses in config).value
 
       Some(new ProjectConfig(
         id,
@@ -226,7 +227,8 @@ object DottyIDEPlugin extends AutoPlugin {
         compilerArguments.toArray,
         sourceDirectories.toArray,
         depClasspath.toArray,
-        classDir
+        classDir,
+        mainClasses.toArray
       ))
     }
   }

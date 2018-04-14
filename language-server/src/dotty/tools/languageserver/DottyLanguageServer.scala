@@ -250,6 +250,16 @@ class DottyLanguageServer extends LanguageServer
     import Commands._
 
     command match {
+      case RESOLVE_MAINCLASS =>
+        drivers.keys.flatMap(config => config.mainClasses.map(mc => new MainClassItem(mc, config.id))).asJava
+      case RESOLVE_CLASSPATH =>
+        // FIXME: should be runtime, not compile-time classpath
+        val id  = args(1)
+        val config = drivers.keys.find(_.id == id).get
+        val x = (config.classDirectory :: config.dependencyClasspath.toList)
+
+        // (modulePath, classPath) (mutually exclusive?)
+        List(Nil.asJava, x.asJava).asJava
       case DEBUG_STARTSESSION =>
         if (!args.isEmpty) {
           println(s"Unexpected arguments for command $command: $args")

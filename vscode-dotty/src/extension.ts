@@ -19,7 +19,11 @@ export function activate(context: ExtensionContext) {
   extensionContext = context
   outputChannel = vscode.window.createOutputChannel('Dotty Language Client');
 
-  context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider("dotty", new DottyDebugConfigurationProvider()));
+  console.log("bla");
+  outputChannel.show();
+  outputChannel.appendLine("activate");
+
+  context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider("dotty", new DottyDebugConfigurationProvider(outputChannel)));
   context.subscriptions.push(vscode.commands.registerCommand("DottyDebug.SpecifyProgramArgs", async () => {
     return specifyProgramArguments(context);
   }));
@@ -105,7 +109,7 @@ function run(serverOptions: ServerOptions) {
     }
   }
 
-  outputChannel.dispose()
+  // outputChannel.dispose()
 
   const client = new LanguageClient('dotty', 'Dotty Language Server', serverOptions, clientOptions);
 	client.onReady().then(() => {
