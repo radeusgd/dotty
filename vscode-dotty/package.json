@@ -26,6 +26,7 @@
   "main": "./out/src/extension",
   "activationEvents": [
     "workspaceContains:.dotty-ide.json",
+    "onCommand:dotty.execute.workspaceCommand",
     "onDebugInitialConfigurations",
     "onDebugResolve:dotty",
     "onCommand:DottyDebug.SpecifyProgramArgs"

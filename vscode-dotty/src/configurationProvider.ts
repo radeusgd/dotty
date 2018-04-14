@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import * as vscode from "vscode";
-import * as commands from "./commands";
+import { Commands } from "./commands";
 
 export class DottyDebugConfigurationProvider implements vscode.DebugConfigurationProvider {
     private isUserSettingsDirty: boolean = true;
@@ -102,7 +102,7 @@ export class DottyDebugConfigurationProvider implements vscode.DebugConfiguratio
 
             if (config.request === "launch") {
                 try {
-                    const buildResult = await vscode.commands.executeCommand(commands.DOTTY_BUILD_WORKSPACE, false);
+                    const buildResult = await vscode.commands.executeCommand(Commands.DOTTY_BUILD_WORKSPACE, false);
                 } catch (err) {
                     const ans = await vscode.window.showErrorMessage("Build failed, do you want to continue?", "Proceed", "Abort");
                     if (ans !== "Proceed") {
@@ -140,7 +140,7 @@ export class DottyDebugConfigurationProvider implements vscode.DebugConfiguratio
                     // tslint:disable-next-line:max-line-length
                     "Request type \"" + config.request + "\" is not supported. Only \"launch\" and \"attach\" are supported.", "Open launch.json");
                 if (ans === "Open launch.json") {
-                    await vscode.commands.executeCommand(commands.VSCODE_ADD_DEBUGCONFIGURATION);
+                    await vscode.commands.executeCommand(Commands.VSCODE_ADD_DEBUGCONFIGURATION);
                 }
                 this.log("usageError", "Illegal request type in launch.json");
                 return undefined;
@@ -206,18 +206,18 @@ export class DottyDebugConfigurationProvider implements vscode.DebugConfiguratio
 }
 
 function startDebugSession() {
-    return commands.executeDottyLanguageServerCommand(commands.DOTTY_START_DEBUGSESSION);
+    return Commands.executeDottyLanguageServerCommand(Commands.DOTTY_START_DEBUGSESSION);
 }
 
 function resolveClasspath(mainClass: string, projectName: string) {
-    return commands.executeDottyLanguageServerCommand(commands.DOTTY_RESOLVE_CLASSPATH, mainClass, projectName);
+    return Commands.executeDottyLanguageServerCommand(Commands.DOTTY_RESOLVE_CLASSPATH, mainClass, projectName);
 }
 
 function resolveMainClass(workspaceUri: vscode.Uri | undefined): Promise<IMainClassOption[]> {
     if (workspaceUri) {
-        return <Promise<IMainClassOption[]>>commands.executeDottyLanguageServerCommand(commands.DOTTY_RESOLVE_MAINCLASS, workspaceUri.toString());
+        return <Promise<IMainClassOption[]>>Commands.executeDottyLanguageServerCommand(Commands.DOTTY_RESOLVE_MAINCLASS, workspaceUri.toString());
     }
-    return <Promise<IMainClassOption[]>>commands.executeDottyLanguageServerCommand(commands.DOTTY_RESOLVE_MAINCLASS);
+    return <Promise<IMainClassOption[]>>Commands.executeDottyLanguageServerCommand(Commands.DOTTY_RESOLVE_MAINCLASS);
 }
 
 async function updateDebugSettings() {
@@ -228,7 +228,7 @@ async function updateDebugSettings() {
     const logLevel = convertLogLevel(debugSettingsRoot.logLevel || "");
     if (debugSettingsRoot.settings && Object.keys(debugSettingsRoot.settings).length) {
         try {
-            console.log("settings:", await commands.executeDottyLanguageServerCommand(commands.DOTTY_UPDATE_DEBUG_SETTINGS, JSON.stringify(
+            console.log("settings:", await Commands.executeDottyLanguageServerCommand(Commands.DOTTY_UPDATE_DEBUG_SETTINGS, JSON.stringify(
                 { ...debugSettingsRoot.settings, logLevel })));
         } catch (err) {
             // log a warning message and continue, since update settings failure should not block debug session

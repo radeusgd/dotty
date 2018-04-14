@@ -7,8 +7,9 @@ import * as cpp from 'child-process-promise';
 
 import { ExtensionContext } from 'vscode';
 import * as vscode from 'vscode';
-import { LanguageClient, LanguageClientOptions, ServerOptions } from 'vscode-languageclient';
+import { ExecuteCommandParams, ExecuteCommandRequest, LanguageClient, LanguageClientOptions, ServerOptions } from 'vscode-languageclient';
 
+import { Commands } from "./commands";
 import { DottyDebugConfigurationProvider } from "./configurationProvider";
 
 let extensionContext: ExtensionContext
@@ -107,6 +108,15 @@ function run(serverOptions: ServerOptions) {
   outputChannel.dispose()
 
   const client = new LanguageClient('dotty', 'Dotty Language Server', serverOptions, clientOptions);
+	client.onReady().then(() => {
+	  vscode.commands.registerCommand(Commands.DOTTY_EXECUTE_WORKSPACE_COMMAND, (command, ...rest) => {
+		  const params: ExecuteCommandParams = {
+			  command,
+			  arguments: rest
+		  }
+		  return client.sendRequest(ExecuteCommandRequest.type, params)
+	  })
+  })
 
   // Push the disposable to the context's subscriptions so that the
   // client can be deactivated on extension deactivation
