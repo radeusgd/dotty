@@ -52,7 +52,7 @@ class DebugFrontEnd extends FrontEnd {
   }
 }
 
-class DebugCompiler(exprPos: Position) extends Compiler {
+class EvaluationCompiler(exprPos: Position) extends Compiler {
   override def phases: List[List[Phase]] =
     List(new DebugFrontEnd) ::
     super.phases.init.tail ++ List(
@@ -131,14 +131,14 @@ class DottyEvaluationProvider(languageServer: DottyLanguageServer, sourceLookup:
     println("line: " + line)
     println("sp: " + loc.sourcePath)
     val uri = new URI(sourceLookup.getSourceFileURI(""/*unused*/, loc.sourcePath))
-    val driver: dotc.interactive.InteractiveDriver = ??? //languageServer.debugDriverFor(uri)
+    val driver: dotc.interactive.InteractiveDriver = languageServer.debugDriverFor(uri)
     implicit val ctx = driver.currentCtx
 
     // FIXME: Duplication with DottySourceLookUpProvider#getFullyQualifiedName
     val debugPos = DottyLanguageServer.sourcePosition(driver, uri, line - 1, column = 0)
 
 
-    val tree: untpd.Tree = ??? //driver.openedUntypedTree(uri)
+    val tree = driver.compilationUnits(uri).untpdTree
     val newTree = new untpd.UntypedTreeMap {
       import untpd._
 
@@ -148,28 +148,28 @@ class DottyEvaluationProvider(languageServer: DottyLanguageServer, sourceLookup:
         else
           tree
 
-      ???
-      // override def transformStats(trees: List[Tree], ownerPos: Position)(implicit ctx: Context): List[Tree] = {
-      //   if (ownerPos.contains(debugPos.pos)) {
-      //     val trees1: List[Tree] = super.transformStats(trees, ownerPos)
-      //     if (trees1 eq trees) {
-      //       val (beforeTrees, afterTrees) = trees.partition(statTree => statTree.pos.end < debugPos.pos.start)
-      //       println("beforeTrees: " + beforeTrees.map(_.show))
-      //       println("afterTrees: " + afterTrees.map(_.show))
-      //       val stats = parse(expression)
-      //       val statsBlock = untpd.Block(stats, Literal(Constant(())))
+      override def transformStats(trees: List[Tree], ownerPos: Position)(implicit ctx: Context): List[Tree] = {
+        // FIXME: ownerPos is too large, in { stats; expr }, is pos of block, but we're only looking at stats
+        if (ownerPos.contains(debugPos.pos)) {
+          val trees1: List[Tree] = super.transformStats(trees, ownerPos)
+          if (trees1 eq trees) {
+            val (beforeTrees, afterTrees) = trees.partition(statTree => statTree.pos.end < debugPos.pos.start)
+            println("beforeTrees: " + beforeTrees.map(_.show))
+            println("afterTrees: " + afterTrees.map(_.show))
+            val stats = parse(expression)
+            val statsBlock = untpd.Block(stats, Literal(Constant(())))
 
-      //       statsBlock.setPosUncheckedRecursively(debugPos.pos)
+            statsBlock.setPosUncheckedRecursively(debugPos.pos)
 
-      //       println("#Stats: " + statsBlock)
-      //       beforeTrees ++ (statsBlock :: afterTrees)
-      //     }
-      //     else
-      //       trees1
-      //   }
-      //   else
-      //     trees
-      // }
+            println("#Stats: " + statsBlock)
+            beforeTrees ++ (statsBlock :: afterTrees)
+          }
+          else
+            trees1
+        }
+        else
+          trees
+      }
     }.transform(tree)
 
     val path = "/home/smarter/tmp/"
@@ -179,7 +179,7 @@ class DottyEvaluationProvider(languageServer: DottyLanguageServer, sourceLookup:
       val settings = driver.settings ++ List("-d", path)
       val runCtx: Context = DebugDriver.setup(settings.toArray, rootCtx)._2
 
-      val compiler = new DebugCompiler(debugPos.pos)
+      val compiler = new EvaluationCompiler(debugPos.pos)
       val run = compiler.newRun(runCtx)
 
       val sourceCode = sourceLookup.getSourceContents(uri.toString)

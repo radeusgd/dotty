@@ -22,7 +22,7 @@ class DottySourceLookUpProvider(languageServer: DottyLanguageServer) extends ISo
   override def getFullyQualifiedName(uriString: String, lines: Array[Int], optionalColumns: Array[Int]): Array[String] =
     languageServer.synchronized {
       val uri = new URI(uriString)
-      val driver: dotc.interactive.InteractiveDriver = ??? //languageServer.debugDriverFor(uri)
+      val driver: dotc.interactive.InteractiveDriver = languageServer.debugDriverFor(uri)
       val sourceCode = getSourceContents(uriString)
       val diags = driver.run(uri, sourceCode)
       println("diags: " + diags)

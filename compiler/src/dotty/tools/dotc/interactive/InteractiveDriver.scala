@@ -24,7 +24,7 @@ import reporting._, reporting.diagnostic.MessageContainer
 import util._
 
 /** A Driver subclass designed to be used from IDEs */
-class InteractiveDriver(val settings: List[String]) extends Driver {
+class InteractiveDriver(val settings: List[String], val compiler: Compiler = new InteractiveCompiler) extends Driver {
   import tpd._
   import InteractiveDriver._
 
@@ -183,8 +183,6 @@ class InteractiveDriver(val settings: List[String]) extends Driver {
 
     trees.toList
   }
-
-  private val compiler: Compiler = new InteractiveCompiler
 
   /** Remove attachments and error out completers. The goal is to avoid
    *  having a completer hanging in a typed tree which can capture the context

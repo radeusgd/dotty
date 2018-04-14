@@ -55,6 +55,7 @@ class DottyLanguageServer extends LanguageServer
   private[this] var client: LanguageClient = _
 
   private[this] var myDrivers: mutable.Map[ProjectConfig, InteractiveDriver] = _
+  private[this] var myDebugDrivers: mutable.Map[ProjectConfig, InteractiveDriver] = _
 
   def drivers: Map[ProjectConfig, InteractiveDriver] = thisServer.synchronized {
     if (myDrivers == null) {
@@ -65,6 +66,7 @@ class DottyLanguageServer extends LanguageServer
       val defaultFlags = List("-color:never" /*, "-Yplain-printer","-Yprint-pos"*/)
 
       myDrivers = new mutable.HashMap
+      myDebugDrivers = new mutable.HashMap
       for (config <- configs) {
         implicit class updateDeco(ss: List[String]) {
           def update(pathKind: String, pathInfo: String) = {
@@ -80,9 +82,15 @@ class DottyLanguageServer extends LanguageServer
             .update("-sourcepath", config.sourceDirectories.mkString(File.pathSeparator)) :+
           "-scansource"
         myDrivers(config) = new InteractiveDriver(settings)
+        myDebugDrivers(config) = new InteractiveDriver(settings, new DebugCompiler)
       }
     }
     myDrivers
+  }
+
+  def debugDrivers = thisServer.synchronized {
+    drivers // initialization
+    myDebugDrivers
   }
 
   /** Restart all presentation compiler drivers, copying open files over */
@@ -114,6 +122,20 @@ class DottyLanguageServer extends LanguageServer
         val config = drivers.keys.head
         println(s"No configuration contains $uri as a source file, arbitrarily choosing ${config.id}")
         drivers(config)
+    }
+  }
+
+  def debugDriverFor(uri: URI): InteractiveDriver = {
+    val matchingConfig =
+      drivers.keys.find(config => config.sourceDirectories.exists(sourceDir =>
+        new File(uri.getPath).getCanonicalPath.startsWith(sourceDir.getCanonicalPath)))
+    matchingConfig match {
+      case Some(config) =>
+        debugDrivers(config)
+      case None =>
+        val config = debugDrivers.keys.head
+        println(s"No configuration contains $uri as a source file, arbitrarily choosing ${config.id}")
+        debugDrivers(config)
     }
   }
 
@@ -220,6 +242,26 @@ class DottyLanguageServer extends LanguageServer
   override def didSave(params: DidSaveTextDocumentParams): Unit =
     /*thisServer.synchronized*/ {}
 
+
+  override def executeCommand(params: ExecuteCommandParams) = computeAsync { cancelToken =>
+    val command = params.getCommand
+    val args = params.getArguments.asScala
+
+    import Commands._
+
+    command match {
+      case DEBUG_STARTSESSION =>
+        if (!args.isEmpty) {
+          println(s"Unexpected arguments for command $command: $args")
+          null
+        }
+        else
+          DottyDebugServer.newServer(this)
+      case _ =>
+        println(s"Unrecognized command $command with arguments $args")
+        null
+    }
+  }
 
   // FIXME: share code with messages.NotAMember
   override def completion(params: TextDocumentPositionParams) = computeAsync { cancelToken =>

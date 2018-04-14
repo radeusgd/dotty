@@ -8,6 +8,7 @@ import SymDenotations._, Symbols._, Annotations._, Trees._, Symbols._
 import Denotations._, Decorators._
 import dotty.tools.dotc.transform.SymUtils._
 import core.tasty.TreePickler.Hole
+import util.Positions.Position
 
 /** A map that applies three functions and a substitution together to a tree and
  *  makes sure they are coordinated so that the result is well-typed. The functions are
@@ -123,7 +124,7 @@ class TreeTypeMap(
       }
   }
 
-  override def transformStats(trees: List[tpd.Tree])(implicit ctx: Context) =
+  override def transformStats(trees: List[tpd.Tree], treePos: Position)(implicit ctx: Context) =
     transformDefs(trees)._2
 
   private def transformDefs[TT <: tpd.Tree](trees: List[TT])(implicit ctx: Context): (TreeTypeMap, List[TT]) = {
