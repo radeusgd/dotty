@@ -108,7 +108,8 @@ object Build {
       "-feature",
       "-deprecation",
       "-unchecked",
-      "-Xfatal-warnings",
+      // FIXME: need a way to turn this off in the debugger
+      // "-Xfatal-warnings",
       "-encoding", "UTF8",
       "-language:existentials,higherKinds,implicitConversions"
     ),
@@ -786,9 +787,11 @@ object Build {
       // (you need to have `cancelable in Global := true` in your global sbt config to ctrl+c a run)
       fork in run := true,
       fork in Test := true,
+      resolvers += "Local Maven Repository" at "file:///home/smarter/.m2/repository",
       libraryDependencies ++= Seq(
         "org.eclipse.lsp4j" % "org.eclipse.lsp4j" % "0.3.0",
         "com.microsoft.java" % "com.microsoft.java.debug.core" % "0.8.0",
+        "com.microsoft.java" % "com.microsoft.java.debug.plugin" % "0.8.0",
         Dependencies.`jackson-databind`
       ),
       javaOptions := (javaOptions in `dotty-compiler-bootstrapped`).value,

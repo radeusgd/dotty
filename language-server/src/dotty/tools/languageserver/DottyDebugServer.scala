@@ -3,6 +3,7 @@ package languageserver
 
 import com.microsoft.java.debug.core._
 import com.microsoft.java.debug.core.adapter._
+import com.microsoft.java.debug.plugin.internal.JdtVirtualMachineManagerProvider
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -25,6 +26,13 @@ object DottyDebugServer {
     val providerContext = {
       val c = new ProviderContext
       val sourceLookup = new DottySourceLookUpProvider(languageServer)
+
+      // FIXME: Would like to use this (to support custom env and cwd), but
+      // depends on org.eclipse.jdi.internal.VirtualMachineManagerImpl
+      // Maybe copy-paste and replace VirtualMachineManagerImpl (what does it do
+      // anyway?)
+
+      // val vmManager = new JdtVirtualMachineManagerProvider
       val vmManager = new DottyVirtualMachineManagerProvider
       c.registerProvider(classOf[ISourceLookUpProvider],
         sourceLookup)
@@ -32,6 +40,8 @@ object DottyDebugServer {
         vmManager)
       c.registerProvider(classOf[IEvaluationProvider],
         new DottyEvaluationProvider(languageServer, sourceLookup, vmManager.getVirtualMachineManager))
+      c.registerProvider(classOf[IHotCodeReplaceProvider],
+        new DottyHotCodeReplaceProvider())
       c
     }
 
@@ -43,11 +53,21 @@ object DottyDebugServer {
         }
       }))
 
-    Future {
+    val f = Future {
+      println("Waiting for client")
       val clientSocket = serverSocket.accept()
+      println(s"Accepted client: $clientSocket")
 
       val ps = new ProtocolServer(clientSocket.getInputStream, clientSocket.getOutputStream, providerContext)
       ps.run()
+    }
+    import scala.util.{Success, Failure}
+    f.onComplete {
+      case Success(s) =>
+        println("#success: " + s)
+      case Failure(f) =>
+        println("#failure")
+        f.printStackTrace
     }
 
     val port = serverSocket.getLocalPort

@@ -124,7 +124,7 @@ class TreeTypeMap(
       }
   }
 
-  override def transformStats(trees: List[tpd.Tree], treePos: Position)(implicit ctx: Context) =
+  override def transformStats(trees: List[tpd.Tree], treePos: Position, ownerPos: Position)(implicit ctx: Context) =
     transformDefs(trees)._2
 
   private def transformDefs[TT <: tpd.Tree](trees: List[TT])(implicit ctx: Context): (TreeTypeMap, List[TT]) = {

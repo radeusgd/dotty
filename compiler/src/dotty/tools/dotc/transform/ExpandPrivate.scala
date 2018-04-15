@@ -89,10 +89,16 @@ class ExpandPrivate extends MiniPhase with IdentityDenotTransformer { thisPhase 
         (j < 0 || p1(j) == separatorChar)
       }
 
-      assert(d.symbol.sourceFile != null &&
-             isSimilar(d.symbol.sourceFile.path, ctx.owner.sourceFile.path),
+      if (ctx.owner.sourceFile == null) {
+        // In debug evaluation, if we're trying to access something private, we
+        // should use Java reflection to make it public.
+        println("FIXME: Skipping check for " + d)
+      } else {
+        assert(d.symbol.sourceFile != null &&
+          isSimilar(d.symbol.sourceFile.path, ctx.owner.sourceFile.path),
           s"private ${d.symbol.showLocated} in ${d.symbol.sourceFile} accessed from ${ctx.owner.showLocated} in ${ctx.owner.sourceFile}")
-      d.ensureNotPrivate.installAfter(thisPhase)
+        d.ensureNotPrivate.installAfter(thisPhase)
+      }
     }
 
   override def transformIdent(tree: Ident)(implicit ctx: Context) = {

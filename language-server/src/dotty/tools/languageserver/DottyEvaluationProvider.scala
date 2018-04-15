@@ -148,10 +148,9 @@ class DottyEvaluationProvider(languageServer: DottyLanguageServer, sourceLookup:
         else
           tree
 
-      override def transformStats(trees: List[Tree], ownerPos: Position)(implicit ctx: Context): List[Tree] = {
-        // FIXME: ownerPos is too large, in { stats; expr }, is pos of block, but we're only looking at stats
-        if (ownerPos.contains(debugPos.pos)) {
-          val trees1: List[Tree] = super.transformStats(trees, ownerPos)
+      override def transformStats(trees: List[Tree], ownerPos: Position, exprPos: Position)(implicit ctx: Context): List[Tree] = {
+        if (ownerPos.contains(debugPos.pos) && !exprPos.contains(debugPos.pos)) {
+          val trees1: List[Tree] = super.transformStats(trees, ownerPos, exprPos)
           if (trees1 eq trees) {
             val (beforeTrees, afterTrees) = trees.partition(statTree => statTree.pos.end < debugPos.pos.start)
             println("beforeTrees: " + beforeTrees.map(_.show))
