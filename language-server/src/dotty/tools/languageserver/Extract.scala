@@ -70,6 +70,8 @@ class Extract(exprPos: Position) extends MacroTransform with IdentityDenotTransf
                   Block(tree.stats.init, lastStat)
                 }
               exprOwner = ctx.owner
+            case _ =>
+              println(s"FIXME: we matched on $tree")
           }
           tree
         }
