@@ -58,7 +58,17 @@ class Extract(exprPos: Position) extends MacroTransform with IdentityDenotTransf
             case tree: Block =>
               // FIXME: Somehow this triggers on TypeComparer:172, expr is duplicated?
               assert(expr == null, s"Old: $expr\nNew: $tree")
-              expr = tree
+
+              val Literal(Constant(())) = tree.expr // assertion
+
+              val lastStat = tree.stats.last
+              expr =
+                if (lastStat.isInstanceOf[DefTree]) {
+                  // No expression
+                  tree
+                } else {
+                  Block(tree.stats.init, lastStat)
+                }
               exprOwner = ctx.owner
           }
           tree
@@ -170,21 +180,21 @@ class Extract(exprPos: Position) extends MacroTransform with IdentityDenotTransf
           val origClass = exprOwner.enclosingClass.asClass
 
           val liftedExprSym =
-            liftedSym("liftedExpr".toTermName, defn.UnitType, origParams, origClass)
+            liftedSym("liftedExpr".toTermName, expr.tpe, origParams, origClass)
           val liftedDefsSyms = defs.map(d =>
             liftedSym(d.name, d.tpt.tpe, collectParams(d.rhs) ++ d.vparamss.flatten, origClass))
 
           val oldSyms = exprOwner :: defs.map(_.symbol)
           val newSyms = liftedExprSym :: liftedDefsSyms
 
-          val liftedExpr = lifted(liftedExprSym, defn.UnitType, origParams, origClass, exprOwner, expr, oldSyms, newSyms)
+          val liftedExpr = lifted(liftedExprSym, expr.tpe, origParams, origClass, exprOwner, expr, oldSyms, newSyms)
           val liftedDefs = (defs, liftedDefsSyms).zipped.map((d, sym) =>
             lifted(sym, d.tpt.tpe, collectParams(d.rhs) ++ d.vparamss.flatten, origClass, d.symbol.owner, d.rhs, oldSyms, newSyms))
 
           val execParamNames = List("self", "names", "args").map(_.toTermName)
           val execParamTypes = List(defn.ObjectType, JavaArrayType(defn.StringType), JavaArrayType(defn.ObjectType))
           val execDefSym = ctx.newSymbol(GlobalClass, "exec".toTermName, Method | Synthetic,
-            MethodType(execParamNames)(mt => execParamTypes, mt => defn.UnitType))
+            MethodType(execParamNames)(mt => execParamTypes, mt => defn.ObjectType))
           val execDef = polyDefDef(execDefSym, trefs => vrefss => {
             val List(selfRef, namesRef, argsRef) = vrefss.flatten
             val mapSym = ctx.newSymbol(execDefSym, "map".toTermName, Synthetic, immMapType())
@@ -194,11 +204,11 @@ class Extract(exprPos: Position) extends MacroTransform with IdentityDenotTransf
                 .asInstance(param.tpe.widen))
 
             Block(
-              List(
-                ValDef(mapSym, This(GlobalClass).select("makeMap".toTermName).appliedTo(namesRef, argsRef)),
-                ref(liftedExprSym).appliedTo(selfRef.asInstance(origClass.typeRef), localArgs: _*)
-              ),
-              Literal(Constant(()))
+              List(ValDef(mapSym, This(GlobalClass).select("makeMap".toTermName).appliedTo(namesRef, argsRef))),
+              dotc.transform.Erasure.Boxing.adaptToType(
+                ref(liftedExprSym).appliedTo(selfRef.asInstance(origClass.typeRef), localArgs: _*),
+                defn.ObjectType
+              )
             )
             // ref(liftedExprSym).applied
           })

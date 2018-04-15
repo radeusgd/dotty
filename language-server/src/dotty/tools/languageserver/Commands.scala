@@ -8,7 +8,7 @@ object Commands {
 
   final val RESOLVE_MAINCLASS = "vscode.dotty.resolveMainClass";
 
-  final val BUILD_WORKSPACE = "vscode.dotty.buildWorkspace";
+  final val BUILD_WORKSPACE = "dotty.workspace.compile";
 
   final val UPDATE_DEBUG_SETTINGS = "vscode.dotty.updateDebugSettings";
 }

@@ -106,7 +106,8 @@ export class DottyDebugConfigurationProvider implements vscode.DebugConfiguratio
 
             if (config.request === "launch") {
                 try {
-                    const buildResult = await vscode.commands.executeCommand(Commands.DOTTY_BUILD_WORKSPACE, false);
+                    // TODO
+                    // await vscode.commands.executeCommand(Commands.DOTTY_BUILD_WORKSPACE, false);
                 } catch (err) {
                     const ans = await vscode.window.showErrorMessage("Build failed, do you want to continue?", "Proceed", "Abort");
                     if (ans !== "Proceed") {

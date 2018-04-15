@@ -6,7 +6,7 @@ import java.net._
 object DebugEval {
   // private val unsafe = scala.concurrent.util.Unsafe.instance
 
-  def eval(path: String, self: Object, names: Array[String], args: Array[Object]): Unit = {
+  def eval(path: String, self: Object, names: Array[String], args: Array[Object]): Any = {
     // val bytes = Files.readAllBytes(Paths.get(path))
     // val cls = unsafe.defineAnonymousClass(this.getClass, bytes, null)
 
