@@ -147,8 +147,9 @@ object Erasure {
   import TypeTestsCasts._
 
   val name = "erasure"
+  val Boxing = Erasure
 
-  object Boxing {
+  /*object Boxing {*/
 
     def isUnbox(sym: Symbol)(implicit ctx: Context) =
       sym.name == nme.unbox && sym.owner.linkedClass.isPrimitiveValueClass
@@ -180,7 +181,7 @@ object Erasure {
       (if (isPureExpr(tree)) const else Block(tree :: Nil, const))
         .withPos(tree.pos)
 
-    final def box(tree: Tree, target: => String = "")(implicit ctx: Context): Tree = trace(i"boxing ${tree.showSummary}: ${tree.tpe} into $target") {
+    final def box(tree: Tree, target: => String = "")(implicit ctx: Context): Tree = {
       tree.tpe.widen match {
         case ErasedValueType(tycon, _) =>
           New(tycon, cast(tree, underlyingOfValueClass(tycon.symbol.asClass)) :: Nil) // todo: use adaptToType?
@@ -312,10 +313,10 @@ object Erasure {
           else
             cast(tree, pt)
       }
-  }
+  /*}*/
 
   class Typer extends typer.ReTyper with NoChecking {
-    import Boxing._
+    // import Boxing._
 
     def erasedType(tree: untpd.Tree)(implicit ctx: Context): Type = {
       val tp = tree.typeOpt
