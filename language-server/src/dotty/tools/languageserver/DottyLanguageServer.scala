@@ -269,7 +269,7 @@ class DottyLanguageServer extends LanguageServer
           null
         }
         else
-          DottyDebugServer.newServer(this)
+          scala.Int.box(DottyDebugServer.newServer(this)) // FIXME: why is manual boxing needed?
       case _ =>
         println(s"Unrecognized command $command with arguments $args")
         null
