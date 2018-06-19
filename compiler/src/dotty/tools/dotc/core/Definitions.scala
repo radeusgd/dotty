@@ -661,6 +661,9 @@ class Definitions {
   @tu lazy val QuotedMatchingBindingClass: ClassSymbol = ctx.requiredClass("scala.quoted.matching.Bind")
   @tu lazy val TastyReflectionClass: ClassSymbol = ctx.requiredClass("scala.tasty.Reflection")
 
+  @tu lazy val RefinedScrutineeType: TypeRef       = ctx.requiredClassRef("scala.RefinedScrutinee")
+    @tu lazy val RefinedScrutineeClass = RefinedScrutineeType.symbol.asClass
+
   @tu lazy val Unpickler_unpickleExpr: Symbol = ctx.requiredMethod("scala.runtime.quoted.Unpickler.unpickleExpr")
   @tu lazy val Unpickler_unpickleType: Symbol = ctx.requiredMethod("scala.runtime.quoted.Unpickler.unpickleType")
 

@@ -1479,10 +1479,31 @@ class Typer extends Namer
         else {
           // for a singleton pattern like `x @ Nil`, `x` should get the type from the scrutinee
           // see tests/neg/i3200b.scala and SI-1503
-          val symTp =
+          val symTp0 =
             if (body1.tpe.isInstanceOf[TermRef]) pt1
             else body1.tpe.underlyingIfRepeated(isJava = false)
-          val sym = ctx.newPatternBoundSymbol(name, symTp, tree.span)
+
+            // If it is name based pattern matching, the type of the argument of the unapply is abstract and
+          // the return type has a type member `Refined`, then refine the type of the binding with the type of `Refined`.
+          val symTp1 = body1 match {
+            case Trees.UnApply(fun, _, _) if symTp0.typeSymbol.is(Deferred) =>
+              // TODO check that it is name based pattern matching
+              fun.tpe.widen match {
+                case mt: MethodType if !mt.resType.isInstanceOf[MethodType] =>
+                  val resultType = mt.resType.substParam(mt.paramRefs.head, symTp0)
+                  resultType match {
+                    case resultType: AppliedType if resultType.derivesFrom(defn.RefinedScrutineeClass) =>
+                      resultType.args.head
+                    case _ => symTp0
+                  }
+                case _ =>
+                  symTp0
+              }
+
+            case _ => symTp0
+          }
+
+          val sym = ctx.newPatternBoundSymbol(name, symTp1, tree.span)
           if (pt == defn.ImplicitScrutineeTypeRef || tree.mods.is(Given)) sym.setFlag(Given)
           if (ctx.mode.is(Mode.InPatternAlternative))
             ctx.error(i"Illegal variable ${sym.name} in pattern alternative", tree.sourcePos)
