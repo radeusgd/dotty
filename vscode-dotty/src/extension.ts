@@ -19,9 +19,9 @@ export function activate(context: ExtensionContext) {
   extensionContext = context
   outputChannel = vscode.window.createOutputChannel('Dotty Language Client');
 
-  console.log("bla");
+  // console.log("bla");
   outputChannel.show();
-  outputChannel.appendLine("activate");
+  // outputChannel.appendLine("activate");
 
   context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider("dotty", new DottyDebugConfigurationProvider(outputChannel)));
   context.subscriptions.push(vscode.commands.registerCommand("DottyDebug.SpecifyProgramArgs", async () => {
@@ -63,6 +63,11 @@ function fetchAndRun(artifact: string) {
     title: 'Fetching the Dotty Language Server'
   }, (progress) => {
 
+    // FIXME: don't hardcode
+    const javaHome = "/usr/lib/jvm/java-8-openjdk-amd64"
+    // Needed for debugger to work, but only on Java 8
+    const toolsJar = `${javaHome}/lib/tools.jar`
+
     const coursierPromise =
       cpp.spawn("java", [
         "-jar", coursierPath,
@@ -72,23 +77,24 @@ function fetchAndRun(artifact: string) {
       ])
     const coursierProc = coursierPromise.childProcess
 
-    let classPath = ""
+    let classPath = `${toolsJar}:`
 
     coursierProc.stdout.on('data', (data: Buffer) => {
       classPath += data.toString().trim()
     })
     coursierProc.stderr.on('data', (data: Buffer) => {
       let msg = data.toString()
-      outputChannel.append(msg)
+      outputChannel.appendLine(msg)
     })
 
     coursierProc.on('close', (code: number) => {
       if (code != 0) {
         let msg = "Fetching the language server failed."
-        outputChannel.append(msg)
+        outputChannel.appendLine(msg)
         throw new Error(msg)
       }
 
+      outputChannel.appendLine(classPath)
       run({
         command: "java",
         args: ["-classpath", classPath, "dotty.tools.languageserver.Main", "-stdio"]

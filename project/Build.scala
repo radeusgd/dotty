@@ -41,11 +41,11 @@ object Build {
   val isRelease = sys.env.get("RELEASEBUILD") == Some("yes")
 
   val dottyVersion = {
-    def isNightly = sys.env.get("NIGHTLYBUILD") == Some("yes")
+    def isNightly = true//sys.env.get("NIGHTLYBUILD") == Some("yes")
     if (isRelease)
       baseVersion
     else if (isNightly)
-      baseVersion + "-bin-" + VersionUtil.commitDate + "-" + VersionUtil.gitHash + "-NIGHTLY"
+      baseVersion + "-bin-" + VersionUtil.commitDate + "-" + VersionUtil.gitHash + "-DBG"
     else
       baseVersion + "-bin-SNAPSHOT"
   }
