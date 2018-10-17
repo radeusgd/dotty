@@ -8,7 +8,7 @@ sealed abstract class Type[T] {
   type `$splice` = T
 
   /** Show a source code like representation of this type */
-  final def show(implicit toolbox: Toolbox): String = toolbox.show(this)
+  final def show(implicit st: StagingContext): String = st.show(this)
 }
 
 /** Some basic type tags, currently incomplete */
@@ -28,10 +28,6 @@ object Type {
  *  These should never be used directly.
  */
 object Types {
-  /** A Type backed by a pickled TASTY tree */
-  final class TastyType[T](val tasty: Pickled, val args: Seq[Any]) extends Type[T] {
-    override def toString(): String = s"Type(<pickled tasty>)"
-  }
 
   /** An Type backed by a value */
   final class TaggedType[T](implicit val ct: ClassTag[T]) extends Type[T] {

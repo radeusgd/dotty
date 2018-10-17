@@ -1,8 +1,6 @@
 import scala.quoted._
 import scala.quoted.autolift._
 
-import scala.tasty.Reflection
-
 import scala.language.implicitConversions
 
 case class Xml(parts: String, args: List[Any])
@@ -14,8 +12,8 @@ object XmlQuote {
   }
 
   def impl(receiver: Expr[SCOps], args: Expr[Seq[Any]])
-          (implicit reflect: Reflection): Expr[Xml] = {
-    import reflect._
+          (implicit staging: StagingContext): Expr[Xml] = {
+    import staging.reflection._
 
     def abort(msg: String): Nothing =
       throw new QuoteError(msg)

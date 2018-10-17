@@ -1,6 +1,6 @@
 
 import scala.quoted._
-import scala.tasty.Reflection
+
 import scala.language.implicitConversions
 import scala.quoted.Exprs.LiftedExpr
 import scala.quoted.autolift._
@@ -16,24 +16,30 @@ object Macro {
 }
 
 object SIntepolator extends MacroStringInterpolator[String] {
-  protected def interpolate(strCtx: StringContext, args: List[Expr[Any]])(implicit reflect: Reflection): Expr[String] =
-    '{(${strCtx}).s(${args.toExprOfList}: _*)}
+  protected def interpolate(strCtx: StringContext, args: List[Expr[Any]]): Staged[String] =
+    '{(${strCtx}).s(${liftListOfAny(args)}: _*)}
 }
 
 object RawIntepolator extends MacroStringInterpolator[String] {
-  protected def interpolate(strCtx: StringContext, args: List[Expr[Any]])(implicit reflect: Reflection): Expr[String] =
-    '{(${strCtx}).raw(${args.toExprOfList}: _*)}
+  protected def interpolate(strCtx: StringContext, args: List[Expr[Any]]): Staged[String] =
+    '{(${strCtx}).raw(${liftListOfAny(args)}: _*)}
 }
 
 object FooIntepolator extends MacroStringInterpolator[String] {
-  protected def interpolate(strCtx: StringContext, args: List[Expr[Any]])(implicit reflect: Reflection): Expr[String] =
-    '{(${strCtx}).s(${args.map(_ => '{"foo"}).toExprOfList}: _*)}
+  protected def interpolate(strCtx: StringContext, args: List[Expr[Any]]): Staged[String] =
+    '{(${strCtx}).s(${liftListOfAny(args.map(_ => '{"foo"}))}: _*)}
 }
 
 // TODO put this class in the stdlib or separate project?
 abstract class MacroStringInterpolator[T] {
 
-  final def apply(strCtxExpr: Expr[StringContext], argsExpr: Expr[Seq[Any]])(implicit reflect: Reflection): Expr[T] = {
+  // FIXME: Workarround in non-bootstrapped mode because the `toExprOfList` on the non-bootstrapped lib
+  def liftListOfAny(lst: List[Expr[Any]]): Staged[List[Any]] = lst match {
+    case x :: xs  => '{ ~x :: ~liftListOfAny(xs) }
+    case Nil => '(Nil)
+  }
+
+  final def apply(strCtxExpr: Expr[StringContext], argsExpr: Expr[Seq[Any]]): Staged[T] = {
     try interpolate(strCtxExpr, argsExpr)
     catch {
       case ex: NotStaticlyKnownError =>
@@ -48,13 +54,13 @@ abstract class MacroStringInterpolator[T] {
     }
   }
 
-  protected def interpolate(strCtxExpr: Expr[StringContext], argsExpr: Expr[Seq[Any]])(implicit reflect: Reflection): Expr[T] =
+  protected def interpolate(strCtxExpr: Expr[StringContext], argsExpr: Expr[Seq[Any]]): Staged[T] =
     interpolate(getStaticStringContext(strCtxExpr), getArgsList(argsExpr))
 
-  protected def interpolate(strCtx: StringContext, argExprs: List[Expr[Any]])(implicit reflect: Reflection): Expr[T]
+  protected def interpolate(strCtx: StringContext, argExprs: List[Expr[Any]]): Staged[T]
 
-  protected def getStaticStringContext(strCtxExpr: Expr[StringContext])(implicit reflect: Reflection): StringContext = {
-    import reflect._
+  protected def getStaticStringContext(strCtxExpr: Expr[StringContext])(implicit st: StagingContext): StringContext = {
+    import st.reflection._
     strCtxExpr.unseal.underlyingArgument match {
       case Select(Typed(Apply(_, List(Apply(_, List(Typed(Repeated(strCtxArgTrees, _), Inferred()))))), _), _) =>
         val strCtxArgs = strCtxArgTrees.map {
@@ -67,8 +73,8 @@ abstract class MacroStringInterpolator[T] {
     }
   }
 
-  protected def getArgsList(argsExpr: Expr[Seq[Any]])(implicit reflect: Reflection): List[Expr[Any]] = {
-    import reflect._
+  protected def getArgsList(argsExpr: Expr[Seq[Any]])(implicit st: StagingContext): List[Expr[Any]] = {
+    import st.reflection._
     argsExpr.unseal.underlyingArgument match {
       case Typed(Repeated(args, _), _) => args.map(_.seal)
       case tree => throw new NotStaticlyKnownError("Expected statically known argument list", tree.seal)
@@ -76,10 +82,10 @@ abstract class MacroStringInterpolator[T] {
   }
 
   protected implicit def StringContextIsLiftable: Liftable[StringContext] = new Liftable[StringContext] {
-    def toExpr(strCtx: StringContext): Expr[StringContext] = {
+    def toExpr(strCtx: StringContext)(implicit st: StagingContext): Expr[StringContext] = {
       // TODO define in stdlib?
       implicit def ListIsLiftable: Liftable[List[String]] = new Liftable[List[String]] {
-        override def toExpr(list: List[String]): Expr[List[String]] = list match {
+        override def toExpr(list: List[String])(implicit st: StagingContext): Expr[List[String]] = list match {
           case x :: xs => '{${x.toExpr} :: ${toExpr(xs)}}
           case Nil => '{Nil}
         }

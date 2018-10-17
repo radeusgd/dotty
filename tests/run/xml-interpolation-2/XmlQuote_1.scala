@@ -2,8 +2,6 @@
 import scala.quoted._
 import scala.quoted.autolift._
 
-import scala.tasty.Reflection
-
 import scala.language.implicitConversions
 
 case class Xml(parts: String, args: List[Any])
@@ -16,8 +14,8 @@ object XmlQuote {
   implicit inline def SCOps(ctx: => StringContext): SCOps = new SCOps(ctx)
 
   def impl(receiver: Expr[SCOps], args: Expr[Seq[Any]])
-          (implicit reflect: Reflection): Expr[Xml] = {
-    import reflect._
+          (implicit staging: StagingContext): Expr[Xml] = {
+    import staging.reflection._
 
     // for debugging purpose
     def pp(tree: Tree): Unit = {
@@ -56,7 +54,13 @@ object XmlQuote {
     // [a0, ...]: Any*
     val args2: Expr[List[Any]] = args.unseal.underlyingArgument match {
       case Typed(Repeated(args0, _), _) => // statically known args, make list directly
-        args0.map(_.seal).toExprOfList
+        def liftListOfAny(lst: List[Expr[Any]]): Expr[List[Any]] = lst match {
+          case x :: xs  => '{ ~x :: ~liftListOfAny(xs) }
+          case Nil => '(Nil)
+        }
+        liftListOfAny(args0.map(_.seal[Any]))
+        // FIXME: Faild in non-bootstrapped mode because the `toExprOfList` on the non-bootstrapped lib
+        // args0.map(_.seal).toExprOfList
       case _ =>
         '{$args.toList}
 
