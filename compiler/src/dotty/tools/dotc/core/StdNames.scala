@@ -321,6 +321,7 @@ object StdNames {
 
     // Compiler utilized names
 
+    val AllOps: N               = "AllOps"
     val AnnotatedType: N        = "AnnotatedType"
     val AppliedTypeTree: N      = "AppliedTypeTree"
     val ArrayAnnotArg: N        = "ArrayAnnotArg"
@@ -475,12 +476,14 @@ object StdNames {
     val nmeNewTermName: N       = "newTermName"
     val nmeNewTypeName: N       = "newTypeName"
     val noAutoTupling: N        = "noAutoTupling"
+    val nonInheritedOps: N      = "nonInheritedOps"
     val normalize: N            = "normalize"
     val notifyAll_ : N          = "notifyAll"
     val notify_ : N             = "notify"
     val null_ : N               = "null"
     val ofDim: N                = "ofDim"
     val op: N                   = "op"
+    val ops: N                  = "ops"
     val Ops: N                  = "Ops"
     val opaque: N               = "opaque"
     val origin: N               = "origin"
