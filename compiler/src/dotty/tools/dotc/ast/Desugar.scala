@@ -811,16 +811,24 @@ object desugar {
         // FIXME: mix in AllOps from super
         // trait AllOps[F[_], A] extends Ops[F, A] { ... }
         val allOpsTrait = {
+          val parentRefs = parents.flatMap {
+            case AppliedTypeTree(Ident(parent), List(Ident(paramName)))
+                if paramName == methTparam.name =>
+              Some(appliedTypeTree(Select(Ident(parent.toTermName), tpnme.AllOps), List(tparamRef)))
+            case _ =>
+              None
+          }
+
           // FIXME: do we actually need the typeClassInstance member if we mix-in in the other order ?
           // def typeClassInstance: Semigroup[A]
           // val typeClassInstanceMeth =
           TypeDef(tpnme.AllOps, Template(
             makeConstructor(classTparam :: hkClassTparams, Nil),
-            List(opsAppliedRef), EmptyValDef, Nil
+            parentRefs :+ opsAppliedRef, EmptyValDef, Nil
           )).withFlags(Synthetic | Trait)
         }
         // AllOps[F, F$1]
-        val allOpsAppliedRef = appliedTypeTree(Ident(tpnme.Ops), tparamRef :: hkTparamRefs)
+        val allOpsAppliedRef = appliedTypeTree(Ident(tpnme.AllOps), tparamRef :: hkTparamRefs)
 
         // object ops { ... }
         val opsObject = {
