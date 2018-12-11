@@ -649,13 +649,16 @@ object desugar {
 
         // trait Ops[F[_], F$1] { ... }
         val opsTrait = {
-          // def typeClassInstance: C[F]
-          val typeClassInstanceMeth = DefDef(nme.typeClassInstance, Nil, Nil, classTypeRef, EmptyTree)
+          // val typeClassInstance: C[F]
+          val typeClassInstanceVal = ValDef(nme.typeClassInstance, classTypeRef, EmptyTree)
             .withFlags(Synthetic | Deferred)
 
           // def self: F[F$1]
           val selfMeth = DefDef(nme.self, Nil, Nil, appliedTparamRef, EmptyTree)
             .withFlags(Synthetic | Deferred)
+
+          // import typeClassInstance._
+          val typeClassInstanceImport = Import(Ident(nme.typeClassInstance), List(Ident(nme.WILDCARD)))
 
           // Given:
           //
@@ -668,7 +671,7 @@ object desugar {
           // def <opName>[Y](b: A, c: Y): R' =
           //   typeClassInstance.<name>(self, v_1, ..., v_N)
           def opMethod(tree: Tree): Option[DefDef] = tree match {
-            case tree @ DefDef(_, _, (selfParam :: rest1) :: rest2, _, _) =>
+            case tree @ DefDef(_, _, (selfParam :: rest1) :: rest2, _, _) if !(tree.mods.flags is (Private | Protected | Override)) =>
               val (opAnn, otherAnns) = tree.mods.annotations.partition({
                 case Apply(Select(New(Ident(tpnme.op)), nme.CONSTRUCTOR), _) =>
                   true
@@ -689,7 +692,7 @@ object desugar {
                   tree.name
               }
 
-              val otherParamss = rest1 :: rest2
+              val otherParamss = if (rest1.isEmpty) rest2 else rest1 :: rest2
 
               val tparamNames = tree.tparams.map(_.name)
 
@@ -701,6 +704,8 @@ object desugar {
               // F[X] ~ F[A]  => X -> A
               // F[X[Y]] ~ F[A] =>
               def substMap(original: Tree, proto: Tree): Map[Name, Name] = (original, proto) match {
+                case (tpt1: Ident, tpt2: Ident) if tpt1.name == tpt2.name =>
+                  Map(tpt1.name -> tpt2.name)
                 case (AppliedTypeTree(tpt1: Ident, args1), AppliedTypeTree(tpt2: Ident, args2)) if tpt1.name == tpt2.name =>
                   (args1, args2).zipped.foldLeft(Map[Name, Name]()) {
                     case (acc, (arg1: Ident, arg2: Ident)) =>
@@ -722,34 +727,35 @@ object desugar {
                 // type parameters of `def <opName>`
                 val opTparams = tree.tparams.filterNot(tparam => tparamsMap.contains(tparam.name))
 
-                def renameParamss(paramss: List[List[ValDef]]): List[List[ValDef]] = {
-                  val renamer = new UntypedTreeMap {
-                    override def transform(tree: Tree)(implicit ctx: Context): Tree = tree match {
-                      case tree: NameTree if tparamsMap.contains(tree.name) =>
-                        rename(tree, tparamsMap(tree.name))
-                      case _ =>
-                        super.transform(tree)
-                    }
+                val renamer = new UntypedTreeMap {
+                  override def transform(tree: Tree)(implicit ctx: Context): Tree = tree match {
+                    case tree: NameTree if tparamsMap.contains(tree.name) =>
+                      rename(tree, tparamsMap(tree.name))
+                    case _ =>
+                      super.transform(tree)
                   }
-                  paramss.nestedMapconserve(renamer.transform).asInstanceOf[List[List[ValDef] @unchecked]]
+                }
+                def renameTrees[T <: Tree](trees: List[T]): List[T] = {
+                  trees.mapconserve(renamer.transform).asInstanceOf[List[T @unchecked]]
                 }
 
                 // parameters of `def <opName>`
-                val opVparamss = renameParamss(otherParamss)
+                val opVparamss = otherParamss.mapconserve(renameTrees)
 
                 // Arguments to `typeClassInstance.<name>`
                 // val instanceArgss = (Ident(nme.self) :: rest1.map(v => Ident(v.name))) :: rest2.nestedMap(v => Ident(v.name))
-                val instanceArgss = opVparamss match {
+                val instanceArgss = (rest1 :: rest2).mapconserve(renameTrees) match {
                   case x :: xs =>
                     (Ident(nme.self) :: x.map(v => Ident(v.name))) :: xs.nestedMap(v => Ident(v.name))
                   case Nil =>
-                    List(List(Ident(nme.self)))
+                    ???
                 }
 
                 Some(cpy.DefDef(tree)(
                   name = opName.toTermName,
                   opTparams,
                   opVparamss,
+                  renamer.transform(tree.tpt),
                   rhs = appliedToArgss(
                     Select(Ident(nme.typeClassInstance), tree.name),
                     instanceArgss
@@ -766,7 +772,7 @@ object desugar {
             makeConstructor(classTparam :: hkClassTparams, Nil),
             parents = Nil,
             self = EmptyValDef,
-            body = typeClassInstanceMeth :: selfMeth :: opMeths
+            body = typeClassInstanceVal :: selfMeth :: typeClassInstanceImport :: opMeths
           )).withFlags(Synthetic | Trait)
         }
         // Ops[F, F$1]
@@ -811,10 +817,10 @@ object desugar {
         // FIXME: mix in AllOps from super
         // trait AllOps[F[_], A] extends Ops[F, A] { ... }
         val allOpsTrait = {
-          val parentRefs = parents.flatMap {
+          val parentAllOps = parents.flatMap {
             case AppliedTypeTree(Ident(parent), List(Ident(paramName)))
                 if paramName == methTparam.name =>
-              Some(appliedTypeTree(Select(Ident(parent.toTermName), tpnme.AllOps), List(tparamRef)))
+              Some(appliedTypeTree(Select(Ident(parent.toTermName), tpnme.AllOps), tparamRef :: hkTparamRefs))
             case _ =>
               None
           }
@@ -824,7 +830,7 @@ object desugar {
           // val typeClassInstanceMeth =
           TypeDef(tpnme.AllOps, Template(
             makeConstructor(classTparam :: hkClassTparams, Nil),
-            parentRefs :+ opsAppliedRef, EmptyValDef, Nil
+            parentAllOps :+ opsAppliedRef, EmptyValDef, Nil
           )).withFlags(Synthetic | Trait)
         }
         // AllOps[F, F$1]
