@@ -660,7 +660,7 @@ object desugar {
           // Given:
           //
           // trait C[F[_]] {
-          //   @op("<opName>") def <name>[X, Y](a: F[X], b: X, c: Y): R
+          //   def <name>[X, Y](a: F[X], b: X, c: Y): R
           // }
           //
           // Generate:
@@ -668,8 +668,7 @@ object desugar {
           // def <opName>[Y](b: A, c: Y): R' =
           //   typeClassInstance.<name>(self, v_1, ..., v_N)
           def opMethod(tree: Tree): Option[DefDef] = tree match {
-            case tree: DefDef =>
-              // FIXME: if a method doesn't have an op name, it should also get forwarded
+            case tree @ DefDef(_, _, (selfParam :: rest1) :: rest2, _, _) =>
               val (opAnn, otherAnns) = tree.mods.annotations.partition({
                 case Apply(Select(New(Ident(tpnme.op)), nme.CONSTRUCTOR), _) =>
                   true
@@ -683,69 +682,79 @@ object desugar {
               def appliedToArgss(tree: Tree, argss: List[List[Tree]])(implicit ctx: Context): Tree =
                 argss.foldLeft(tree)(Apply(_, _))
 
-              opAnn.headOption.collect {
-                case Apply(_, Literal(c: Constant) :: rest) =>
-                  val opName = c.stringValue
-                  tree.vparamss match {
-                    case (firstParam :: rest1) :: rest2 =>
+              val opName = opAnn.headOption match {
+                case Some(Apply(_, Literal(c: Constant) :: _)) =>
+                  c.stringValue.toTermName
+                case _ =>
+                  tree.name
+              }
 
-                      val tparamNames = tree.tparams.map(_.name)
+              val otherParamss = rest1 :: rest2
 
-                      // Given:
-                      // trait C[F[_]] {
-                      //   def foo[X, Y](a: F[X], b: X, c: Y): <tpt>
-                      // }
-                      // F[X]
-                      // F[X] ~ F[A]  => X -> A
-                      // F[X[Y]] ~ F[A] =>
-                      def substMap(original: Tree, proto: Tree): Map[Name, Name] = (original, proto) match {
-                        case (AppliedTypeTree(tpt1: Ident, args1), AppliedTypeTree(tpt2: Ident, args2)) if tpt1.name == tpt2.name =>
-                          (args1, args2).zipped.foldLeft(Map[Name, Name]()) {
-                            case (acc, (arg1: Ident, arg2: Ident)) =>
-                              if (tparamNames.contains(arg1.name))
-                                acc + (arg1.name -> arg2.name)
-                              else
-                                acc
-                            case (acc, _) =>
-                              acc
-                          }
-                        case _ =>
-                          Map()
-                      }
-                      val tparamsMap = substMap(firstParam.tpt, appliedTparamRef)
-                      // type parameters of `def <opName>`
-                      val opTparams = tree.tparams.filterNot(tparam => tparamsMap.contains(tparam.name))
+              val tparamNames = tree.tparams.map(_.name)
 
-                      def renameParamss(paramss: List[List[ValDef]]): List[List[ValDef]] = {
-                        val renamer = new UntypedTreeMap {
-                          override def transform(tree: Tree)(implicit ctx: Context): Tree = tree match {
-                            case tree: NameTree if tparamsMap.contains(tree.name) =>
-                              rename(tree, tparamsMap(tree.name))
-                            case _ =>
-                              super.transform(tree)
-                          }
-                        }
-                        paramss.nestedMapconserve(renamer.transform).asInstanceOf[List[List[ValDef] @unchecked]]
-                      }
-
-                      // parameters of `def <opName>`
-                      val opVparamss = renameParamss(rest1 :: rest2)
-
-                      // Arguments to `typeClassInstance.<name>`
-                      val instanceArgss = (Ident(nme.self) :: rest1.map(v => Ident(v.name))) :: rest2.nestedMap(v => Ident(v.name))
-
-                      cpy.DefDef(tree)(
-                        name = opName.toTermName,
-                        opTparams,
-                        opVparamss,
-                        rhs = appliedToArgss(
-                          Select(Ident(nme.typeClassInstance), tree.name),
-                          instanceArgss
-                        )
-                      ).withMods(tree.rawMods.withAnnotations(otherAnns) | Synthetic)
-                    case _ =>
-                      ???
+              // Given:
+              // trait C[F[_]] {
+              //   def foo[X, Y](a: F[X], b: X, c: Y): <tpt>
+              // }
+              // F[X]
+              // F[X] ~ F[A]  => X -> A
+              // F[X[Y]] ~ F[A] =>
+              def substMap(original: Tree, proto: Tree): Map[Name, Name] = (original, proto) match {
+                case (AppliedTypeTree(tpt1: Ident, args1), AppliedTypeTree(tpt2: Ident, args2)) if tpt1.name == tpt2.name =>
+                  (args1, args2).zipped.foldLeft(Map[Name, Name]()) {
+                    case (acc, (arg1: Ident, arg2: Ident)) =>
+                      if (tparamNames.contains(arg1.name))
+                        acc + (arg1.name -> arg2.name)
+                      else
+                        acc
+                    case (acc, _) =>
+                      acc
                   }
+                case _ =>
+                  Map()
+              }
+
+              val tparamsMap = substMap(selfParam.tpt, appliedTparamRef)
+              if (tparamsMap.isEmpty)
+                None
+              else {
+                // type parameters of `def <opName>`
+                val opTparams = tree.tparams.filterNot(tparam => tparamsMap.contains(tparam.name))
+
+                def renameParamss(paramss: List[List[ValDef]]): List[List[ValDef]] = {
+                  val renamer = new UntypedTreeMap {
+                    override def transform(tree: Tree)(implicit ctx: Context): Tree = tree match {
+                      case tree: NameTree if tparamsMap.contains(tree.name) =>
+                        rename(tree, tparamsMap(tree.name))
+                      case _ =>
+                        super.transform(tree)
+                    }
+                  }
+                  paramss.nestedMapconserve(renamer.transform).asInstanceOf[List[List[ValDef] @unchecked]]
+                }
+
+                // parameters of `def <opName>`
+                val opVparamss = renameParamss(otherParamss)
+
+                // Arguments to `typeClassInstance.<name>`
+                // val instanceArgss = (Ident(nme.self) :: rest1.map(v => Ident(v.name))) :: rest2.nestedMap(v => Ident(v.name))
+                val instanceArgss = opVparamss match {
+                  case x :: xs =>
+                    (Ident(nme.self) :: x.map(v => Ident(v.name))) :: xs.nestedMap(v => Ident(v.name))
+                  case Nil =>
+                    List(List(Ident(nme.self)))
+                }
+
+                Some(cpy.DefDef(tree)(
+                  name = opName.toTermName,
+                  opTparams,
+                  opVparamss,
+                  rhs = appliedToArgss(
+                    Select(Ident(nme.typeClassInstance), tree.name),
+                    instanceArgss
+                  )
+                ).withMods(tree.rawMods.withAnnotations(otherAnns) | Synthetic))
               }
             case _ =>
               None
