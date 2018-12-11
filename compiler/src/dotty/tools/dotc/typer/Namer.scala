@@ -816,6 +816,9 @@ class Namer { typer: Typer =>
               original match {
                 case LambdaTypeTree(tparams, _) => tparams
                 case original: DerivedFromParamTree => typeParamTrees(original.watched)
+                  // Untyped definitions cannot be shared in general (because we
+                  // set attachments on them)
+                  .map(_.clone.asInstanceOf[TypeDef])
                 case _ => Nil
               }
             case _ => Nil
