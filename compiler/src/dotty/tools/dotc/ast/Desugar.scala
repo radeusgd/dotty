@@ -670,7 +670,7 @@ object desugar {
           //
           // def <opName>[Y](b: A, c: Y): R' =
           //   typeClassInstance.<name>(self, v_1, ..., v_N)
-          def opMethod(tree: Tree): Option[DefDef] = tree match {
+          def opMethods(tree: Tree): List[DefDef] = tree match {
             case tree @ DefDef(_, _, (selfParam :: rest1) :: rest2, _, _) if !(tree.mods.flags is (Private | Protected | Override)) =>
               val (opAnn, otherAnns) = tree.mods.annotations.partition({
                 case Apply(Select(New(Ident(tpnme.op)), nme.CONSTRUCTOR), _) =>
@@ -685,11 +685,14 @@ object desugar {
               def appliedToArgss(tree: Tree, argss: List[List[Tree]])(implicit ctx: Context): Tree =
                 argss.foldLeft(tree)(Apply(_, _))
 
-              val opName = opAnn.headOption match {
+              val opNames = opAnn.headOption match {
+                // FIXME: don't hardcode argument order, use of NamedArg
+                case Some(Apply(_, Literal(c: Constant) :: NamedArg(nme.alias, Literal(Constant(true))) :: _)) =>
+                  List(c.stringValue.toTermName, tree.name)
                 case Some(Apply(_, Literal(c: Constant) :: _)) =>
-                  c.stringValue.toTermName
+                  List(c.stringValue.toTermName)
                 case _ =>
-                  tree.name
+                  List(tree.name)
               }
 
               val otherParamss = if (rest1.isEmpty) rest2 else rest1 :: rest2
@@ -722,7 +725,8 @@ object desugar {
 
               val tparamsMap = substMap(selfParam.tpt, appliedTparamRef)
               if (tparamsMap.isEmpty)
-                None
+
+                Nil
               else {
                 // type parameters of `def <opName>`
                 val opTparams = tree.tparams.filterNot(tparam => tparamsMap.contains(tparam.name))
@@ -751,22 +755,23 @@ object desugar {
                     ???
                 }
 
-                Some(cpy.DefDef(tree)(
-                  name = opName.toTermName,
-                  opTparams,
-                  opVparamss,
-                  renamer.transform(tree.tpt),
-                  rhs = appliedToArgss(
-                    Select(Ident(nme.typeClassInstance), tree.name),
-                    instanceArgss
-                  )
-                ).withMods(tree.rawMods.withAnnotations(otherAnns) | Synthetic))
+                opNames.map(opName =>
+                  cpy.DefDef(tree)(
+                    name = opName.toTermName,
+                    opTparams,
+                    opVparamss,
+                    renamer.transform(tree.tpt),
+                    rhs = appliedToArgss(
+                      Select(Ident(nme.typeClassInstance), tree.name),
+                      instanceArgss
+                    )
+                  ).withMods(tree.rawMods.withAnnotations(otherAnns) | Synthetic))
               }
             case _ =>
-              None
+              Nil
           }
 
-          val opMeths = impl.body.flatMap(opMethod)
+          val opMeths = impl.body.flatMap(opMethods)
 
           TypeDef(tpnme.Ops, Template(
             makeConstructor(classTparam :: hkClassTparams, Nil),

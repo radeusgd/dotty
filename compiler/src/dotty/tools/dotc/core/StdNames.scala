@@ -321,6 +321,7 @@ object StdNames {
 
     // Compiler utilized names
 
+    val alias: N                = "alias"
     val AllOps: N               = "AllOps"
     val AnnotatedType: N        = "AnnotatedType"
     val AppliedTypeTree: N      = "AppliedTypeTree"
