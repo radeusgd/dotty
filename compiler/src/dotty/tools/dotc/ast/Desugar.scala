@@ -670,7 +670,9 @@ object desugar {
           //
           // def <opName>[Y](b: A, c: Y): R' =
           //   typeClassInstance.<name>(self, v_1, ..., v_N)
-          def opMethods(tree: Tree): List[DefDef] = tree match {
+          def opMethods(tree: Tree): List[DefDef] = defTree(tree) match {
+            case Thicket(tree :: _) =>
+              opMethods(tree)
             case tree @ DefDef(_, _, (selfParam :: rest1) :: rest2, _, _) if !(tree.mods.flags is (Private | Protected | Override)) =>
               val (opAnn, otherAnns) = tree.mods.annotations.partition({
                 case Apply(Select(New(Ident(tpnme.op)), nme.CONSTRUCTOR), _) =>
