@@ -315,6 +315,8 @@ object StdNames {
 
     val ??? : N = "???"
 
+    val <:< : N = "<:<"
+
     val genericWrapArray: N     = "genericWrapArray"
     def wrapRefArray: N         = "wrapRefArray"
     def wrapXArray(clsName: Name): N = "wrap" + clsName + "Array"

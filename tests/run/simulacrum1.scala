@@ -322,21 +322,37 @@ object Test {
       Nil.toEither shouldBe Left("empty")
     }
 
-    // // "supports syntax for an F[G[A]]"
-    // {
-    //   @typeclass trait Bar[F[_]]
-    //   @typeclass trait Foo[F[_]] {
-    //     def foo[G[_], A, B](fa: F[A])(f: A => G[B]): G[F[B]]
-    //     def bar[G[_]: Bar, A](fa: F[G[A]]): G[F[A]] = foo(fa)(identity)
-    //   }
-    //   implicit val barOption: Bar[Option] = new Bar[Option] {}
-    //   implicit val fooOption: Foo[Option] = new Foo[Option] {
-    //     def foo[G[_], A, B](fa: Option[A])(f: A => G[B]): G[Option[B]] = null.asInstanceOf[G[Option[B]]]
-    //   }
-    //   import Foo.ops._
-    //   Option(Option(1)).bar
-    // }
+    // "supports syntax for an F[G[A]]"
+    {
+      @typeclass trait Bar[F[_]]
+      @typeclass trait Foo[F[_]] {
+        def foo[G[_], A, B](fa: F[A])(f: A => G[B]): G[F[B]]
+        def bar[G[_]: Bar, A](fa: F[G[A]]): G[F[A]] = foo(fa)(identity)
+      }
+      implicit val barOption: Bar[Option] = new Bar[Option] {}
+      implicit val fooOption: Foo[Option] = new Foo[Option] {
+        def foo[G[_], A, B](fa: Option[A])(f: A => G[B]): G[Option[B]] = null.asInstanceOf[G[Option[B]]]
+      }
+      import Foo.ops._
+      Option(Option(1)).bar
+    }
 
+    // "supports type inference for syntax for operations where the instance type is constrained"
+    {
+      @typeclass trait Ap[F[_]] {
+        def ap[A, B](ff: F[A => B])(fa: F[A]): F[B]
+      }
+
+      object Ap {
+        implicit val apOption: Ap[Option] = new Ap[Option] {
+          def ap[A, B](ff: Option[A => B])(fa: Option[A]): Option[B] = ff.flatMap(fa.map)
+        }
+      }
+
+      import Ap.ops._
+      val ff: Option[Int => String] = Some(_.toString)
+      ff.ap(Some(0)) shouldBe Some("0")
+    }
   }
 
   def main(args: Array[String]): Unit = {
