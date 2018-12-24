@@ -77,20 +77,18 @@ object Test {
       Sg.foo shouldBe 1
     }
 
-    // XXX: neg test
-    // // supports changing the name of adapted methods
-    // {
-    //   @typeclass trait Sg[A] {
-    //     @op("|+|") def append(x: A, y: A): A
-    //   }
-    //   implicit val sgInt: Sg[Int] = new Sg[Int] {
-    //     def append(x: Int, y: Int) = x + y
-    //   }
+    // supports changing the name of adapted methods
+    {
+      @typeclass trait Sg[A] {
+        @op("|+|") def append(x: A, y: A): A
+      }
+      implicit val sgInt: Sg[Int] = new Sg[Int] {
+        def append(x: Int, y: Int) = x + y
+      }
 
-    //   import Sg.ops._
-    //   1 |+| 2 shouldBe 3
-    //   "1 append 2" shouldNot compile
-    // }
+      import Sg.ops._
+      1 |+| 2 shouldBe 3
+    }
 
     // supports aliasing the name of adapted methods
     {
@@ -124,21 +122,6 @@ object Test {
     //   1 ~ 2 shouldBe 3
     // }
 
-
-    // XXX: not implemented, neg test
-    // // supports suppression of adapter methods
-    // {
-    //   @typeclass trait Sg[A] {
-    //     @noop def append(x: A, y: A): A
-    //     @simulacrum.noop def foo(x: A, y: A): A = append(x, y)
-    //   }
-    //   implicit val sgInt: Sg[Int] = new Sg[Int] {
-    //     def append(x: Int, y: Int) = x + y
-    //   }
-
-    //   "1 append 2 shouldBe 3" shouldNot compile
-    //   "1 foo 2 shouldBe 3" shouldNot compile
-    // }
 
     // supports type bounds on type class type param
     {
@@ -180,24 +163,6 @@ object Test {
     //   @typeclass(excludeParents = List("Show")) trait ShowingSemigroup[A] extends Show[A] { def append(x: A, y: A): A }
     // }
 
-    // XXX: not implemented, neg test
-    // // report compilation failures when excludeParents attribute references unknown parent
-    // {
-    //   trait Show[A] { def show(a: A): String }
-    //   """
-    //     @typeclass(excludeParents = List("Show", "Foo")) trait ShowingSemigroup[A] extends Show[A] { def append(x: A, y: A): A }
-    //     """ shouldNot compile
-    // }
-
-
-    // XXX: not implemented, neg test
-    // // supports suppressing generation of the AllOps trait and the ops object
-    // {
-    //   @typeclass(generateAllOps = false) trait Show[A] { def show(a: A): String }
-    //   "trait foo extends Show.AllOps" shouldNot compile
-    //   "Show.ops" shouldNot compile
-    // }
-
     // supports universal traits
     {
       @typeclass trait Univseral[A] extends Any {
@@ -216,8 +181,6 @@ object Test {
         def bar(a: Int) = -a
       }
       5.bar shouldBe -5
-      // XXX: neg test
-      // "5.foo" shouldNot compile
     }
   }
 
@@ -228,8 +191,6 @@ object Test {
 
     // generates object oriented style forwarding methods
     {
-      // XXX: neg test
-      // "List(1, 2, 3).as(0) shouldBe List(0, 0, 0)" shouldNot compile
       import Functor.ops._
       List(1, 2, 3).as(0) shouldBe List(0, 0, 0)
     }
@@ -263,8 +224,6 @@ object Test {
       import Monad.ops._
       val twice: Int => List[Int] = x => List(x, x)
       (List(1, 2, 3) >>= twice) shouldBe List(1, 1, 2, 2, 3, 3)
-      // XXX: Neg test
-      // "Monad.Ops(List(1, 2, 3)) flatMap twice" shouldNot compile
     }
 
     // supports aliasing the name of adapted methods
