@@ -174,7 +174,7 @@ object Test {
     }
 
     // XXX: not implemented
-    // // "supports type classes that extends traits that are not type classes"
+    // // supports type classes that extends traits that are not type classes
     // {
     //   trait Show[A] { def show(a: A): String }
     //   @typeclass(excludeParents = List("Show")) trait ShowingSemigroup[A] extends Show[A] { def append(x: A, y: A): A }
@@ -191,7 +191,7 @@ object Test {
 
 
     // XXX: not implemented, neg test
-    // // "supports suppressing generation of the AllOps trait and the ops object"
+    // // supports suppressing generation of the AllOps trait and the ops object
     // {
     //   @typeclass(generateAllOps = false) trait Show[A] { def show(a: A): String }
     //   "trait foo extends Show.AllOps" shouldNot compile
@@ -234,7 +234,7 @@ object Test {
       List(1, 2, 3).as(0) shouldBe List(0, 0, 0)
     }
 
-    // "supports type class inheritance"
+    // supports type class inheritance
     {
       @typeclass trait Monad[G[_]] extends Functor[G] {
         def pure[A](a: => A): G[A]
@@ -249,7 +249,7 @@ object Test {
       Monad.ops.toAllMonadOps(List(1, 2)).flatMap { x => List(x, x) } shouldBe List(1, 1, 2, 2)
     }
 
-    // "supports changing the name of adapted methods"
+    // supports changing the name of adapted methods
     {
       @typeclass trait Monad[G[_]] extends Functor[G] {
         def pure[A](a: => A): G[A]
@@ -267,7 +267,7 @@ object Test {
       // "Monad.Ops(List(1, 2, 3)) flatMap twice" shouldNot compile
     }
 
-    // "supports aliasing the name of adapted methods"
+    // supports aliasing the name of adapted methods
     {
       @typeclass trait Monad[G[_]] extends Functor[G] {
         def pure[A](a: => A): G[A]
@@ -284,7 +284,7 @@ object Test {
       Monad.ops.toAllMonadOps(List(1, 2, 3)) flatMap twice shouldBe List(1, 1, 2, 2, 3, 3)
     }
 
-    // "supports type bounds on type class type param"
+    // supports type bounds on type class type param
     {
       trait Upper
       trait Lower extends Upper
@@ -296,7 +296,7 @@ object Test {
       @typeclass trait TypeConstructorBounded[F[_ >: Lower <: Upper]] { def id[A >: Lower <: Upper](x: F[A]): F[A] = x }
     }
 
-    // "lifted type argument in method bodies are supported"
+    // lifted type argument in method bodies are supported
     {
       object typeClasses {
         @typeclass trait Monoid[A] { def append(x: A, y: A): A; def id: A }
@@ -314,7 +314,7 @@ object Test {
       List(1, 2, 3).concatenate shouldBe 6
     }
 
-    // "lifted type argument in return type is rewritten correctly"
+    // lifted type argument in return type is rewritten correctly
     {
       @typeclass trait Foo[F[_]] { def toEither[A](fa: F[A]): Either[String, A] }
       implicit val listFoo: Foo[List] = new Foo[List] { def toEither[A](fa: List[A]) = if (fa.isEmpty) Left("empty") else Right(fa.head) }
@@ -322,7 +322,7 @@ object Test {
       Nil.toEither shouldBe Left("empty")
     }
 
-    // "supports syntax for an F[G[A]]"
+    // supports syntax for an F[G[A]]
     {
       @typeclass trait Bar[F[_]]
       @typeclass trait Foo[F[_]] {
@@ -337,7 +337,7 @@ object Test {
       Option(Option(1)).bar
     }
 
-    // "supports type inference for syntax for operations where the instance type is constrained"
+    // supports type inference for syntax for operations where the instance type is constrained
     {
       @typeclass trait Ap[F[_]] {
         def ap[A, B](ff: F[A => B])(fa: F[A]): F[B]
@@ -355,8 +355,204 @@ object Test {
     }
   }
 
+  // support annotated companions
+  def annot(): Unit = {
+    class exports extends scala.annotation.StaticAnnotation
+    @typeclass trait Foo[F[_]]
+    @exports object Foo
+  }
+
+  // support variant type classes
+  def variance(): Unit = {
+    // covariant
+    {
+      @typeclass trait Empty[+A] {
+        def empty: A
+      }
+      @typeclass trait Empty1[+A] extends Empty[A] {
+        def empty2[A1 >: A]: A1
+      }
+      @typeclass trait Empty2[A] extends Empty[A] {  // invariant
+        def id(x: A): A
+      }
+    }
+    // contravariant
+    {
+      @typeclass trait Order[-A] {
+        def cmp(x: A, y: A): Boolean
+      }
+      @typeclass trait Order1[-A] extends Order[A] {
+        def cmp2[A1 <: A](x: A1, y: A1): Boolean
+      }
+      @typeclass trait Order2[A] extends Order[A] { // invariant
+        def id(x: A): A
+      }
+    }
+  }
+
+  // handle abstract type members (1)
+  def abstractTypeMembers1(): Unit = {
+    case class Dingo(x: Int)
+    var dingo: Dingo = null
+
+    object typeClasses {
+      @typeclass trait Bippoid[A] {
+        type Bippy
+        def append(x: A, y: A): A
+        def secretId: Bippy
+        def fn(x: Bippy): Int
+      }
+      @typeclass trait Foldable[F[_]] {
+        def reduce[A](fa: F[A])(f: (A, A) => A): A
+        def obtainDingo[A](fa: F[A])(implicit z: Bippoid[A]): (z.Bippy, A) = (z.secretId, reduce(fa)(z.append))
+      }
+    }
+    import typeClasses._
+
+    // NB: Having an explicit type here breaks the associated type usage.
+    implicit val intBippoid: Bippoid[Int] { type Bippy = Dingo } =
+      new Bippoid[Int] {
+        type Bippy = Dingo
+        def append(x: Int, y: Int) = x + y
+        def secretId = Dingo(5)
+        def fn(x: Bippy) = x.x
+      }
+    implicit val foldInstance: Foldable[List] = new Foldable[List] {
+      def reduce[A](fa: List[A])(f: (A, A) => A): A = fa reduceLeft f
+    }
+
+    import Foldable.ops._
+
+    // Making sure we can assign to the dingo var with a value
+    // which has the abstract type from the Bippoid.
+    val dep = List(1, 2, 3).obtainDingo
+    dingo = dep._1
+    dingo shouldBe Dingo(5)
+    dingo = Dingo(10)
+    intBippoid.fn(dingo) shouldBe 10
+  }
+
+  // handle abstract type members (2)
+  def abstractTypeMembers2(): Unit = {
+    @typeclass trait Companion1[T] {
+      type A
+      def apply(a: A): T
+      def unapply(t: T): Option[A]
+    }
+    object Foo extends Companion1[String] {
+      type A = Int
+      def apply(x: Int) = x.toString
+      def unapply(s: String) = util.Try(java.lang.Integer.parseInt(s)).toOption
+    }
+    Foo(1) shouldBe "1"
+    Foo.unapply("1") shouldBe Some(1)
+  }
+
+  // support dependent types in ops and summoner
+  def depTypes1(): Unit = {
+    @typeclass
+    trait First[P] {
+      type Out >: Nothing <: Any  // bounds are supported but not required
+      def first(product: P): Out
+    }
+    object First {
+      type Aux[T, Out0] = First[T] { type Out = Out0 }
+
+      implicit def firstOfPair[A, B]: First.Aux[(A, B), A] = new First[(A, B)] {
+        override type Out = A
+        override def first(pair: (A, B)) = pair._1
+      }
+    }
+
+    val p = (1, "xxx")
+    import First.ops._
+    val a = p.first
+    val i: Int = a  // The compiler should know a has type Int
+
+    val b = First[(Int,String)].first(p)
+    val j: Int = b  // The compiler should know b has type Int
+  }
+
+  // support dependent type constructors in ops and summoner
+  def depTypes2(): Unit = {
+    import scala.collection.mutable
+    @typeclass trait Mutable[S[_]] {
+      type R[_]
+      def toMutable[A](source: S[A]): R[A]
+    }
+    object Mutable {
+      type Aux[S[_],R0[_]] = Mutable[S]{ type R[x] = R0[x] }
+      implicit def converterImpl: Aux[List, mutable.ListBuffer] = new Mutable[List] {
+        type R[x] = mutable.ListBuffer[x]
+        def toMutable[A](s: List[A]) = {
+          val buf = mutable.ListBuffer[A]()
+          buf ++= s
+          buf
+        }
+      }
+    }
+
+    import Mutable.ops._
+    val a = List(1,2,3).toMutable
+    val i: mutable.ListBuffer[Int] = a  // The compiler should know a has type mutable.ListBuffer[Int]
+
+    val b = Mutable[List].toMutable(List(1,2,3))
+    val j: mutable.ListBuffer[Int] = b  // The compiler should know b has type mutable.ListBuffer[Int]
+  }
+
+  // support lots of dependent types
+  def depTypes3(): Unit = {
+    @typeclass trait Foo[P] {
+      type A
+      type B
+      type C
+      type F[_,_,_]
+      def a(p: P): A
+      def b(p: P): B
+      def c(p: P): C
+      def make[X,Y,Z](x: X, y: Y, z: Z): F[X,Y,Z]
+    }
+
+    object Foo {
+      type Aux[P,A0,B0,C0,F0[_,_,_]] = Foo[P] { type A=A0; type B=B0; type C=C0; type F[x,y,z] = F0[x,y,z] }
+
+      implicit def foo[A0,B0,C0]: Foo.Aux[(A0,B0,C0),A0,B0,C0,scala.Tuple3] = new Foo[(A0,B0,C0)] {
+        type A = A0
+        type B = B0
+        type C = C0
+        type F[x,y,z] = (x,y,z)
+        def a(p: (A0,B0,C0)) = p._1
+        def b(p: (A0,B0,C0)) = p._2
+        def c(p: (A0,B0,C0)) = p._3
+        def make[X,Y,Z](x: X, y: Y, z: Z) = (x,y,z)
+      }
+    }
+
+    import Foo.ops._
+
+    val tuple: (Int,String,Option[Int]) = Foo[(Int,Int,Int)].make(1,"a",Some(2))
+
+    val a: Int = tuple.a
+    val b: String = tuple.b
+    val c: Option[Int] = tuple.c
+  }
+
+  // generate universal traits by default
+  def univTraits(): Unit = {
+    // XXX: Not implemented
+    // trait Foo[F[_]] extends Any with Functor[F]
+  }
+
   def main(args: Array[String]): Unit = {
     proper()
     tc()
+    annot()
+    variance()
+    abstractTypeMembers1()
+    abstractTypeMembers2()
+    depTypes1()
+    depTypes2()
+    depTypes3()
+    univTraits()
   }
 }

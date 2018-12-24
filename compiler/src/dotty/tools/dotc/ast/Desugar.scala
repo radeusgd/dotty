@@ -639,12 +639,10 @@ object desugar {
         val appliedTparamRef = appliedTypeTree(tparamRef, hkTparamRefs)
 
         // def apply[F[_]](implicit instance: C[F]): C[F] = instance
-        // FIXME: return instance.type instead to preserve dependent types
-        // (hopefully better solution than https://github.com/mpilquist/simulacrum/pull/74)
         val applyMeth =
           DefDef(nme.apply, List(methTparam),
             List(List(makeParameter(nme.instance, classTypeRef, Modifiers(Implicit)))),
-            classTypeRef, Ident(nme.instance))
+            SingletonTypeTree(Ident(nme.instance))/*classTypeRef*/, Ident(nme.instance))
             .withFlags(Synthetic)
 
         // trait Ops[F[_], F$1] { ... }
@@ -809,10 +807,18 @@ object desugar {
         // trait To${C}Ops { ... }
         val toOpsTrait = {
 
-          // implicit def to${C}Ops[F[_], F$1](target: F[F$1])(implicit tc: C[F]): Ops[F] = new Ops[F] {
-          //   val self: F[F$1] = target
-          //   val typeClassInstance: C[F] = tc
-          // }
+          // Ops[F, F$1] { val self: target.type; val typeClassInstance: tc.type }
+          val dependentOpsRef =
+            RefinedTypeTree(opsAppliedRef, List(
+              ValDef(nme.self, SingletonTypeTree(Ident(nme.target)), EmptyTree),
+              ValDef(nme.typeClassInstance, SingletonTypeTree(Ident(nme.tc)), EmptyTree)))
+
+          // implicit def to${C}Ops[F[_], F$1](target: F[F$1])(implicit tc: C[F])
+          //     : Ops[F, F$1] { val self: target.type; val typeClassInstance: tc.type } =
+          //   new Ops[F, F$1] {
+          //     val self: target.type = target
+          //     val typeClassInstance: tc.type = tc
+          //   }
           val toOpsMeth = DefDef(
             s"to${className}Ops".toTermName,
             methTparam :: hkMethTparams,
@@ -820,10 +826,10 @@ object desugar {
               List(makeParameter(nme.target, appliedTparamRef)),
               List(makeParameter(nme.tc, classTypeRef, Modifiers(Implicit)))
             ),
-            opsAppliedRef,
+            dependentOpsRef,
             New(Template(emptyConstructor, List(opsAppliedRef), EmptyValDef, List(
-              ValDef(nme.self, appliedTparamRef, Ident(nme.target)),
-              ValDef(nme.typeClassInstance, classTypeRef, Ident(nme.tc))
+              ValDef(nme.self, SingletonTypeTree(Ident(nme.target)), Ident(nme.target)),
+              ValDef(nme.typeClassInstance, SingletonTypeTree(Ident(nme.tc)), Ident(nme.tc))
             )))
           ).withFlags(Synthetic | Implicit)
 
@@ -866,10 +872,19 @@ object desugar {
 
         // object ops { ... }
         val opsObject = {
-          // implicit def toAllSemigroupOps[F[_], F$1](target: F[F$1])(implicit tc: Semigroup[F]): AllOps[F] = new AllOps[F, A] {
-          //   val self: F[F$1] = target
-          //   val typeClassInstance: C[F] = tc
-          // }
+
+          // AllOps[F, F$1] { val self: target.type; val typeClassInstance: tc.type }
+          val dependentAllOpsRef =
+            RefinedTypeTree(allOpsAppliedRef, List(
+              ValDef(nme.self, SingletonTypeTree(Ident(nme.target)), EmptyTree),
+              ValDef(nme.typeClassInstance, SingletonTypeTree(Ident(nme.tc)), EmptyTree)))
+
+          // implicit def toAll${C}Ops[F[_], F$1](target: F[F$1])(implicit tc: C[F])
+          //    : AllOps[F, F$1] { val self: target.type; val typeClassInstance: tc.type } =
+          //   new AllOps[F, F$1] {
+          //     val self: target.type = target
+          //     val typeClassInstance: tc.type = tc
+          //   }
           val toAllOpsMeth = DefDef(
             s"toAll${className}Ops".toTermName,
             methTparam :: hkMethTparams,
@@ -877,10 +892,10 @@ object desugar {
               List(makeParameter(nme.target, appliedTparamRef)),
               List(makeParameter(nme.tc, classTypeRef, Modifiers(Implicit)))
             ),
-            allOpsAppliedRef,
+            dependentAllOpsRef,
             New(Template(emptyConstructor, List(allOpsAppliedRef), EmptyValDef, List(
-              ValDef(nme.self, appliedTparamRef, Ident(nme.target)),
-              ValDef(nme.typeClassInstance, classTypeRef, Ident(nme.tc))
+              ValDef(nme.self, SingletonTypeTree(Ident(nme.target)), Ident(nme.target)),
+              ValDef(nme.typeClassInstance, SingletonTypeTree(Ident(nme.tc)), Ident(nme.tc))
             )))
           ).withFlags(Synthetic | Implicit)
 
