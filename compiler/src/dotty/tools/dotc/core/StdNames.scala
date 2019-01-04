@@ -480,6 +480,7 @@ object StdNames {
     val nmeNewTypeName: N       = "newTypeName"
     val noAutoTupling: N        = "noAutoTupling"
     val nonInheritedOps: N      = "nonInheritedOps"
+    val noop: N                 = "noop"
     val normalize: N            = "normalize"
     val notifyAll_ : N          = "notifyAll"
     val notify_ : N             = "notify"

@@ -152,8 +152,7 @@ object Test {
         def qux(x: Int) = x * 2
       }
       import Qux.ops._
-      // XXX: broken, dotty bug ?
-      // 1.op shouldBe -1 // Linearization causes the op override from bar to take precedence
+      1.op shouldBe -1 // Linearization causes the op override from bar to take precedence
     }
 
     // XXX: not implemented

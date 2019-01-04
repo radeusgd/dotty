@@ -679,6 +679,32 @@ object desugar {
                   false
               })
 
+              def opsMethodNames(origName: TermName, anns: List[Tree]): List[TermName] = {
+                val noop = anns.exists {
+                  case Apply(Select(New(Ident(tpnme.noop)), nme.CONSTRUCTOR), _) =>
+                    true
+                  case _ =>
+                    false
+                }
+                if (noop)
+                  Nil
+                else {
+                  val (opAnn, otherAnns) = tree.mods.annotations.partition({
+                    case Apply(Select(New(Ident(tpnme.op)), nme.CONSTRUCTOR), _) =>
+                      true
+                    case _ =>
+                      false
+                  })
+
+                  if (opAnn.isEmpty)
+                    List(origName)
+                  else {
+                    val opArgs = opAnn.flatMap(arguments)
+                    ???
+                  }
+                }
+              }
+
               /** The current tree applied to given argument lists:
                *  `tree (argss(0)) ... (argss(argss.length -1))`
                */
