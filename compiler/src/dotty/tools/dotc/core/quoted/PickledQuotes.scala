@@ -27,6 +27,8 @@ object PickledQuotes {
     if (ctx.reporter.hasErrors) Nil
     else {
       assert(!tree.isInstanceOf[Hole]) // Should not be pickled as it represents `'{$x}` which should be optimized to `x`
+//      println(tree.show)
+//      println()
       val pickled = pickle(tree)
       TastyString.pickle(pickled)
     }

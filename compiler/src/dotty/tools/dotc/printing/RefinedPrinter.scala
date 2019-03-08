@@ -328,7 +328,7 @@ class RefinedPrinter(_ctx: Context) extends PlainPrinter(_ctx) {
         if (name.isTypeName) typeText(txt)
         else txt
       case tree @ Select(qual, name) =>
-        if (tree.hasType && tree.symbol == defn.QuotedExpr_splice) keywordStr("${") ~ toTextLocal(qual) ~ keywordStr("}")
+        if (tree.hasType && tree.symbol == defn.InternalQuoted_exprSplice) keywordStr("${") ~ toTextLocal(qual) ~ keywordStr("}") // TODO move this to typeApplyText
         else if (tree.hasType && tree.symbol == defn.QuotedType_splice) typeText("${") ~ toTextLocal(qual) ~ typeText("}")
         else if (qual.isType) toTextLocal(qual) ~ "#" ~ typeText(toText(name))
         else toTextLocal(qual) ~ ("." ~ nameIdText(tree) provided name != nme.CONSTRUCTOR)

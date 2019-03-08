@@ -22,7 +22,7 @@ object StagedTuple {
       case Some(4) =>
         tup.as[Tuple4[Object, Object, Object, Object]].bind(t => '{Array($t._1, $t._2, $t._3, $t._4)})
       case Some(n) if n <= MaxSpecialized =>
-        '{to$Array($tup, ${ n.toExpr })}
+        '{to$Array($tup, ${ Liftable.IntIsLiftable.toExpr(n) })}
       case Some(n) =>
         '{${ tup.as[TupleXXL] }.elems}
       case None =>
@@ -68,7 +68,7 @@ object StagedTuple {
     val res =
       if (!specialize) '{dynamicSize($tup)}
       else size match {
-        case Some(n) => n.toExpr
+        case Some(n) => Liftable.IntIsLiftable.toExpr(n)
         case None => '{dynamicSize($tup)}
       }
     res.as[Res]
@@ -113,7 +113,8 @@ object StagedTuple {
           tup.as[Tuple5[_, _, _, _, _]].bind(t => '{Tuple4($t._2, $t._3, $t._4, $t._5)})
         case Some(n) if n > 5 =>
           val arr = toArrayStaged(tup, size)
-          fromArrayStaged('{ $arr.tail }, Some(n - 1))
+          // fromArrayStaged('{ $arr.tail }, Some(n - 1))
+          ???
         case None =>
           '{dynamicTail($tup)}
       }
@@ -162,13 +163,13 @@ object StagedTuple {
         case Some(s) if s > 4 && s <= MaxSpecialized =>
           val t = tup.as[Product]
           nValue match {
-            case Some(n) if n >= 0 && n < s => '{$t.productElement(${ n.toExpr })}
+            case Some(n) if n >= 0 && n < s => '{$t.productElement(${ Liftable.IntIsLiftable.toExpr(n) })}
             case _ => fallbackApply()
           }
         case Some(s) if s > MaxSpecialized =>
           val t = tup.as[TupleXXL]
           nValue match {
-            case Some(n) if n >= 0 && n < s => '{$t.elems(${ n.toExpr })}
+            case Some(n) if n >= 0 && n < s => '{$t.elems(${ Liftable.IntIsLiftable.toExpr(n) })}
             case _ => fallbackApply()
           }
         case _ => fallbackApply()
@@ -203,7 +204,8 @@ object StagedTuple {
     if (!specialize) '{dynamic_++[Self, That]($self, $that)}
     else {
       def genericConcat(xs: Expr[Tuple], ys: Expr[Tuple]): Expr[Tuple] =
-        fromArrayStaged[Tuple]('{${ toArrayStaged(xs, None) } ++ ${ toArrayStaged(ys, None) }}, None)
+        ???
+        // fromArrayStaged[Tuple]('{${ toArrayStaged(xs, None) } ++ ${ toArrayStaged(ys, None) }}, None)
 
       val res = selfSize match {
         case Some(0) =>

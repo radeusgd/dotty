@@ -1944,7 +1944,28 @@ class Typer extends Namer
   /** Translate `${ t: Expr[T] }` into expresiion `t.splice` while tracking the quotation level in the context */
   def typedSplice(tree: untpd.Splice, pt: Type)(implicit ctx: Context): Tree = track("typedSplice") {
     checkSpliceOutsideQuote(tree)
-    typedSelect(untpd.Select(tree.expr, nme.splice), pt)(spliceContext).withSpan(tree.span)
+    if (tree.isType) typedSelect(untpd.Select(tree.expr, nme.splice), pt)(spliceContext).withSpan(tree.span)
+    else {
+//      val a = typed(tree.expr, defn.QuotedExprType.appliedTo(pt))(spliceContext)
+////      println("=========================")
+////      println(tree.show)
+////      println()
+////      a.tpe.show
+////      println()
+////      println()
+////      println()
+//
+//      a.tpe.widenTermRefExpr match {
+//        case tp: AppliedType =>
+//          tpd.ref(defn.InternalQuoted_exprSpliceR).appliedToType(tp.args.head).appliedTo(a)
+//        case tp: ErrorType => a
+//      }
+
+      // or ?
+
+      typedApply(untpd.Apply(untpd.ref(defn.InternalQuoted_exprSpliceR), tree.expr), pt)(spliceContext)
+
+    }
   }
 
   /** Translate ${ t: Type[T] }` into type `t.splice` while tracking the quotation level in the context */
