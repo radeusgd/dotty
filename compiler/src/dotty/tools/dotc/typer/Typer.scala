@@ -1957,6 +1957,7 @@ class Typer extends Namer
   }
 
   def splitQuotePattern(quoted: Tree)(implicit ctx: Context): (Tree, List[Tree]) = {
+    val ctx0 = ctx
     object splitter extends tpd.TreeMap {
       val patBuf = new mutable.ListBuffer[Tree]
       override def transform(tree: Tree)(implicit ctx: Context) = tree match {
@@ -1966,6 +1967,13 @@ class Typer extends Namer
         case Splice(pat) =>
           try patternHole(tree)
           finally patBuf += pat
+        case vdef: ValDef =>
+          if (vdef.symbol.annotations.exists(_.symbol == defn.InternalQuoted_patternBindHoleAnnot)) {
+            val tpe = AppliedType(defn.QuotedMatchingBindingType, vdef.tpt.tpe :: Nil)
+            val sym = ctx0.newPatternBoundSymbol(vdef.name, tpe, vdef.span)
+            patBuf += Bind(sym, untpd.Ident(nme.WILDCARD).withType(tpe)).withSpan(vdef.span)
+          }
+          super.transform(tree)
         case _ =>
           super.transform(tree)
       }
