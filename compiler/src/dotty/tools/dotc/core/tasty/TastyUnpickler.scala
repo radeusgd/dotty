@@ -61,6 +61,8 @@ class TastyUnpickler(reader: TastyReader) {
         val params = until(end)(readName().toTypeName)
         var sig = Signature(params, result)
         SignedName(original, sig)
+      case BACKQUOTED =>
+        BackquotedName(readName())
       case _ =>
         simpleNameKindOfTag(tag)(readName())
     }

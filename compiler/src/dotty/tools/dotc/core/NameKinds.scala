@@ -265,6 +265,16 @@ object NameKinds {
     }
   }
 
+  class BackquotedName extends NameKind(BACKQUOTED) {
+    type ThisInfo = Info
+    private[this] val info = new Info
+    def apply(name: TermName): TermName = name.derived(info)
+    def mkString(underlying: TermName, info: ThisInfo): String = str.sanitize(underlying.toString)
+    def infoString: String = "Backquoted"
+  }
+
+  val BackquotedName: BackquotedName = new BackquotedName
+
   /** Expanded names of the form `prefix $_setter_$ name`. These only occur in Scala2. */
   val TraitSetterName: QualifiedNameKind = new QualifiedNameKind(TRAITSETTER, str.TRAIT_SETTER_SEPARATOR)
 

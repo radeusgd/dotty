@@ -248,7 +248,7 @@ Standard Section: "Comments" Comment*
 object TastyFormat {
 
   final val header: Array[Int] = Array(0x5C, 0xA1, 0xAB, 0x1F)
-  val MajorVersion: Int = 13
+  val MajorVersion: Int = 14
   val MinorVersion: Int = 0
 
   /** Tags used to serialize names */
@@ -271,6 +271,8 @@ object TastyFormat {
 
     final val VARIANT = 12           // A name `+<name>` o `-<name>` indicating
                                      // a co- or contra-variant parameter of a type lambda.
+
+    final val BACKQUOTED = 14        // A name that was writen with backquotes
 
     final val SUPERACCESSOR = 20     // The name of a super accessor `super$name` created by SuperAccesors.
 

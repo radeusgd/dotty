@@ -403,10 +403,12 @@ object Parsers {
     /** Convert tree to formal parameter
     */
     def convertToParam(tree: Tree, expected: String = "formal parameter"): ValDef = tree match {
-      case Ident(name) =>
-        makeParameter(name.asTermName, TypeTree()).withSpan(tree.span)
-      case Typed(Ident(name), tpt) =>
-        makeParameter(name.asTermName, tpt).withSpan(tree.span)
+      case id @ Ident(name) =>
+        val name1 = if (id.isBackquoted) NameKinds.BackquotedName(name.asTermName) else name.asTermName // TODO encode directly in the Ident istead of using a BackquoteIdent
+        makeParameter(name1, TypeTree()).withSpan(tree.span)
+      case Typed(id @ Ident(name), tpt) =>
+        val name1 = if (id.isBackquoted) NameKinds.BackquotedName(name.asTermName) else name.asTermName // TODO encode directly in the Ident istead of using a BackquoteIdent
+        makeParameter(name1, tpt).withSpan(tree.span)
       case Typed(Splice(Ident(name)), tpt) =>
         makeParameter(("$" + name).toTermName, tpt).withSpan(tree.span)
       case _ =>
@@ -2358,7 +2360,8 @@ object Parsers {
         } else EmptyTree
       lhs match {
         case (id @ Ident(name: TermName)) :: Nil => {
-          finalizeDef(ValDef(name, tpt, rhs), mods, start)
+          val name1 = if (id.isBackquoted) NameKinds.BackquotedName(name) else name // TODO encode directly in the Ident istead of using a BackquoteIdent
+          finalizeDef(ValDef(name1, tpt, rhs), mods, start)
         } case _ =>
           PatDef(mods, lhs, tpt, rhs)
       }
