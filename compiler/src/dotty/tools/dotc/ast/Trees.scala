@@ -372,14 +372,7 @@ object Trees {
     def qualifier: Tree[T] = genericEmptyTree
 
     /** Is this a `BackquotedIdent` ? */
-    def isBackquoted: Boolean = false
-  }
-
-  class BackquotedIdent[-T >: Untyped]private[ast] (name: Name)(implicit @constructorOnly src: SourceFile)
-    extends Ident[T](name) {
-    override def isBackquoted: Boolean = true
-
-    override def toString: String = s"BackquotedIdent($name)"
+    def isBackquoted: Boolean = name.is(NameKinds.BackquotedName)
   }
 
   class SearchFailureIdent[-T >: Untyped] private[ast] (name: Name)(implicit @constructorOnly src: SourceFile)
@@ -893,7 +886,6 @@ object Trees {
     type ValOrDefDef = Trees.ValOrDefDef[T]
 
     type Ident = Trees.Ident[T]
-    type BackquotedIdent = Trees.BackquotedIdent[T]
     type SearchFailureIdent = Trees.SearchFailureIdent[T]
     type Select = Trees.Select[T]
     type SelectWithSig = Trees.SelectWithSig[T]
@@ -980,9 +972,6 @@ object Trees {
         postProcess(tree, copied.withSpan(tree.span).withAttachmentsFrom(tree))
 
       def Ident(tree: Tree)(name: Name)(implicit ctx: Context): Ident = tree match {
-        case tree: BackquotedIdent =>
-          if (name == tree.name) tree
-          else finalize(tree, new BackquotedIdent(name)(sourceFile(tree)))
         case tree: Ident if name == tree.name => tree
         case _ => finalize(tree, untpd.Ident(name)(sourceFile(tree)))
       }

@@ -308,7 +308,7 @@ class RefinedPrinter(_ctx: Context) extends PlainPrinter(_ctx) {
     }
 
     tree match {
-      case id: Trees.BackquotedIdent[_] if !homogenizedView =>
+      case id: Trees.Ident[_] if id.isBackquoted && !homogenizedView =>
         "`" ~ toText(id.name) ~ "`"
       case id: Trees.SearchFailureIdent[_] =>
         tree.typeOpt match {

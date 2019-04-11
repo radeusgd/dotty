@@ -404,11 +404,9 @@ object Parsers {
     */
     def convertToParam(tree: Tree, expected: String = "formal parameter"): ValDef = tree match {
       case id @ Ident(name) =>
-        val name1 = if (id.isBackquoted) NameKinds.BackquotedName(name.asTermName) else name.asTermName // TODO encode directly in the Ident istead of using a BackquoteIdent
-        makeParameter(name1, TypeTree()).withSpan(tree.span)
+        makeParameter(name.asTermName, TypeTree()).withSpan(tree.span)
       case Typed(id @ Ident(name), tpt) =>
-        val name1 = if (id.isBackquoted) NameKinds.BackquotedName(name.asTermName) else name.asTermName // TODO encode directly in the Ident istead of using a BackquoteIdent
-        makeParameter(name1, tpt).withSpan(tree.span)
+        makeParameter(name.asTermName, tpt).withSpan(tree.span)
       case Typed(Splice(Ident(name)), tpt) =>
         makeParameter(("$" + name).toTermName, tpt).withSpan(tree.span)
       case _ =>
@@ -613,7 +611,7 @@ object Parsers {
 
     private def makeIdent(tok: Token, offset: Offset, name: Name) = {
       val tree =
-        if (tok == BACKQUOTED_IDENT) BackquotedIdent(name)
+        if (tok == BACKQUOTED_IDENT) Ident(NameKinds.BackquotedName(name.toTermName))
         else Ident(name)
 
       // Make sure that even trees with parsing errors have a offset that is within the offset
