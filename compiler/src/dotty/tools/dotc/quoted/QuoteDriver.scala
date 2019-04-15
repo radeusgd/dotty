@@ -6,7 +6,7 @@ import dotty.tools.dotc.core.Contexts.{Context, ContextBase, FreshContext}
 import dotty.tools.dotc.tastyreflect.ReflectionImpl
 import dotty.tools.io.{AbstractFile, Directory, PlainDirectory, VirtualDirectory}
 import dotty.tools.repl.AbstractFileClassLoader
-
+import dotty.tools.dotc.reporting._
 import scala.quoted.{Expr, Type}
 import scala.quoted.Toolbox
 import java.net.URLClassLoader
@@ -49,6 +49,7 @@ class QuoteDriver(appClassloader: ClassLoader) extends Driver {
 
   private def doShow(tree: Tree, ctx: Context): String = {
     implicit val c: Context = ctx
+
     val tree1 =
       if (ctx.settings.YshowRawQuoteTrees.value) tree
       else (new TreeCleaner).transform(tree)
@@ -65,12 +66,18 @@ class QuoteDriver(appClassloader: ClassLoader) extends Driver {
   def withTree[T](expr: Expr[_], f: (Tree, Context) => T, settings: Toolbox.Settings): T = {
     val ctx = setToolboxSettings(setup(settings.compilerArgs.toArray :+ "dummy.scala", initCtx.fresh)._2.fresh, settings)
 
+    ctx.setReporter(new ConsoleReporter)
+
     var output: Option[T] = None
     def registerTree(tree: tpd.Tree)(ctx: Context): Unit = {
       assert(output.isEmpty)
       output = Some(f(tree, ctx))
     }
     new QuoteDecompiler(registerTree).newRun(ctx).compileExpr(expr)
+
+    println(ctx.reporter.hasErrors)
+    ctx.reporter.flush()(ctx)
+
     output.getOrElse(throw new Exception("Could not extract " + expr))
   }
 
