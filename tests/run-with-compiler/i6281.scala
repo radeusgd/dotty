@@ -25,13 +25,15 @@ object Test {
   }
 
   implied cons1 for Effects[Int :: Int :: HNil] {
-    def reify[A] given Type[A]   = m1 => '{ k1 => ${ '{ k => ${ (m1(a1 => k2 => ('k1(a1)).apply('{ a => ${  k2('a) } }))).apply(a => 'k(a)) }}}}
-    def reflect[A] given Type[A] = m =>    k =>    k3 => m('{ a => ${ '{ k2 => ${ k('a)(a => 'k2(a)) }} } })('{ a2 => ${  k3('a2) } })
+    def reify[A] given Type[A]   = m1 => '{ k1 => (k3: Int => Int) => ${ (m1.apply(a1 => (k2: Expr[Int] => Expr[Int]) => ('k1(a1)).apply('{ a => ${  k2('a) } }))).apply(a => 'k3(a))}}
+    def reflect[A] given Type[A] = m1 => k1 => (k3: Expr[Int] => Expr[Int]) => m1.apply('{ a: A => (k2: Int => Int) => ${ k1('a).apply(a => 'k2(a)) }}).apply('{ a2 => ${ k3('a2)}})
   }
 
+  // def reify[A] given Type[A]   = m => '{ k => ${ Effects[L].reify[Int] { m(a =>  (k1: quoted.Expr[A] => (quoted.Expr[Int] => quoted.Expr[Int]) => quoted.Expr[Int]) => (k3: Expr[Int] => Expr[Int]) => ('k(a)).apply('{ a: A => (k2: Int => Int) => ${ k1('a).apply(a => 'k2(a)) }}).apply('{ a2 => ${ k3('a2)}})) }}}
+
   implied cons [L <: HList] given Effects[L] given Type[L] for Effects[Int :: L] {
-    def reify[A] given Type[A]   = m => '{ k => ${ Effects[L].reify[Int] {   m(   a =>    Effects[L].reflect[Int]('k(a))) } }}
-    def reflect[A] given Type[A] = m =>    k =>    Effects[L].reflect[Int] { m('{ a => ${ Effects[L].reify[Int](   k('a)) } })}
+    def reify[A] given Type[A]   = m => '{ k => ${ Effects[L].reify[Int] { m(a => Effects[L].reflect[Int]('k(a))) }}}
+    def reflect[A] given Type[A] = m =>    k =>    Effects[L].reflect[Int] { m('{ a => ${ Effects[L].reify[Int](k('a)) } })}
   }
 
   def Effects[L <: HList] given Effects[L]: Effects[L] = the[Effects[L]]
