@@ -6,7 +6,7 @@ package matching
  *  @param name string name of this symbol
  *  @param id unique id used for equality
  */
-class Sym[T <: AnyKind] private[scala](val name: String, private[Sym] val id: Object) { self =>
+class Sym[T <: AnyKind] (val name: String, private[Sym] val id: Object) { self =>
 
   override def equals(obj: Any): Boolean = obj match {
     case obj: Sym[_] => obj.id == id
@@ -23,6 +23,9 @@ object Sym {
     import qctx.tasty.{_, given}
     expr.unseal match {
       case ref: Ident =>
+        val sym = ref.symbol
+        Some(new Sym[T](sym.name, sym))
+      case Typed(IsIdent(ref), _) =>
         val sym = ref.symbol
         Some(new Sym[T](sym.name, sym))
       case _ => None
