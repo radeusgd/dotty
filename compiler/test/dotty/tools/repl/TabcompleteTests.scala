@@ -147,4 +147,24 @@ class TabcompleteTests extends ReplTest {
     assertEquals(List("implicitVal"), tabComplete("import implied Foo.impl"))
     assertEquals(List("explicitVal"), tabComplete("import Foo.expl"))
   }
+
+  @Test def importModesTests = fromInitialState { implicit state =>
+    val src = """
+    object foo {
+      implied x1 for Int = 10
+      implied x2 for Double = 2.5
+
+      val x3 = 1
+      val x4 = 2
+    }""".stripMargin
+    run(src)
+  }.andThen { implicit state =>
+    assertEquals(List("x3","x4"), tabComplete("import foo._; x"))
+    assertEquals(List("x3"), tabComplete("import foo.{ _, x4 => _ }; x"))
+    assertEquals(List("stuff"), tabComplete("import foo.{ _, x3 => stuff }; x/*4*/; stu"))
+    assertEquals(List("x1","x2"), tabComplete("import implied foo._; x"))
+    assertEquals(List("x1"), tabComplete("import implied foo.{ _, x2 => _ }; x"))
+    assertEquals(List("x2"), tabComplete("import implied foo.{ _, x1 => stuff }; x"))
+    assertEquals(List("stuff"), tabComplete("import implied foo.{ _, x1 => stuff }; stu"))
+  }
 }
