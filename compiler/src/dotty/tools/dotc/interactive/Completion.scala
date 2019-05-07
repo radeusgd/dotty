@@ -232,18 +232,18 @@ object Completion {
      * If `sym` exists, no symbol with the same name is already included, and it satisfies the
      * inclusion filter, then add it to the completions.
      */
-    private def add(sym: Symbol, nameInScope: Name)(implicit ctx: Context) =
+    private def add(sym: Symbol, nameInScope: Name, mode: ImportMode = ImportMode.All)(implicit ctx: Context) =
       if (sym.exists &&
           completionsFilter(NoType, nameInScope) &&
           !completions.lookup(nameInScope).exists &&
-          include(sym, nameInScope)) {
+          include(sym, nameInScope, mode)) {
         completions.enter(sym, nameInScope)
       }
 
     /** Lookup members `name` from `site`, and try to add them to the completion list. */
-    private def addMember(site: Type, name: Name, nameInScope: Name)(implicit ctx: Context) =
+    private def addMember(site: Type, name: Name, nameInScope: Name, mode: ImportMode = ImportMode.All)(implicit ctx: Context) =
       if (!completions.lookup(nameInScope).exists) {
-        for (alt <- site.member(name).alternatives) add(alt.symbol, nameInScope)
+        for (alt <- site.member(name).alternatives) add(alt.symbol, nameInScope, mode)
       }
 
     /** Include in completion sets only symbols that
@@ -307,18 +307,28 @@ object Completion {
     private def addImportCompletions(implicit ctx: Context): Unit = {
       val imp = ctx.importInfo
       if (imp != null) {
-        def addImport(name: TermName, nameInScope: TermName) = {
-          addMember(imp.site, name, nameInScope)
-          addMember(imp.site, name.toTypeName, nameInScope.toTypeName)
+        val impMode = ImportMode(imp.importImplied)
+
+        def addImport(name: TermName, nameInScope: TermName, mode: ImportMode) = {
+          addMember(imp.site, name, nameInScope, mode)
+          addMember(imp.site, name.toTypeName, nameInScope.toTypeName, mode)
         }
-        imp.reverseMapping.foreachBinding { (nameInScope, original) =>
-          if (original != nameInScope || !imp.excluded.contains(original)) {
-            addImport(original, nameInScope)
-          }
-        }
+
+        val namesMap = imp.reverseMapping.map2 { case (renamed, original) => original -> renamed }.toMap
+
         if (imp.isWildcardImport)
-          for (mbr <- accessibleMembers(imp.site) if !imp.excluded.contains(mbr.name.toTermName))
-            addMember(imp.site, mbr.name, mbr.name)
+          for {
+            mbr <- accessibleMembers(imp.site, impMode)       // All members
+            original = mbr.name.toTermName
+            renamed  = namesMap.getOrElse(original, original) // Map Renamed
+            if !imp.excluded.contains(renamed)    // Exclude hidden
+          } addImport(original, renamed, impMode)
+        else
+          imp.reverseMapping.foreachBinding { (nameInScope, original) =>
+            if (original != nameInScope || !imp.excluded.contains(original)) {
+              addImport(original, nameInScope, impMode)
+            }
+          }
       }
     }
 
