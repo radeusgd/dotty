@@ -1957,7 +1957,33 @@ class Typer extends Namer
         typed(innerExpr, pt)
       case quoted if quoted.isType =>
         ctx.compilationUnit.needsStaging = true
-        typedTypeApply(untpd.TypeApply(untpd.ref(defn.InternalQuoted_typeQuoteR), quoted :: Nil), pt)(quoteContext).withSpan(tree.span)
+        if (ctx.mode.is(Mode.Pattern) && level == 0) {
+//          val typePt = pt.baseType(defn.QuotedTypeClass)
+//          val quotedPt = if (typePt.exists) typePt.argTypesHi.head else defn.AnyType
+          val quoted1 = typedExpr(quoted, WildcardType)(quoteContext.addMode(Mode.QuotedPattern))
+          val (shape, splices) = splitQuotePattern(quoted1)
+          val patType = defn.tupleType(splices.tpes.map(_.widen))
+          val splicePat = typed(untpd.Tuple(splices.map(untpd.TypedSplice(_))).withSpan(quoted.span), patType)
+
+          println()
+          println(quoted.show)
+          println(quoted1.show)
+          println()
+          println(shape.show)
+          println(splices)
+          println()
+          println(patType)
+          println(splicePat)
+          println()
+          UnApply(
+            fun = ref(defn.InternalQuotedTypeMatcher_unapplyR).appliedToType(patType),
+            implicits =
+              ref(defn.InternalQuoted_typeQuoteR).appliedToTypeTrees(shape :: Nil) ::
+                implicitArgTree(defn.TastyReflectionType, tree.span) :: Nil,
+            patterns = splicePat :: Nil,
+            proto = pt)
+        } else
+          typedTypeApply(untpd.TypeApply(untpd.ref(defn.InternalQuoted_typeQuoteR), quoted :: Nil), pt)(quoteContext).withSpan(tree.span)
       case quoted =>
         ctx.compilationUnit.needsStaging = true
         if (ctx.mode.is(Mode.Pattern) && level == 0) {

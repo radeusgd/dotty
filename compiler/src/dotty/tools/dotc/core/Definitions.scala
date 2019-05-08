@@ -730,6 +730,12 @@ class Definitions {
     lazy val InternalQuotedMatcher_unapplyR: TermRef = InternalQuotedMatcherModule.requiredMethodRef(nme.unapply)
     def InternalQuotedMatcher_unapply(implicit ctx: Context) = InternalQuotedMatcher_unapplyR.symbol
 
+  lazy val InternalQuotedTypeMatcherModuleRef: TermRef = ctx.requiredModuleRef("scala.internal.quoted.TypeMatcher")
+  def InternalQuotedTypeMatcherModule(implicit ctx: Context): Symbol = InternalQuotedTypeMatcherModuleRef.symbol
+
+    lazy val InternalQuotedTypeMatcher_unapplyR: TermRef = InternalQuotedTypeMatcherModule.requiredMethodRef(nme.unapply)
+    def InternalQuotedTypeMatcher_unapply(implicit ctx: Context) = InternalQuotedTypeMatcher_unapplyR.symbol
+
   lazy val QuotedExprsModule: TermSymbol = ctx.requiredModule("scala.quoted.Exprs")
   def QuotedExprsClass(implicit ctx: Context): ClassSymbol = QuotedExprsModule.asClass
 
