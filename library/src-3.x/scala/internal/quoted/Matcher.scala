@@ -315,9 +315,9 @@ object Matcher {
   }
 
   /** Result of matching a part of an expression */
-  private opaque type Matching = Option[Tuple]
+  opaque type Matching = Option[Tuple]
 
-  private object Matching {
+  object Matching {
 
     def notMatched: Matching = None
     val matched: Matching = Some(())

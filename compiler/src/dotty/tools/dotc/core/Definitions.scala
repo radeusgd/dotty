@@ -722,6 +722,8 @@ class Definitions {
     def InternalQuoted_typeQuote(implicit ctx: Context): Symbol = InternalQuoted_typeQuoteR.symbol
     lazy val InternalQuoted_patternHoleR: TermRef = InternalQuotedModule.requiredMethodRef("patternHole")
     def InternalQuoted_patternHole(implicit ctx: Context): Symbol = InternalQuoted_patternHoleR.symbol
+    lazy val InternalQuoted_typePatternHoleR: TypeRef = InternalQuotedModule.requiredType("typePatternHole").typeRef
+    def InternalQuoted_typePatternHole(implicit ctx: Context): Symbol = InternalQuoted_typePatternHoleR.symbol
     lazy val InternalQuoted_patternBindHoleAnnot: ClassSymbol = InternalQuotedModule.requiredClass("patternBindHole")
 
   lazy val InternalQuotedMatcherModuleRef: TermRef = ctx.requiredModuleRef("scala.internal.quoted.Matcher")

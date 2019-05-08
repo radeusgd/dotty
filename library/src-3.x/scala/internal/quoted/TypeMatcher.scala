@@ -10,7 +10,7 @@ object TypeMatcher {
   import Matcher.Matching
   import Matcher.Matching._
 
-  private final val debug = false
+  private final val debug = true
 
   /** Pattern matches an the scrutineeType aquainsnt the patternType and returns a tuple
    *  with the matched holes if successful.
@@ -32,7 +32,7 @@ object TypeMatcher {
    *  @param reflection instance of the reflection API (implicitly provided by the macro)
    *  @return None if it did not match, `Some(tup)` if it matched where `tup` contains `Expr[Ti]``
    */
-  def unapply[Tup <: Tuple](scrutineeType: Type[_])(implicit patternType: Type[_], reflection: Reflection): Option[Tup] = {
+  def unapply[Bindings <: Tuple, Tup <: Tuple](scrutineeType: Type[_])(implicit patternType: Type[_], reflection: Reflection): Option[Tup] = {
     // TODO improve performance
     import reflection.{Bind => BindPattern, _}
     import Matching._
@@ -164,7 +164,7 @@ object TypeMatcher {
         case (IsTypeTree(scrutinee @ TypeIdent(_)), IsTypeTree(pattern @ TypeIdent(_))) if scrutinee.symbol == pattern.symbol =>
           matched
 
-        case (IsInferred(scrutinee), IsInferred(pattern)) if scrutinee.tpe <:< pattern.tpe =>
+        case (IsInferred(scrutinee), IsTypeTree(pattern)) if scrutinee.tpe =:= pattern.tpe =>
           matched
 
         case (Applied(tycon1, args1), Applied(tycon2, args2)) =>
