@@ -1,4 +1,4 @@
-[12..15] in A.scala
-Not found: foo
 [12..15] in B.scala
 Not found: bar
+[12..15] in A.scala
+Not found: foo

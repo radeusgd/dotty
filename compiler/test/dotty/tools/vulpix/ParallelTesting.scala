@@ -652,7 +652,7 @@ trait ParallelTesting extends RunnerOrchestration { self =>
       checkFile(testSource).foreach(diffTest(testSource, _, reporterOutputLines(reporters)))
 
     def reporterOutputLines(reporters: Seq[TestReporter]): List[String] =
-      reporters.flatMap(_.allErrors).sortBy(_.pos.source.toString).flatMap { error =>
+      reporters.flatMap(_.allErrors).sortBy(_.pos.source.toString).reverse.flatMap { error =>
         (error.pos.span.toString + " in " + error.pos.source.file.name) :: error.getMessage().linesIterator.toList }.toList
 
     // In neg-tests we allow two types of error annotations,
