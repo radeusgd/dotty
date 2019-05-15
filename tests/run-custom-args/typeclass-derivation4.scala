@@ -24,7 +24,7 @@ object Utils {
     // Add fallback for larger sizes
   }
 
-  inline def summonValues[T] <: T = inline erasedValue[Id[T]] match {
+  inline def summonValues[T] <: Tuple = inline erasedValue[T] match {
     case _: Unit => ()
     case _: (a *: b) => constValue[a] *: summonValues[b]
   }
@@ -253,15 +253,10 @@ object K0 {
     case a *: b => a | ToUnion[b]
   }
 
-  // Workaround for missing literal types for negative Ints
-  def narrow(x: Any): Id[x.type] = x
-  val m1 = narrow(-1)
-  type M1 = m1.type
-
   type IndexOf[E, X] = IndexOf0[E, X, 0]
 
   type IndexOf0[E, X, I <: Int] <: Int = X match {
-    case Unit => M1
+    case Unit => -1
     case x *: xs => x match {
       case E => I
       case _ => IndexOf0[E, xs, S[I]]

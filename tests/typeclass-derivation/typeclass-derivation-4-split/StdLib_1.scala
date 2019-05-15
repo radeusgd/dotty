@@ -23,7 +23,7 @@ object Utils {
     // Add fallback for larger sizes
   }
 
-  inline def summonValues[T] <: T = inline erasedValue[Id[T]] match {
+  inline def summonValues[T] <: Tuple = inline erasedValue[T] match {
     case _: Unit => ()
     case _: (a *: b) => constValue[a] *: summonValues[b]
   }
