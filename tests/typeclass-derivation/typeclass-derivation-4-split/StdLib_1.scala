@@ -6,6 +6,7 @@ import scala.compiletime._
 object Utils {
   type Id[t] = t
   type Const[c] = [t] => c
+  case class Wrap[T](t: T)
 
   type ~>[A[_], B[_]] = [t] -> A[t] => B[t]
 

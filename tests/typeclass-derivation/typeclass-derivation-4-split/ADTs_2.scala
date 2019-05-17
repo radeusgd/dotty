@@ -87,7 +87,7 @@ object Opt extends Mirror.Sum {
   type MirroredType = Opt
   type MonoType = Opt[_]
   type Label = "Opt"
-  type ElemTypes = [t] => (Sm[t], Const[Nn.type][t])
+  type ElemTypes = [t] => (Sm[t], Nn.type)
   type ElemLabels = ("Sm", "Nn")
 
   def ordinal(x: MonoType): Int = x match {
@@ -144,7 +144,7 @@ object CList extends Mirror.Sum {
   type MirroredType = CList
   type MonoType = CList[_]
   type Label = "CList"
-  type ElemTypes = [t] => (CCons[t], Const[CNil.type][t])
+  type ElemTypes = [t] => (CCons[t], CNil.type)
   type ElemLabels = ("CCons", "CNil")
 
   def ordinal(x: MonoType): Int = x match {
@@ -239,8 +239,7 @@ object ListF extends Mirror.Sum {
   type MirroredType = ListF
   type MonoType = ListF[_, _]
   type Label = "ListF"
-  type Const[c] = [t, u] => c
-  type ElemTypes = [t, u] => (ConsF[t, u], Const[NilF.type][t, u])
+  type ElemTypes = [t, u] => (ConsF[t, u], NilF.type)
   type ElemLabels = ("ConsF", "NilF")
 
   def ordinal(x: MonoType): Int = x match {
