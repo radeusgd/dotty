@@ -36,23 +36,22 @@ object Utils {
 
 case class Labelling[T](label: String, elemLabels: Seq[String])
 object Labelling {
-  inline implicit def apply[T0](implicit mirror: Mirror { type MirroredType = T0 }): Labelling[T0] =
+  inline implicit def apply[T0](implicit mirror: Mirror[_] { type MirroredType = T0 }): Labelling[T0] =
     Labelling[T0](constValue[mirror.Label & String], WrappedArray.make[String](Utils.summonValuesAsArray[mirror.ElemLabels]))
 }
 
-sealed trait Mirror {
+sealed trait Mirror[MonoType] {
   // type MirroredType <: AnyKind // possible, but not necessary
-  type MonoType
   type Label
   type ElemLabels
 }
 
 object Mirror {
-  trait Product extends Mirror {
+  trait Product[MonoType] extends Mirror[MonoType] {
     def fromProduct(p: scala.Product): MonoType
   }
 
-  trait Sum extends Mirror {
+  trait Sum[MonoType] extends Mirror[MonoType] {
     def ordinal(x: MonoType): Int
   }
 
@@ -91,7 +90,7 @@ abstract class ErasedInstances[FT] {
   def erasedMap(x: Any)(f: (Any, Any) => Any): Any
 }
 
-final class ErasedProductInstances[FT](val mirror: Mirror.Product, is0: => Array[Any]) extends ErasedInstances[FT] {
+final class ErasedProductInstances[FT](val mirror: Mirror.Product[_], is0: => Array[Any]) extends ErasedInstances[FT] {
   lazy val is = is0
 
   inline def toProduct(x: Any): Product = x.asInstanceOf[Product]
@@ -192,7 +191,7 @@ final class ErasedProductInstances[FT](val mirror: Mirror.Product, is0: => Array
   }
 }
 
-final class ErasedCoproductInstances[FT](mirror: Mirror.Sum, is0: => Array[Any]) extends ErasedInstances[FT] {
+final class ErasedCoproductInstances[FT](mirror: Mirror.Sum[_], is0: => Array[Any]) extends ErasedInstances[FT] {
   lazy val is = is0
 
   def ordinal(x: Any): Any = is(mirror.ordinal(x.asInstanceOf))
@@ -219,9 +218,9 @@ final class ErasedCoproductInstances[FT](mirror: Mirror.Sum, is0: => Array[Any])
 }
 
 object K0 {
-  type Generic[O] = Mirror { type MirroredType = O ; type ElemTypes }
-  type ProductGeneric[O] = Mirror.Product { type MirroredType = O ; type ElemTypes }
-  type CoproductGeneric[O] = Mirror.Sum { type MirroredType = O ; type ElemTypes }
+  type Generic[O] = Mirror[_] { type MirroredType = O ; type ElemTypes }
+  type ProductGeneric[O] = Mirror.Product[_] { type MirroredType = O ; type ElemTypes }
+  type CoproductGeneric[O] = Mirror.Sum[_] { type MirroredType = O ; type ElemTypes }
 
   def Generic[O](implicit gen: Generic[O]): Generic[O] { type ElemTypes = gen.ElemTypes ; type Label = gen.Label ; type ElemLabels = gen.ElemLabels } = gen
   def ProductGeneric[O](implicit gen: ProductGeneric[O]): ProductGeneric[O] { type ElemTypes = gen.ElemTypes ; type Label = gen.Label ; type ElemLabels = gen.ElemLabels } = gen
@@ -303,13 +302,13 @@ object K0 {
       inst.erasedFold2(x, y)(a.asInstanceOf)(f.asInstanceOf).asInstanceOf
   }
 
-  type ProductGenericR[O, R] = Mirror.Product { type MirroredType = O ; type ElemTypes = R }
-  type CoproductGenericR[O, R] = Mirror.Sum { type MirroredType = O ; type ElemTypes = R }
+  type ProductGenericR[O, R] = Mirror.Product[_] { type MirroredType = O ; type ElemTypes = R }
+  type CoproductGenericR[O, R] = Mirror.Sum[_] { type MirroredType = O ; type ElemTypes = R }
 
   inline implicit def mkInstances[F[_], T](implicit gen: Generic[T]): ErasedInstances[F[T]] =
     inline gen match {
-      case p: Mirror.Product   => mkProductInstances[F, T](gen.asInstanceOf[ProductGeneric[T] { type ElemTypes = gen.ElemTypes }])
-      case c: Mirror.Sum => mkCoproductInstances[F, T](gen.asInstanceOf[CoproductGeneric[T] { type ElemTypes = gen.ElemTypes }])
+      case p: Mirror.Product[_]   => mkProductInstances[F, T](gen.asInstanceOf[ProductGeneric[T] { type ElemTypes = gen.ElemTypes }])
+      case c: Mirror.Sum[_] => mkCoproductInstances[F, T](gen.asInstanceOf[CoproductGeneric[T] { type ElemTypes = gen.ElemTypes }])
     }
 
   inline implicit def mkProductInstances[F[_], T](implicit gen: ProductGeneric[T]): ErasedProductInstances[F[T]] =
@@ -320,9 +319,9 @@ object K0 {
 }
 
 object K1 {
-  type Generic[O[_]] = Mirror { type MirroredType = O ; type ElemTypes[_] }
-  type ProductGeneric[O[_]] = Mirror.Product { type MirroredType = O ; type ElemTypes[_] }
-  type CoproductGeneric[O[_]] = Mirror.Sum { type MirroredType = O ; type ElemTypes[_] }
+  type Generic[O[_]] = Mirror[_] { type MirroredType = O ; type ElemTypes[_] }
+  type ProductGeneric[O[_]] = Mirror.Product[_] { type MirroredType = O ; type ElemTypes[_] }
+  type CoproductGeneric[O[_]] = Mirror.Sum[_] { type MirroredType = O ; type ElemTypes[_] }
 
   def Generic[O[_]](implicit gen: Generic[O]): gen.type = gen
   def ProductGeneric[O[_]](implicit gen: ProductGeneric[O]): gen.type = gen
@@ -401,8 +400,8 @@ object K1 {
 
   inline implicit def mkInstances[F[_[_]], T[_]](implicit gen: Generic[T]): ErasedInstances[F[T]] =
     inline gen match {
-      case p: Mirror.Product   => mkProductInstances[F, T](gen.asInstanceOf[ProductGeneric[T] { type ElemTypes = gen.ElemTypes }])
-      case c: Mirror.Sum => mkCoproductInstances[F, T](gen.asInstanceOf[CoproductGeneric[T] { type ElemTypes = gen.ElemTypes }])
+      case p: Mirror.Product[_]   => mkProductInstances[F, T](gen.asInstanceOf[ProductGeneric[T] { type ElemTypes = gen.ElemTypes }])
+      case c: Mirror.Sum[_] => mkCoproductInstances[F, T](gen.asInstanceOf[CoproductGeneric[T] { type ElemTypes = gen.ElemTypes }])
     }
 
   inline implicit def mkProductInstances[F[_[_]], T[_]](implicit gen: ProductGeneric[T]): ErasedProductInstances[F[T]] =
@@ -415,9 +414,9 @@ object K1 {
 }
 
 object K11 {
-  type Generic[O[_[_]]] = Mirror { type MirroredType = O ; type ElemTypes[_[_]] }
-  type ProductGeneric[O[_[_]]] = Mirror.Product { type MirroredType = O ; type ElemTypes[_[_]] }
-  type CoproductGeneric[O[_[_]]] = Mirror.Sum { type MirroredType = O ; type ElemTypes[_[_]] }
+  type Generic[O[_[_]]] = Mirror[_] { type MirroredType = O ; type ElemTypes[_[_]] }
+  type ProductGeneric[O[_[_]]] = Mirror.Product[_] { type MirroredType = O ; type ElemTypes[_[_]] }
+  type CoproductGeneric[O[_[_]]] = Mirror.Sum[_] { type MirroredType = O ; type ElemTypes[_[_]] }
 
   def Generic[O[_[_]]](implicit gen: Generic[O]): gen.type = gen
   def ProductGeneric[O[_[_]]](implicit gen: ProductGeneric[O]): gen.type = gen
@@ -477,8 +476,8 @@ object K11 {
 
   inline implicit def mkInstances[F[_[_[_]]], T[_[_]]](implicit gen: Generic[T]): ErasedInstances[F[T]] =
     inline gen match {
-      case p: Mirror.Product   => mkProductInstances[F, T](gen.asInstanceOf[ProductGeneric[T] { type ElemTypes = gen.ElemTypes }])
-      case c: Mirror.Sum => mkCoproductInstances[F, T](gen.asInstanceOf[CoproductGeneric[T] { type ElemTypes = gen.ElemTypes }])
+      case p: Mirror.Product[_]   => mkProductInstances[F, T](gen.asInstanceOf[ProductGeneric[T] { type ElemTypes = gen.ElemTypes }])
+      case c: Mirror.Sum[_] => mkCoproductInstances[F, T](gen.asInstanceOf[CoproductGeneric[T] { type ElemTypes = gen.ElemTypes }])
     }
 
   inline implicit def mkProductInstances[F[_[_[_]]], T[_[_]]](implicit gen: ProductGeneric[T]): ErasedProductInstances[F[T]] =
@@ -489,9 +488,9 @@ object K11 {
 }
 
 object K2 {
-  type Generic[O[_, _]] = Mirror { type MirroredType = O ; type ElemTypes[_, _] }
-  type ProductGeneric[O[_, _]] = Mirror.Product { type MirroredType = O ; type ElemTypes[_, _] }
-  type CoproductGeneric[O[_, _]] = Mirror.Sum { type MirroredType = O ; type ElemTypes[_, _] }
+  type Generic[O[_, _]] = Mirror[_] { type MirroredType = O ; type ElemTypes[_, _] }
+  type ProductGeneric[O[_, _]] = Mirror.Product[_] { type MirroredType = O ; type ElemTypes[_, _] }
+  type CoproductGeneric[O[_, _]] = Mirror.Sum[_] { type MirroredType = O ; type ElemTypes[_, _] }
 
   def Generic[O[_, _]](implicit gen: Generic[O]): gen.type = gen
   def ProductGeneric[O[_, _]](implicit gen: ProductGeneric[O]): gen.type = gen
@@ -554,8 +553,8 @@ object K2 {
 
   inline implicit def mkInstances[F[_[_, _]], T[_, _]](implicit gen: Generic[T]): ErasedInstances[F[T]] =
     inline gen match {
-      case p: Mirror.Product   => mkProductInstances[F, T](gen.asInstanceOf[ProductGeneric[T] { type ElemTypes = gen.ElemTypes }])
-      case c: Mirror.Sum => mkCoproductInstances[F, T](gen.asInstanceOf[CoproductGeneric[T] { type ElemTypes = gen.ElemTypes }])
+      case p: Mirror.Product[_]   => mkProductInstances[F, T](gen.asInstanceOf[ProductGeneric[T] { type ElemTypes = gen.ElemTypes }])
+      case c: Mirror.Sum[_] => mkCoproductInstances[F, T](gen.asInstanceOf[CoproductGeneric[T] { type ElemTypes = gen.ElemTypes }])
     }
 
   inline implicit def mkProductInstances[F[_[_, _]], T[_, _]](implicit gen: ProductGeneric[T]): ErasedProductInstances[F[T]] =
@@ -1118,34 +1117,31 @@ object Transform {
 import Mirror.productElement
 
 case class ISB(i: Int, s: String, b: Boolean)
-object ISB extends Mirror.Product {
+object ISB extends Mirror.Product[ISB] {
   type MirroredType = ISB
-  type MonoType = MirroredType
   type Label = "ISB"
   type ElemTypes = (Int, String, Boolean)
   type ElemLabels = ("i", "s", "b")
 
-  def fromProduct(p: Product): MonoType =
+  def fromProduct(p: Product): ISB =
     ISB(productElement[Int](p, 0), productElement[String](p, 1), productElement[Boolean](p, 2))
 
   inline implicit def mirror: this.type = this
 }
 
 case class Box[A](x: A)
-object Box extends Mirror.Product {
+object Box extends Mirror.Product[Box[_]] {
   type MirroredType = Box
-  type MonoType = Box[_]
   type Label = "Box"
   type ElemTypes = [t] => Tuple1[t]
   type ElemLabels = Tuple1["x"]
 
-  def fromProduct(p: Product): MonoType =
+  def fromProduct(p: Product): Box[_] =
     Box[Any](productElement[Any](p, 0))
 
   inline implicit def mirror: this.type = this
-  inline implicit def monoMirror[T]: Mirror.Product {
+  inline implicit def monoMirror[T]: Mirror.Product[Box[T]] {
     type MirroredType = Box.MirroredType[T]
-    type MonoType = MirroredType
     type Label = Box.Label
     type ElemTypes = Box.ElemTypes[T]
     type ElemLabels = Box.ElemLabels
@@ -1153,14 +1149,13 @@ object Box extends Mirror.Product {
 }
 
 sealed trait OptionInt
-object OptionInt extends Mirror.Sum {
+object OptionInt extends Mirror.Sum[OptionInt] {
   type MirroredType = OptionInt
-  type MonoType = MirroredType
   type Label = "OptionInt"
   type ElemTypes = (SomeInt, NoneInt.type)
   type ElemLabels = ("SomeInt", "NoneInt")
 
-  def ordinal(x: MonoType): Int = x match {
+  def ordinal(x: OptionInt): Int = x match {
     case _: SomeInt => 0
     case NoneInt => 1
   }
@@ -1169,49 +1164,45 @@ object OptionInt extends Mirror.Sum {
 }
 
 case class SomeInt(value: Int) extends OptionInt
-object SomeInt extends Mirror.Product {
+object SomeInt extends Mirror.Product[SomeInt] {
   type MirroredType = SomeInt
-  type MonoType = MirroredType
   type Label = "SomeInt"
   type ElemTypes = Tuple1[Int]
   type ElemLabels = Tuple1["value"]
 
-  def fromProduct(p: Product): MonoType =
+  def fromProduct(p: Product): SomeInt =
     SomeInt(productElement[Int](p, 0))
 
   inline implicit def mirror: this.type = this
 }
 
-case object NoneInt extends OptionInt with Mirror.Product {
+case object NoneInt extends OptionInt with Mirror.Product[NoneInt.type] {
   type MirroredType = NoneInt.type
-  type MonoType = MirroredType
   type Label = "NoneInt"
   type ElemTypes = Unit
   type ElemLabels = Unit
 
-  def fromProduct(p: Product): MonoType =
+  def fromProduct(p: Product): NoneInt.type =
     NoneInt
 
   inline implicit def mirror: this.type = this
 }
 
 sealed trait Opt[+A]
-object Opt extends Mirror.Sum {
+object Opt extends Mirror.Sum[Opt[_]] {
   type MirroredType = Opt
-  type MonoType = Opt[_]
   type Label = "Opt"
   type ElemTypes = [t] => (Sm[t], Nn.type)
   type ElemLabels = ("Sm", "Nn")
 
-  def ordinal(x: MonoType): Int = x match {
+  def ordinal(x: Opt[_]): Int = x match {
     case _: Sm[_] => 0
     case Nn => 1
   }
 
   inline implicit def mirror: this.type = this
-  inline implicit def monoMirror[T]: Mirror.Sum {
+  inline implicit def monoMirror[T]: Mirror.Sum[Opt[T]] {
     type MirroredType = Opt.MirroredType[T]
-    type MonoType = MirroredType
     type Label = Opt.Label
     type ElemTypes = Opt.ElemTypes[T]
     type ElemLabels = Opt.ElemLabels
@@ -1219,56 +1210,51 @@ object Opt extends Mirror.Sum {
 }
 
 case class Sm[+A](value: A) extends Opt[A]
-object Sm extends Mirror.Product {
+object Sm extends Mirror.Product[Sm[_]] {
   type MirroredType = Sm
-  type MonoType = Sm[_]
   type Label = "Sm"
   type ElemTypes = [t] => Tuple1[t]
   type ElemLabels = Tuple1["value"]
 
-  def fromProduct(p: Product): MonoType =
+  def fromProduct(p: Product): Sm[_] =
     Sm(productElement[Any](p, 0))
 
   inline implicit def mirror: this.type = this
-  inline implicit def monoMirror[T]: Mirror.Product {
+  inline implicit def monoMirror[T]: Mirror.Product[Sm[T]] {
     type MirroredType = Sm.MirroredType[T]
-    type MonoType = MirroredType
     type ElemTypes = Sm.ElemTypes[T]
     type Label = Sm.Label
     type ElemLabels = Sm.ElemLabels
   } = Sm.asInstanceOf
 }
 
-case object Nn extends Opt[Nothing] with Mirror.Product {
+case object Nn extends Opt[Nothing] with Mirror.Product[Nn.type] {
   type MirroredType = Nn.type
-  type MonoType = MirroredType
   type Label = "Nn"
   type ElemTypes = Unit
   type ElemLabels = Unit
 
-  def fromProduct(p: Product): MonoType =
+  def fromProduct(p: Product): Nn.type =
     Nn
 
   inline implicit def mirror: this.type = this
 }
 
 sealed trait CList[+A]
-object CList extends Mirror.Sum {
+object CList extends Mirror.Sum[CList[_]] {
   type MirroredType = CList
-  type MonoType = CList[_]
   type Label = "CList"
   type ElemTypes = [t] => (CCons[t], CNil.type)
   type ElemLabels = ("CCons", "CNil")
 
-  def ordinal(x: MonoType): Int = x match {
+  def ordinal(x: CList[_]): Int = x match {
     case _: CCons[_] => 0
     case CNil => 1
   }
 
   inline implicit def mirror: this.type = this
-  inline implicit def monoMirror[T]: Mirror.Sum {
+  inline implicit def monoMirror[T]: Mirror.Sum[CList[T]] {
     type MirroredType = CList.MirroredType[T]
-    type MonoType = MirroredType
     type Label = CList.Label
     type ElemTypes = CList.ElemTypes[T]
     type ElemLabels = CList.ElemLabels
@@ -1276,35 +1262,32 @@ object CList extends Mirror.Sum {
 }
 
 case class CCons[+A](hd: A, tl: CList[A]) extends CList[A]
-object CCons extends Mirror.Product {
+object CCons extends Mirror.Product[CCons[_]] {
   type MirroredType = CCons
-  type MonoType = CCons[_]
   type Label = "CCons"
   type ElemTypes = [t] => (t, CList[t])
   type ElemLabels = ("hd", "tl")
 
-  def fromProduct(p: Product): MonoType =
+  def fromProduct(p: Product): CCons[_] =
     CCons(productElement[Any](p, 0), productElement[CList[Any]](p, 1))
 
   inline implicit def mirror: this.type = this
-  inline implicit def monoMirror[T]: Mirror.Product {
+  inline implicit def monoMirror[T]: Mirror.Product[CCons[T]] {
     type MirroredType = CCons.MirroredType[T]
-    type MonoType = MirroredType
     type Label = CCons.Label
     type ElemTypes = CCons.ElemTypes[T]
     type ElemLabels = CCons.ElemLabels
   } = CCons.asInstanceOf
 }
 
-case object CNil extends CList[Nothing] with Mirror.Product {
+case object CNil extends CList[Nothing] with Mirror.Product[CNil.type] {
   type MirroredType = CNil.type
-  type MonoType = MirroredType
   type Label = "CNil"
   type ElemTypes = Unit
   type ElemLabels = Unit
 
   inline implicit def mirror: this.type = this
-  def fromProduct(p: Product): MonoType =
+  def fromProduct(p: Product): CNil.type =
     CNil
 }
 
@@ -1312,20 +1295,18 @@ case class Order[F[_]](
   item: F[String],
   quantity: F[Int]
 )
-object Order extends Mirror.Product {
+object Order extends Mirror.Product[Order[[_] => Any]] {
   type MirroredType = Order
-  type MonoType = Order[[_] => Any]
   type Label = "Order"
   type ElemTypes = [t[_]] => (t[String], t[Int])
   type ElemLabels = ("item", "quantity")
 
-  def fromProduct(p: Product): MonoType =
+  def fromProduct(p: Product): Order[[_] => Any] =
     Order[[_] => Any](productElement[Any](p, 0), productElement[Any](p, 1))
 
   inline implicit def mirror: this.type = this
-  inline implicit def monoMirror[F[_]]: Mirror.Product {
+  inline implicit def monoMirror[F[_]]: Mirror.Product[Order[F]] {
     type MirroredType = Order.MirroredType[F]
-    type MonoType = MirroredType
     type Label = Order.Label
     type ElemTypes = Order.ElemTypes[F]
     type ElemLabels = Order.ElemLabels
@@ -1346,24 +1327,22 @@ case class Given[T](value: T) extends OptionD[T]
 case class Default[T](value: T) extends OptionD[T]
 
 trait ListF[+A, +R]
-object ListF extends Mirror.Sum {
+object ListF extends Mirror.Sum[ListF[_, _]] {
   type List[A] = Fix[ListF, A]
 
   type MirroredType = ListF
-  type MonoType = ListF[_, _]
   type Label = "ListF"
   type ElemTypes = [t, u] => (ConsF[t, u], NilF.type)
   type ElemLabels = ("ConsF", "NilF")
 
-  def ordinal(x: MonoType): Int = x match {
+  def ordinal(x: ListF[_, _]): Int = x match {
     case _: ConsF[_, _] => 0
     case NilF => 1
   }
 
   inline implicit def mirror: this.type = this
-  inline implicit def monoMirror[T, U]: Mirror.Sum {
+  inline implicit def monoMirror[T, U]: Mirror.Sum[ListF[T, U]] {
     type MirroredType = ListF.MirroredType[T, U]
-    type MonoType = MirroredType
     type Label = ListF.Label
     type ElemTypes = ListF.ElemTypes[T, U]
     type ElemLabels = ListF.ElemLabels
@@ -1371,48 +1350,44 @@ object ListF extends Mirror.Sum {
 }
 
 case class ConsF[+A, +R](hd: A, tl: R) extends ListF[A, R]
-object ConsF extends Mirror.Product {
+object ConsF extends Mirror.Product[ConsF[_, _]] {
   type MirroredType = ConsF
-  type MonoType = ConsF[_, _]
   type Label = "ConsF"
   type ElemTypes = [t, u] => (t, u)
   type ElemLabels = ("hd", "tl")
 
-  def fromProduct(p: Product): MonoType =
+  def fromProduct(p: Product): ConsF[_, _] =
     ConsF(productElement[Any](p, 0), productElement[Any](p, 1))
 
   inline implicit def mirror: this.type = this
-  inline implicit def monoMirror[T, U]: Mirror.Product {
+  inline implicit def monoMirror[T, U]: Mirror.Product[ConsF[T, U]] {
     type MirroredType = ConsF.MirroredType[T, U]
-    type MonoType = MirroredType
     type Label = ConsF.Label
     type ElemTypes = ConsF.ElemTypes[T, U]
     type ElemLabels = ConsF.ElemLabels
   } = ConsF.asInstanceOf
 }
 
-case object NilF extends ListF[Nothing, Nothing] with Mirror.Product {
+case object NilF extends ListF[Nothing, Nothing] with Mirror.Product[NilF.type] {
   type MirroredType = NilF.type
-  type MonoType = MirroredType
   type Label = "NilF"
   type ElemTypes = Unit
   type ElemLabels = Unit
 
-  def fromProduct(p: Product): MonoType =
+  def fromProduct(p: Product): NilF.type =
     NilF
 
   inline implicit def mirror: this.type = this
 }
 
 case class BI(b: Boolean, i: Int)
-object BI extends Mirror.Product {
+object BI extends Mirror.Product[BI] {
   type MirroredType = BI
-  type MonoType = MirroredType
   type Label = "BI"
   type ElemTypes = (Boolean, Int)
   type ElemLabels = ("b", "i")
 
-  def fromProduct(p: Product): MonoType =
+  def fromProduct(p: Product): BI =
     BI(productElement[Boolean](p, 0), productElement[Int](p, 1))
 
   inline implicit def mirror: this.type = this
