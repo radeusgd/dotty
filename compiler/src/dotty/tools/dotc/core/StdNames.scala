@@ -410,6 +410,7 @@ object StdNames {
     val drop: N                 = "drop"
     val dynamics: N             = "dynamics"
     val elem: N                 = "elem"
+    val elems: N                = "elems"
     val emptyValDef: N          = "emptyValDef"
     val ensureAccessible : N    = "ensureAccessible"
     val enumTag: N              = "enumTag"
