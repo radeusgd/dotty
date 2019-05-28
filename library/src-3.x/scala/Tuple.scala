@@ -6,7 +6,7 @@ import internal._
 import scala.runtime.DynamicTuple
 
 /** Tuple of arbitrary arity */
-sealed trait Tuple extends Any {
+sealed trait Tuple extends Product {
   import Tuple._
 
   /** Create a copy this tuple as an Array */
@@ -45,7 +45,7 @@ object Tuple {
 
   /** Type of the concatenation of two tuples */
   type Concat[X <: Tuple, +Y <: Tuple] <: Tuple = X match {
-    case Unit => Y
+    case Tuple0.type => Y
     case x1 *: xs1 => x1 *: Concat[xs1, Y]
   }
 
@@ -60,7 +60,7 @@ object Tuple {
 
   /** Literal constant Int size of a tuple */
   type Size[X <: Tuple] <: Int = X match {
-    case Unit => 0
+    case Tuple0.type => 0
     case x *: xs => S[Size[xs]]
   }
 
@@ -80,7 +80,7 @@ object Tuple {
 }
 
 /** Tuple of arbitrary non-zero arity */
-sealed trait NonEmptyTuple extends Tuple with Product {
+sealed trait NonEmptyTuple extends Tuple {
   import Tuple._
 
   /** Get the i-th element of this tuple.
@@ -100,6 +100,8 @@ sealed trait NonEmptyTuple extends Tuple with Product {
     DynamicTuple.dynamicTail[This](this)
 
 }
+
+case object Tuple0 extends Tuple
 
 @showAsInfix
 sealed abstract class *:[+H, +T <: Tuple] extends NonEmptyTuple

@@ -29,7 +29,7 @@ object DynamicTuple {
   }
 
   def dynamicFromArray[T <: Tuple](xs: Array[Object]): T = xs.length match {
-    case 0  => ().asInstanceOf[T]
+    case 0  => Tuple0.asInstanceOf[T]
     case 1  => Tuple1(xs(0)).asInstanceOf[T]
     case 2  => Tuple2(xs(0), xs(1)).asInstanceOf[T]
     case 3  => Tuple3(xs(0), xs(1), xs(2)).asInstanceOf[T]
@@ -175,7 +175,7 @@ object DynamicTuple {
 
 
   def dynamicToArray(self: Tuple): Array[Object] = (self: Any) match {
-    case self: Unit => Array.emptyObjectArray
+    case Tuple0 => Array.emptyObjectArray
     case self: TupleXXL => self.toArray
     case self: Product => productToArray(self)
   }
@@ -189,7 +189,7 @@ object DynamicTuple {
   def dynamicCons[This <: Tuple, H] (self: Tuple, x: H): H *: This = {
     type Result = H *: This
     (self: Any) match {
-      case () =>
+      case Tuple0 =>
         Tuple1(x).asInstanceOf[Result]
       case self: Tuple1[_] =>
         Tuple2(x, self._1).asInstanceOf[Result]
@@ -207,25 +207,25 @@ object DynamicTuple {
   def dynamicConcat[This <: Tuple, That <: Tuple](self: This, that: That): Concat[This, That] = {
     type Result = Concat[This, That]
     (this: Any) match {
-      case self: Unit => return self.asInstanceOf[Result]
+      case Tuple0 => return self.asInstanceOf[Result]
       case _ =>
     }
     (that: Any) match {
-      case that: Unit => return self.asInstanceOf[Result]
+      case Tuple0 => return self.asInstanceOf[Result]
       case _ =>
     }
     dynamicFromArray[Result](dynamicToArray(self) ++ dynamicToArray(that))
   }
 
   def dynamicSize[This <: Tuple](self: This): Size[This] = (self: Any) match {
-    case self: Unit => 0.asInstanceOf[Size[This]]
+    case Tuple0 => 0.asInstanceOf[Size[This]]
     case self: Product => self.productArity.asInstanceOf[Size[This]]
   }
 
   def dynamicTail[This <: NonEmptyTuple] (self: This): Tail[This] = {
     type Result = Tail[This]
     val res = (self: Any) match {
-      case self: Tuple1[_] => ()
+      case self: Tuple1[_] => Tuple0
       case self: Tuple2[_, _] => Tuple1(self._2)
       case self: Tuple3[_, _, _] => Tuple2(self._2, self._3)
       case self: Tuple4[_, _, _, _] => Tuple3(self._2, self._3, self._4)
@@ -237,7 +237,7 @@ object DynamicTuple {
   def dynamicApply[This <: NonEmptyTuple, N <: Int] (self: This, n: Int): Elem[This, N] = {
     type Result = Elem[This, N]
     val res = (self: Any) match {
-      case self: Unit => throw new IndexOutOfBoundsException(n.toString)
+      case Tuple0 => throw new IndexOutOfBoundsException(n.toString)
       case self: Product => self.productElement(n)
     }
     res.asInstanceOf[Result]
