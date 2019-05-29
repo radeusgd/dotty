@@ -124,6 +124,13 @@ class PCPCheckAndHeal(@constructorOnly ictx: Context) extends TreeMapWithStages(
           if (tp.isTerm)
             ctx.error(i"splice outside quotes", pos)
           tp
+        case tp: TypeRef =>
+          if (!levelOK(tp.prefix.termSymbol))
+            tryHeal(tp.typeSymbol, tp, pos, true) match {
+              case Some(tree) => tree.tpe
+              case None => tp
+            }
+          else mapOver(tp)
         case tp: NamedType =>
           checkSymLevel(tp.symbol, tp, pos) match {
             case Some(tpRef) => tpRef.tpe
@@ -151,7 +158,7 @@ class PCPCheckAndHeal(@constructorOnly ictx: Context) extends TreeMapWithStages(
     def isClassRef = sym.isClass && !tp.isInstanceOf[ThisType]
 
     if (sym.exists && !sym.isStaticOwner && !isClassRef && !levelOK(sym))
-      tryHeal(sym, tp, pos)
+      tryHeal(sym, tp, pos, false)
     else
       None
   }
@@ -181,7 +188,7 @@ class PCPCheckAndHeal(@constructorOnly ictx: Context) extends TreeMapWithStages(
    *  @return Some(msg) if unsuccessful where `msg` is a potentially empty error message
    *                    to be added to the "inconsistent phase" message.
    */
-  protected def tryHeal(sym: Symbol, tp: Type, pos: SourcePosition)(implicit ctx: Context): Option[Tree] = {
+  protected def tryHeal(sym: Symbol, tp: Type, pos: SourcePosition, refTagsOnly: Boolean)(implicit ctx: Context): Option[Tree] = {
     def levelError(errMsg: String) = {
       def symStr =
         if (!tp.isInstanceOf[ThisType]) sym.show
@@ -208,7 +215,7 @@ class PCPCheckAndHeal(@constructorOnly ictx: Context) extends TreeMapWithStages(
                             | The access would be accepted with the right type tag, but
                             | ${ctx.typer.missingArgMsg(tag, reqType, "")}""")
             case _ =>
-              Some(tag.select(tpnme.splice))
+              Some(tag.select(tpnme.splice).withType(tag.tpe.select(tpnme.splice)))
           }
         }
       case _ =>

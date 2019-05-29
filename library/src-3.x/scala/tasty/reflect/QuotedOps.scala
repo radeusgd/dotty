@@ -31,6 +31,13 @@ trait QuotedOps extends Core { self: Printers =>
     /** Convert `Term` to an `quoted.Expr[Any]` */
     def seal(implicit ctx: Context): scala.quoted.Expr[Any] =
       kernel.QuotedExpr_seal(term)
+
+    def seal2(implicit ctx: Context): scala.quoted.SealedExpr = {
+      type T
+      val expr = kernel.QuotedExpr_seal(term).asInstanceOf[scala.quoted.Expr[T]]
+      val tpe = kernel.QuotedType_seal(term.tpe).asInstanceOf[scala.quoted.Type[T]]
+      scala.quoted.SealedExpr(expr)(tpe)
+    }
   }
 
   implicit class TypeToQuotedAPI(tpe: Type) {

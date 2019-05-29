@@ -677,6 +677,11 @@ trait Implicits { self: Typer =>
       def quotedType(t: Type) = {
         if (StagingContext.level == 0)
           ctx.compilationUnit.needsStaging = true // We will need to run ReifyQuotes
+        println()
+        println(t.show)
+        println(t)
+        println()
+        println()
         ref(defn.InternalQuoted_typeQuote).appliedToType(t)
       }
       formal.argInfos match {
