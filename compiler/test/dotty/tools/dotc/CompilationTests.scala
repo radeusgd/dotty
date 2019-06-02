@@ -200,9 +200,17 @@ class CompilationTests extends ParallelTesting {
       compileFile("tests/run-custom-args/fors.scala", defaultOptions and "-strict"),
       compileFile("tests/run-custom-args/no-useless-forwarders.scala", defaultOptions and "-Xmixin-force-forwarders:false"),
       compileFilesInDir("tests/run-deep-subtype", allowDeepSubtypes),
+      compileFile("tests/run-custom-args/typeclass-derivation4.scala", defaultOptions without "-Ycheck:all"), // Currently has a -Ycheck:positions problem
       compileFilesInDir("tests/run", defaultOptions)
     ).checkRuns()
   }
+
+  // Type class derivation tests -----------------------------------------------
+
+  @Test def tcd: Unit = {
+    implicit val testGroup: TestGroup = TestGroup("tcd")
+    compileFilesInDir("tests/typeclass-derivation", defaultOptions without "-Ycheck:all") // Currently has a -Ycheck:positions problem
+  }.checkRuns()
 
   // Generic java signatures tests ---------------------------------------------
 
