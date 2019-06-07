@@ -767,12 +767,13 @@ trait Checking {
               // TODO add alias to Nil in scala package
               sym.is(Case) && sym.is(Module)
             }
-            val allow =
-              ctx.erasedTypes ||
-              ctx.inInlineMethod ||
-              (tree.symbol.isStatic && isCaseObject(tree.symbol) || isCaseClassApply(tree.symbol)) ||
-              isCaseClassNew(tree.symbol) ||
-              tree.symbol.owner.is(Module) && tree.symbol.is(Method)
+            val allow = true
+              // ctx.erasedTypes ||
+              // ctx.inInlineMethod ||
+              // (tree.symbol.isStatic && isCaseObject(tree.symbol) || isCaseClassApply(tree.symbol)) ||
+              // isCaseClassNew(tree.symbol) ||
+              // tree.symbol.is(Module) ||
+              // tree.symbol.owner.is(Module) && tree.symbol.is(Method)
 
             if (!allow) ctx.error(em"$what must be a known value", tree.sourcePos)
             else {

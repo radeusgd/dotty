@@ -347,6 +347,7 @@ object Splicer {
         } else if (env.contains(fn.name)) {
           env(fn.name)
         } else if (tree.symbol.is(InlineProxy)) {
+          println(tree)
           interpretTree(tree.symbol.defTree.asInstanceOf[ValOrDefDef].rhs)
         } else {
           unexpectedTree(tree)
@@ -363,7 +364,7 @@ object Splicer {
         interpretTree(expr)(newEnv)
       case NamedArg(_, arg) => interpretTree(arg)
 
-      case Inlined(_, Nil, expansion) => interpretTree(expansion)
+      case Inlined(_, _, expansion) => interpretTree(expansion)
 
       case Typed(expr, _) =>
         interpretTree(expr)
