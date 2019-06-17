@@ -7,7 +7,7 @@ object Test {
   def main(args: Array[String]): Unit = {
     implicit val toolbox: scala.quoted.Toolbox = scala.quoted.Toolbox.make(getClass.getClassLoader)
     def runAndPrint[T](expr: Expr[T]): Unit = println(run(expr))
-    def show[T](expr: Expr[T]): Unit = println(expr.show)
+    def show[T](expr: Expr[T]): Unit = println(run(expr.show.toExpr))
 
     runAndPrint(true)
     runAndPrint('a')

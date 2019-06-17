@@ -4,9 +4,13 @@ import scala.annotation.implicitNotFound
 
 @implicitNotFound("Could not find implicit quoted.Toolbox.\n\nDefault toolbox can be instantiated with:\n  `implicit val toolbox: scala.quoted.Toolbox = scala.quoted.Toolbox.make(getClass.getClassLoader)`\n\n")
 trait Toolbox {
-  def run[T](expr: Expr[T]): T
-  def show[T](expr: Expr[T]): String
-  def show[T](tpe: Type[T]): String
+  def run[T](expr: QuoteContext => Expr[T]): T
+
+//  @deprecated("TODO", "")
+//  def show[T](expr: Expr[T]): String
+//
+//  @deprecated("TODO", "")
+//  def show[T](tpe: Type[T]): String
 }
 
 object Toolbox {

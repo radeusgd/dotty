@@ -11,7 +11,7 @@ object Test {
       println("foo")
       2 + a
     }
-    println(expr.show)
+    println(run(expr.show.toExpr))
     println(run(expr))
     println()
 

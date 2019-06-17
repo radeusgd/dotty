@@ -6,7 +6,13 @@ object Test {
     val x: Expr[Int] = '{3}
 
     val f: Expr[Int => Int] = '{ (x: Int) => x + x }
-    println(run(f(x)))
-    println(f(x).show)
+
+    run {
+      val y = f(x)
+      '{
+        println($y)
+        println(${y.show.toExpr})
+      }
+    }
   }
 }

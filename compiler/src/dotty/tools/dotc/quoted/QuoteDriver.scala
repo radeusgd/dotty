@@ -20,7 +20,7 @@ class QuoteDriver(appClassloader: ClassLoader) extends Driver {
 
   private[this] val contextBase: ContextBase = new ContextBase
 
-  def run[T](expr: Expr[T], settings: Toolbox.Settings): T = {
+  def run[T](expr: scala.quoted.QuoteContext => Expr[T], settings: Toolbox.Settings): T = {
     val outDir: AbstractFile = settings.outDir match {
       case Some(out) =>
         val dir = Directory(out)
@@ -55,23 +55,23 @@ class QuoteDriver(appClassloader: ClassLoader) extends Driver {
     ReflectionImpl.showTree(tree1)
   }
 
-  def show(expr: Expr[_], settings: Toolbox.Settings): String =
-    withTree(expr, doShow, settings)
-
-  def show(tpe: Type[_], settings: Toolbox.Settings): String =
-    withTypeTree(tpe, doShow, settings)
-
-  def withTree[T](expr: Expr[_], f: (Tree, Context) => T, settings: Toolbox.Settings): T = {
-    val ctx = setToolboxSettings(setup(settings.compilerArgs.toArray :+ "dummy.scala", initCtx.fresh)._2.fresh, settings)
-
-    var output: Option[T] = None
-    def registerTree(tree: tpd.Tree)(ctx: Context): Unit = {
-      assert(output.isEmpty)
-      output = Some(f(tree, ctx))
-    }
-    new QuoteDecompiler(registerTree).newRun(ctx).compileExpr(expr)
-    output.getOrElse(throw new Exception("Could not extract " + expr))
-  }
+//  def show(expr: scala.quoted.QuoteContext => Expr[_], settings: Toolbox.Settings): String =
+//    withTree(expr, doShow, settings)
+//
+//  def show(tpe: Type[_], settings: Toolbox.Settings): String =
+//    withTypeTree(tpe, doShow, settings)
+//
+//  def withTree[T](expr: scala.quoted.QuoteContext => Expr[_], f: (Tree, Context) => T, settings: Toolbox.Settings): T = {
+//    val ctx = setToolboxSettings(setup(settings.compilerArgs.toArray :+ "dummy.scala", initCtx.fresh)._2.fresh, settings)
+//
+//    var output: Option[T] = None
+//    def registerTree(tree: tpd.Tree)(ctx: Context): Unit = {
+//      assert(output.isEmpty)
+//      output = Some(f(tree, ctx))
+//    }
+//    new QuoteDecompiler(registerTree).newRun(ctx).compileExpr(expr)
+//    output.getOrElse(throw new Exception("Could not extract " + expr))
+//  }
 
   def withTypeTree[T](tpe: Type[_], f: (TypTree, Context) => T, settings: Toolbox.Settings): T = {
     val ctx = setToolboxSettings(setup(settings.compilerArgs.toArray :+ "dummy.scala", initCtx.fresh)._2.fresh, settings)

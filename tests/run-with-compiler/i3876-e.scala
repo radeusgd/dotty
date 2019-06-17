@@ -8,8 +8,14 @@ object Test {
     val f4: Expr[Int => Int] = '{
       inlineLambda
     }
-    println(run(f4(x)))
-    println(f4(x).show)
+
+    run {
+      val y = f4(x)
+      '{
+        println($y)
+        println(${y.show.toExpr})
+      }
+    }
   }
 
   inline def inlineLambda <: Int => Int = x => x + x

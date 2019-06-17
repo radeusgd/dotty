@@ -12,30 +12,33 @@ import liftable.Exprs._
 object Test {
   def main(args: Array[String]): Unit = {
     implicit val toolbox: scala.quoted.Toolbox = scala.quoted.Toolbox.make(getClass.getClassLoader)
-    val liftedUnit: Expr[Unit] = '{}
+    run {
+      val liftedUnit: Expr[Unit] = '{}
 
-    letVal('{1})(a => '{ $a + 1 }).show
-    letLazyVal('{1})(a => '{ $a + 1 }).show
-    letDef('{1})(a => '{ $a + 1 }).show
+      letVal('{1})(a => '{ $a + 1 }).show
+      letLazyVal('{1})(a => '{ $a + 1 }).show
+      letDef('{1})(a => '{ $a + 1 }).show
 
-    liftedWhile('{true})('{ println(1) }).show
-    liftedDoWhile('{ println(1) })('{true}).show
+      liftedWhile('{true})('{ println(1) }).show
+      liftedDoWhile('{ println(1) })('{true}).show
 
-    val t1: Expr[Tuple1[Int]] = Tuple1(4)
-    val t2: Expr[(Int, Int)] = (2, 3)
-    val t3: Expr[(Int, Int, Int)] = (2, 3, 4)
-    val t4: Expr[(Int, Int, Int, Int)] = (2, 3, 4, 5)
+      val t1: Expr[Tuple1[Int]] = Tuple1(4)
+      val t2: Expr[(Int, Int)] = (2, 3)
+      val t3: Expr[(Int, Int, Int)] = (2, 3, 4)
+      val t4: Expr[(Int, Int, Int, Int)] = (2, 3, 4, 5)
 
-    val list: List[Int] = List(1, 2, 3)
-    val liftedList: Expr[List[Int]] = list
+      val list: List[Int] = List(1, 2, 3)
+      val liftedList: Expr[List[Int]] = list
 
-    liftedList.foldLeft[Int](0)('{ (acc: Int, x: Int) => acc + x }).show
-    liftedList.foreach('{ (x: Int) => println(x) }).show
+      liftedList.foldLeft[Int](0)('{ (acc: Int, x: Int) => acc + x }).show
+      liftedList.foreach('{ (x: Int) => println(x) }).show
 
-    list.unrolledFoldLeft[Int](0)('{ (acc: Int, x: Int) => acc + x }).show
-    list.unrolledForeach('{ (x: Int) => println(x) }).show
+      list.unrolledFoldLeft[Int](0)('{ (acc: Int, x: Int) => acc + x }).show
+      list.unrolledForeach('{ (x: Int) => println(x) }).show
 
-    println("quote lib ok")
+      println("quote lib ok")
+      '{}
+    }
   }
 }
 

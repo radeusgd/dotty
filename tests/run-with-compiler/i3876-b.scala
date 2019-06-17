@@ -9,7 +9,13 @@ object Test {
       def f(x: Int): Int = x + x
       f
     }
-    println(run(f2(x)))
-    println(f2(x).show)
+
+    run {
+      val y = f2(x)
+      '{
+        println($y)
+        println(${y.show.toExpr})
+      }
+    }
   }
 }

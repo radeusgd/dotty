@@ -19,18 +19,19 @@ object ToolboxImpl {
 
     private[this] val driver: QuoteDriver = new QuoteDriver(appClassloader)
 
-    def run[T](expr: Expr[T]): T = expr match {
-      case expr: LiftedExpr[T] =>
-        expr.value
-      case expr: TastyTreeExpr[Tree] @unchecked =>
-        throw new Exception("Cannot call `Expr.run` on an `Expr` that comes from a macro argument.")
+    def run[T](expr: scala.quoted.QuoteContext => Expr[T]): T = expr match {
+        // TODO move logic into driver
+//      case expr: LiftedExpr[T] =>
+//        expr.value
+//      case expr: TastyTreeExpr[Tree] @unchecked =>
+//        throw new Exception("Cannot call `Expr.run` on an `Expr` that comes from a macro argument.")
       case _ =>
         synchronized(driver.run(expr, settings))
     }
 
-    def show[T](expr: Expr[T]): String = synchronized(driver.show(expr, settings))
-
-    def show[T](tpe: Type[T]): String = synchronized(driver.show(tpe, settings))
+//    def show[T](expr: Expr[T]): String = synchronized(driver.show(_ => expr, settings))
+//
+//    def show[T](tpe: Type[T]): String = synchronized(driver.show(tpe, settings))
   }
 
 }

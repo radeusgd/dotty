@@ -50,7 +50,7 @@ class QuoteCompiler extends Compiler {
         case exprUnit: ExprCompilationUnit =>
           val tree =
             if (putInClass) inClass(exprUnit.expr)
-            else PickledQuotes.quotedExprToTree(exprUnit.expr)
+            else PickledQuotes.quotedExprToTree(exprUnit.expr.apply(new QuoteContext(ctx)))
           val source = SourceFile.virtual("<quoted.Expr>", "")
           CompilationUnit(source, tree, forceTrees = true)
         case typeUnit: TypeCompilationUnit =>
@@ -65,7 +65,7 @@ class QuoteCompiler extends Compiler {
       *  with the following format.
       *  `package __root__ { class ' { def apply: Any = <expr> } }`
       */
-    private def inClass(expr: Expr[_])(implicit ctx: Context): Tree = {
+    private def inClass(expr: scala.quoted.QuoteContext => Expr[_])(implicit ctx: Context): Tree = {
       val pos = Span(0)
       val assocFile = new VirtualFile("<quote>")
 
@@ -74,7 +74,7 @@ class QuoteCompiler extends Compiler {
       cls.enter(ctx.newDefaultConstructor(cls), EmptyScope)
       val meth = ctx.newSymbol(cls, nme.apply, Method, ExprType(defn.AnyType), coord = pos).entered
 
-      val quoted = PickledQuotes.quotedExprToTree(expr)(ctx.withOwner(meth))
+      val quoted = PickledQuotes.quotedExprToTree(expr.apply(new QuoteContext(ctx)))(ctx.withOwner(meth))
 
       val run = DefDef(meth, quoted)
       val classTree = ClassDef(cls, DefDef(cls.primaryConstructor.asTerm), run :: Nil)
@@ -85,7 +85,7 @@ class QuoteCompiler extends Compiler {
   }
 
   class ExprRun(comp: Compiler, ictx: Context) extends Run(comp, ictx) {
-    def compileExpr(expr: Expr[_]): Unit = {
+    def compileExpr(expr:  scala.quoted.QuoteContext => Expr[_]): Unit = {
       val units = new ExprCompilationUnit(expr) :: Nil
       compileUnits(units)
     }

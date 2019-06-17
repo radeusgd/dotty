@@ -12,7 +12,7 @@ package quoted {
 
     implicit object TypeOps {
       /** Show a source code like representation of this type */
-      def (tpe: Type[T]) show[T] given Toolbox: String = the[Toolbox].show(tpe.asInstanceOf[Type[Any]])
+      def (tpe: Type[T]) show[T] given QuoteContext: String = the[QuoteContext].show(tpe.asInstanceOf[Type[Any]])
     }
 
     implicit val UnitTag: Type[Unit] = new TaggedType[Unit]

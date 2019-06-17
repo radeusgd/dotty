@@ -7,17 +7,23 @@ object Test {
   implicit val toolbox: scala.quoted.Toolbox = scala.quoted.Toolbox.make(getClass.getClassLoader)
   def main(args: Array[String]): Unit = {
     '[List]
-    val list = bound('{List(1, 2, 3)})
-    println(list.show)
-    println(run(list))
+    run {
+      val list = bound('{List(1, 2, 3)})
+      println(list.show)
+      '{ println($list) }
+    }
 
-    val opt = bound('{Option(4)})
-    println(opt.show)
-    println(run(opt))
+    run {
+      val opt = bound('{Option(4)})
+      println(opt.show)
+      '{ println($opt) }
+    }
 
-    val map = bound('{Map(4 -> 1)})
-    println(map.show)
-    println(run(map))
+    run {
+      val map = bound('{Map(4 -> 1)})
+      println(map.show)
+      '{ println($map) }
+    }
   }
 
   def bound[T: Type, S[_]: Type](x: Expr[S[T]]): Expr[S[T]] = '{
