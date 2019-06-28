@@ -148,8 +148,11 @@ object Splicer {
       constr.newInstance(args: _*).asInstanceOf[Object]
     }
 
-    protected def unexpectedTree(tree: Tree)(implicit env: Env): Object =
-      throw new StopInterpretation("Unexpected tree could not be interpreted: " + tree, tree.sourcePos)
+    protected def unexpectedTree(tree: Tree)(implicit env: Env): Object = {
+      val e = new StopInterpretation("Unexpected tree could not be interpreted: " + tree, tree.sourcePos)
+      e.printStackTrace
+      throw e
+    }
 
     private def loadModule(sym: Symbol): Object = {
       if (sym.owner.is(Package)) {
@@ -369,6 +372,7 @@ object Splicer {
             accEnv
         })
         unexpected.getOrElse(interpretTree(expr)(newEnv))
+
       case NamedArg(_, arg) => interpretTree(arg)
 
       case Inlined(_, Nil, expansion) => interpretTree(expansion)
