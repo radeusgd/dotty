@@ -1,8 +1,7 @@
 object Test {
   import Strymonas._
-
   def main(args: Array[String]): Unit = {
-    val test1 = Stream.of('{Array(1, 2, 3)}).fold(0, (a, b) => a + b)
+    val test1 = Stream.of('{Array(1, 2, 3)}) //.fold(0, (a, b) => a + b)
 
   //   def test1() = Stream
   //   .of('{Array(1, 2, 3)})
