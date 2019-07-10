@@ -31,6 +31,7 @@ import scala.collection.mutable.ListBuffer
 import scala.collection.mutable
 import config.Printers.pickling
 import core.quoted.PickledQuotes
+import dotty.tools.dotc.tastyreflect.ReflectionImpl
 
 import scala.quoted
 import scala.internal.quoted.{TastyTreeExpr, TreeType}
@@ -1283,7 +1284,9 @@ class TreeUnpickler(reader: TastyReader,
         val quotedType = splice.asInstanceOf[Seq[Any] => quoted.Type[_]](reifiedArgs)
         PickledQuotes.quotedTypeToTree(quotedType)
       } else {
-        val quotedExpr = splice.asInstanceOf[Seq[Any] => quoted.Expr[_]](reifiedArgs)
+        val qctx = new quoted.QuoteContext(ReflectionImpl(ctx))
+        val quotedExpr: quoted.Expr[_] =
+          splice.asInstanceOf[Seq[Any] => quoted.QuoteContext => quoted.Expr[_]](reifiedArgs)(qctx)
         PickledQuotes.quotedExprToTree(quotedExpr)
       }
       // We need to make sure a hole is created with the source file of the surrounding context, even if

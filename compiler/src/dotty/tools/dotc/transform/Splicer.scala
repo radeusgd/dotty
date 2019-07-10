@@ -101,7 +101,7 @@ object Splicer {
         case SeqLiteral(elems, _) =>
           elems.foreach(checkIfValidArgument)
 
-        case tree: Ident if tree.symbol.is(Inline) || tree.symbol.is(Synthetic) =>
+        case tree: Ident if tree.symbol.is(Inline) || tree.symbol.is(Synthetic) || tree.symbol.is(Param) =>
           // OK
 
         case _ =>
@@ -115,6 +115,10 @@ object Splicer {
               |""".stripMargin, tree.sourcePos)
       }
       def checkIfValidStaticCall(tree: Tree): Unit = tree match {
+        case Block((ddef @ DefDef(nme.ANON_FUN, Nil, (qctx :: Nil) :: Nil, _, _)) :: Nil, Closure(x, y, z))
+            if qctx.symbol.info.classSymbol.derivesFrom(defn.QuoteContextClass) =>
+          checkIfValidStaticCall(ddef.rhs)
+
         case Block(stats, expr) =>
           stats.foreach(checkValidStat)
           checkIfValidStaticCall(expr)

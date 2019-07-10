@@ -1026,8 +1026,19 @@ class Inliner(call: tpd.Tree, rhsToInline: tpd.Tree)(implicit ctx: Context) {
       }
 
     override def typedApply(tree: untpd.Apply, pt: Type)(implicit ctx: Context): Tree = {
-      constToLiteral(betaReduce(super.typedApply(tree, pt))) match {
+//           println()
+//    println(tree.show)
+//    println(tree)
+//    println()
+//    println()
+      val tree1 = super.typedApply(tree, pt)
+//    println()
+//    println(tree1.show)
+//    println()
+      constToLiteral(betaReduce(tree1)) match {
         case res: Apply if res.symbol == defn.InternalQuoted_exprSplice && level == 0 && call.symbol.is(Macro) =>
+          expandMacro0(res.args.head, tree.span)
+        case res: Apply if res.symbol == defn.InternalQuoted_quotedExprSplice && level == 0 && call.symbol.is(Macro) =>
           expandMacro(res.args.head, tree.span)
         case res => res
       }
@@ -1185,10 +1196,35 @@ class Inliner(call: tpd.Tree, rhsToInline: tpd.Tree)(implicit ctx: Context) {
     }
   }
 
-  private def expandMacro(body: Tree, span: Span)(implicit ctx: Context) = {
+  private def expandMacro0(body: Tree, span: Span)(implicit ctx: Context) = { // TODO
     assert(level == 0)
     val inlinedFrom = enclosingInlineds.last
     val evaluatedSplice = Splicer.splice(body, inlinedFrom.sourcePos, MacroClassLoader.fromContext)(ctx.withSource(inlinedFrom.source))
+
+    val inlinedNormailizer = new TreeMap {
+      override def transform(tree: tpd.Tree)(implicit ctx: Context): tpd.Tree = tree match {
+        case Inlined(EmptyTree, Nil, expr) if enclosingInlineds.isEmpty => transform(expr)
+        case _ => super.transform(tree)
+      }
+    }
+    val normalizedSplice = inlinedNormailizer.transform(evaluatedSplice)
+
+    if (ctx.reporter.hasErrors) EmptyTree
+    else normalizedSplice.withSpan(span)
+  }
+
+  private def expandMacro(body: Tree, span: Span)(implicit ctx: Context) = {
+    assert(level == 0)
+    val inlinedFrom = enclosingInlineds.last
+    println()
+    println(body.show)
+    println()
+    val evaluatedSplice = Splicer.splice(body, inlinedFrom.sourcePos, MacroClassLoader.fromContext)(ctx.withSource(inlinedFrom.source))
+
+    println(evaluatedSplice.show)
+    println()
+    println()
+    println()
 
     val inlinedNormailizer = new TreeMap {
       override def transform(tree: tpd.Tree)(implicit ctx: Context): tpd.Tree = tree match {

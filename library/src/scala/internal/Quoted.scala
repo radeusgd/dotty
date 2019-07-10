@@ -13,6 +13,10 @@ object Quoted {
   @compileTimeOnly("Illegal reference to `scala.internal.Quoted.exprSplice`")
   def exprSplice[T](x: Expr[T]): T = ???
 
+  /** A term splice is desugared by the compiler into a call to this method */
+  @compileTimeOnly("Illegal reference to `scala.internal.Quoted.exprSplice`")
+  def quotedExprSplice[T](body: given QuoteContext => Expr[T]): T = ???
+
   /** A type quote is desugared by the compiler into a call to this method */
   @compileTimeOnly("Illegal reference to `scala.internal.Quoted.typeQuote`")
   def typeQuote[T <: AnyKind]: Type[T] = ???

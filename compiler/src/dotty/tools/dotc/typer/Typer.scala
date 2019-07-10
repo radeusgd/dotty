@@ -49,7 +49,7 @@ object Typer {
    */
   enum BindingPrec {
     case NothingBound, PackageClause, WildImport, NamedImport, Definition
-    
+
     def isImportPrec = this == NamedImport || this == WildImport
   }
 
@@ -2222,7 +2222,7 @@ class Typer extends Namer
               else if (!c.outer.owner.is(Package)) markAsMacro(c.outer)
             markAsMacro(ctx)
           }
-          typedApply(untpd.Apply(untpd.ref(defn.InternalQuoted_exprSpliceR), tree.expr), pt)(spliceContext).withSpan(tree.span)
+          typedApply(untpd.Apply(untpd.ref(defn.InternalQuoted_quotedExprSpliceR), tree.expr), pt)(spliceContext).withSpan(tree.span)
         }
     }
   }

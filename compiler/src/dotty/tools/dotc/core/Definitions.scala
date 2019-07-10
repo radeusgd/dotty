@@ -772,8 +772,10 @@ class Definitions {
   def InternalQuotedModule: Symbol = InternalQuotedModuleRef.symbol
     @threadUnsafe lazy val InternalQuoted_exprQuoteR: TermRef = InternalQuotedModule.requiredMethodRef("exprQuote")
     def InternalQuoted_exprQuote(implicit ctx: Context): Symbol = InternalQuoted_exprQuoteR.symbol
-    @threadUnsafe lazy val InternalQuoted_exprSpliceR: TermRef = InternalQuotedModule.requiredMethodRef("exprSplice")
-    def InternalQuoted_exprSplice(implicit ctx: Context): Symbol = InternalQuoted_exprSpliceR.symbol
+    @threadUnsafe lazy val InternalQuoted_exprSpliceR: TermRef = InternalQuotedModule.requiredMethodRef("exprSplice") // TODO remove
+    def InternalQuoted_exprSplice(implicit ctx: Context): Symbol = InternalQuoted_exprSpliceR.symbol // TODO remove
+    @threadUnsafe lazy val InternalQuoted_quotedExprSpliceR: TermRef = InternalQuotedModule.requiredMethodRef("quotedExprSplice")
+    def InternalQuoted_quotedExprSplice(implicit ctx: Context): Symbol = InternalQuoted_quotedExprSpliceR.symbol
     @threadUnsafe lazy val InternalQuoted_typeQuoteR: TermRef = InternalQuotedModule.requiredMethodRef("typeQuote")
     def InternalQuoted_typeQuote(implicit ctx: Context): Symbol = InternalQuoted_typeQuoteR.symbol
     @threadUnsafe lazy val InternalQuoted_patternHoleR: TermRef = InternalQuotedModule.requiredMethodRef("patternHole")

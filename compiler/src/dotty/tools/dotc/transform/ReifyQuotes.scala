@@ -352,7 +352,9 @@ class ReifyQuotes extends MacroTransform {
       val tree2 = transform(tree)
       capturers --= outer.localSymbols
 
-      seq(captured.result().valuesIterator.toList, tree2)
+      val capt = captured.result().valuesIterator.toList
+      if (capt.isEmpty) tree2
+      else Block(capt, tree2)
     }
 
     /** Returns true if this tree will be captured by `makeLambda`. Checks phase consistency and presence of capturer. */

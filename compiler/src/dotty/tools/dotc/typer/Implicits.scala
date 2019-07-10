@@ -702,10 +702,10 @@ trait Implicits { self: Typer =>
       }
     }
 
-  lazy val synthesizedQuoteContext: SpecialHandler =
-    (formal, span) => implicit ctx =>
-      if (ctx.inInlineMethod || enclosingInlineds.nonEmpty) ref(defn.QuoteContext_macroContext)
-      else EmptyTree
+  // lazy val synthesizedQuoteContext: SpecialHandler =
+  //   (formal, span) => implicit ctx =>
+  //     if (ctx.inInlineMethod || enclosingInlineds.nonEmpty) ref(defn.QuoteContext_macroContext)
+  //     else EmptyTree
 
   lazy val synthesizedTupleFunction: SpecialHandler =
     (formal, span) => implicit ctx => formal match {
@@ -1033,7 +1033,7 @@ trait Implicits { self: Typer =>
       mySpecialHandlers = List(
         defn.ClassTagClass        -> synthesizedClassTag,
         defn.QuotedTypeClass      -> synthesizedTypeTag,
-        defn.QuoteContextClass    -> synthesizedQuoteContext,
+        // defn.QuoteContextClass    -> synthesizedQuoteContext,
         defn.EqlClass             -> synthesizedEq,
         defn.TupledFunctionClass  -> synthesizedTupleFunction,
         defn.ValueOfClass         -> synthesizedValueOf,
