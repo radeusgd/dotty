@@ -567,15 +567,12 @@ object Staged {
 
           def accessorsE(value: E[T])(implicit q: QuoteContext): List[E[Any]] = {
             import q.tasty._
-            // println(t.show)
             t.unseal.symbol match {
               case IsClassDefSymbol(self) => // case class
-                // println(s"case class ${self.caseFields}")
                 self.caseFields.map { field =>
                   Select.unique(value.unseal, field.name).seal
                 }
               case _ =>
-                // println("case object")
                 Nil // case object
             }
           }
@@ -755,6 +752,13 @@ object Staged {
 
           def typetestsE[A](value: E[T[A]])(implicit q: QuoteContext): List[E[Boolean]] =
             x.instances.map { case tpe: Type[_] =>
+              // This is a hack to compensate for a shortcoming of type
+              // patterns with AnyKind. Here we *know* that x.instances is
+              // composed of `Type[Fn[_]]` for n = 1..x.size, so we should
+              // like to write `case tpe: Type[_[_]]`, but that's outside of
+              // the current syntax. Thankfully all we need is to splice that
+              // `tpe` to perform a type test, which we manage to do in a very
+              // forceful way using a dummy trait with the desired kind:
               trait DummyK[X]
               val tpe0 = tpe.asInstanceOf[quoted.Type[DummyK]]
               '{ ${ value.asInstanceOf[E[T[Any]]] }.isInstanceOf[$tpe0[Any]] }
