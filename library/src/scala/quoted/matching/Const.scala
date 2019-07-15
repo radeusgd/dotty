@@ -26,4 +26,16 @@ object Const {
     rec(expr.unseal)
   }
 
+  object Expr {
+
+    def unapply[T](tpt: Type[T])(using qctx: QuoteContext): Option[Expr[T]] = {
+      import qctx.tasty.{_, given _}
+      def rec(tpe: Type): Option[Expr[T]] = tpe match {
+        case ConstantType(c) => Some(Literal(c).seal.asInstanceOf[Expr[T]])
+        case _  => None
+      }
+      rec(tpt.unseal.tpe.dealias)
+    }
+
+  }
 }
