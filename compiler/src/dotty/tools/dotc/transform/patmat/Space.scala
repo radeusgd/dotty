@@ -298,16 +298,17 @@ class SpaceEngine(implicit ctx: Context) extends SpaceLogic {
 
   override def intersectUnrelatedAtomicTypes(tp1: Type, tp2: Type): Space = trace(s"atomic intersection: ${AndType(tp1, tp2).show}", debug) {
     // Precondition: !isSubType(tp1, tp2) && !isSubType(tp2, tp1)
-    if (tp1 == nullType || tp2 == nullType) {
-      // Since projections of types don't include null, intersection with null is empty.
-      return Empty
-    }
-    val res = ctx.typeComparer.disjoint(tp1, tp2)
 
-    if (res) Empty
-    else if (tp1.isSingleton) Typ(tp1, true)
-    else if (tp2.isSingleton) Typ(tp2, true)
-    else Typ(AndType(tp1, tp2), true)
+    // Since projections of types don't include null, intersection with null is empty.
+    if (tp1 == nullType || tp2 == nullType) Empty
+    else {
+      val res = ctx.typeComparer.disjoint(tp1, tp2)
+
+      if (res) Empty
+      else if (tp1.isSingleton) Typ(tp1, true)
+      else if (tp2.isSingleton) Typ(tp2, true)
+      else Typ(AndType(tp1, tp2), true)
+    }
   }
 
   /** Return the space that represents the pattern `pat` */
