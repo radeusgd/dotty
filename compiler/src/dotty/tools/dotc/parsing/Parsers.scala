@@ -1285,6 +1285,7 @@ object Parsers {
      *  Ascription        ::=  `:' InfixType
      *                      |  `:' Annotation {Annotation}
      *                      |  `:' `_' `*'
+     *  Catches           ::=  ‘catch’ (Expr | CaseClause)
      */
     val exprInParens: () => Tree = () => expr(Location.InParens)
 
@@ -1354,7 +1355,10 @@ object Parsers {
             if (in.token == CATCH) {
               val span = in.offset
               in.nextToken()
-              (expr(), span)
+              val catches =
+                if (in.token == CASE) Match(EmptyTree, caseClause() :: Nil)
+                else expr()
+              (catches, span)
             } else (EmptyTree, -1)
 
           handler match {

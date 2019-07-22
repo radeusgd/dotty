@@ -207,7 +207,7 @@ Expr1             ::=  ‘if’ ‘(’ Expr ‘)’ {nl}
 Expr2             ::=  PostfixExpr [Ascription]
 Ascription        ::=  ‘:’ InfixType                                            Typed(expr, tp)
                     |  ‘:’ Annotation {Annotation}                              Typed(expr, Annotated(EmptyTree, annot)*)
-Catches           ::=  ‘catch’ Expr
+Catches           ::=  ‘catch’ (Expr | CaseClause)
 PostfixExpr       ::=  InfixExpr [id]                                           PostfixOp(expr, op)
 InfixExpr         ::=  PrefixExpr
                     |  InfixExpr id [nl] InfixExpr                              InfixOp(expr, op, expr)
