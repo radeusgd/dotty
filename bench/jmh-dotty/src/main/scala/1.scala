@@ -1,3 +1,5 @@
+package scala
+
 import scala.tasty._
 import scala.deriving._
 import scala.quoted.{Expr => E, _}
@@ -994,79 +996,79 @@ case class P100(
 )
 
 enum C10 {
-  case A0(i: I); case B0(b: B); case C0(i: I); case D0(b: B); case E0(i: I); case F0(b: B); case G0(i: I); case H0(b: B);
+  case A0(i: I); case B0(b: B); case C0(i: I); case D0(b: B); case E0(i: I); case F0(b: B); case G0(i: I); case H0(b: B); case I0(i: I); case J0(b: B);
 }
 enum C20 {
-  case A0(i: I); case B0(b: B); case C0(i: I); case D0(b: B); case E0(i: I); case F0(b: B); case G0(i: I); case H0(b: B);
-  case A1(i: I); case B1(b: B); case C1(i: I); case D1(b: B); case E1(i: I); case F1(b: B); case G1(i: I); case H1(b: B);
+  case A0(i: I); case B0(b: B); case C0(i: I); case D0(b: B); case E0(i: I); case F0(b: B); case G0(i: I); case H0(b: B); case I0(i: I); case J0(b: B);
+  case A1(i: I); case B1(b: B); case C1(i: I); case D1(b: B); case E1(i: I); case F1(b: B); case G1(i: I); case H1(b: B); case I1(i: I); case J1(b: B);
 }
 enum C30 {
-  case A0(i: I); case B0(b: B); case C0(i: I); case D0(b: B); case E0(i: I); case F0(b: B); case G0(i: I); case H0(b: B);
-  case A1(i: I); case B1(b: B); case C1(i: I); case D1(b: B); case E1(i: I); case F1(b: B); case G1(i: I); case H1(b: B);
-  case A2(i: I); case B2(b: B); case C2(i: I); case D2(b: B); case E2(i: I); case F2(b: B); case G2(i: I); case H2(b: B);
+  case A0(i: I); case B0(b: B); case C0(i: I); case D0(b: B); case E0(i: I); case F0(b: B); case G0(i: I); case H0(b: B); case I0(i: I); case J0(b: B);
+  case A1(i: I); case B1(b: B); case C1(i: I); case D1(b: B); case E1(i: I); case F1(b: B); case G1(i: I); case H1(b: B); case I1(i: I); case J1(b: B);
+  case A2(i: I); case B2(b: B); case C2(i: I); case D2(b: B); case E2(i: I); case F2(b: B); case G2(i: I); case H2(b: B); case I2(i: I); case J2(b: B);
 }
 enum C40 {
-  case A0(i: I); case B0(b: B); case C0(i: I); case D0(b: B); case E0(i: I); case F0(b: B); case G0(i: I); case H0(b: B);
-  case A1(i: I); case B1(b: B); case C1(i: I); case D1(b: B); case E1(i: I); case F1(b: B); case G1(i: I); case H1(b: B);
-  case A2(i: I); case B2(b: B); case C2(i: I); case D2(b: B); case E2(i: I); case F2(b: B); case G2(i: I); case H2(b: B);
-  case A3(i: I); case B3(b: B); case C3(i: I); case D3(b: B); case E3(i: I); case F3(b: B); case G3(i: I); case H3(b: B);
+  case A0(i: I); case B0(b: B); case C0(i: I); case D0(b: B); case E0(i: I); case F0(b: B); case G0(i: I); case H0(b: B); case I0(i: I); case J0(b: B);
+  case A1(i: I); case B1(b: B); case C1(i: I); case D1(b: B); case E1(i: I); case F1(b: B); case G1(i: I); case H1(b: B); case I1(i: I); case J1(b: B);
+  case A2(i: I); case B2(b: B); case C2(i: I); case D2(b: B); case E2(i: I); case F2(b: B); case G2(i: I); case H2(b: B); case I2(i: I); case J2(b: B);
+  case A3(i: I); case B3(b: B); case C3(i: I); case D3(b: B); case E3(i: I); case F3(b: B); case G3(i: I); case H3(b: B); case I3(i: I); case J3(b: B);
 }
 enum C50 {
-  case A0(i: I); case B0(b: B); case C0(i: I); case D0(b: B); case E0(i: I); case F0(b: B); case G0(i: I); case H0(b: B);
-  case A1(i: I); case B1(b: B); case C1(i: I); case D1(b: B); case E1(i: I); case F1(b: B); case G1(i: I); case H1(b: B);
-  case A2(i: I); case B2(b: B); case C2(i: I); case D2(b: B); case E2(i: I); case F2(b: B); case G2(i: I); case H2(b: B);
-  case A3(i: I); case B3(b: B); case C3(i: I); case D3(b: B); case E3(i: I); case F3(b: B); case G3(i: I); case H3(b: B);
-  case A4(i: I); case B4(b: B); case C4(i: I); case D4(b: B); case E4(i: I); case F4(b: B); case G4(i: I); case H4(b: B);
+  case A0(i: I); case B0(b: B); case C0(i: I); case D0(b: B); case E0(i: I); case F0(b: B); case G0(i: I); case H0(b: B); case I0(i: I); case J0(b: B);
+  case A1(i: I); case B1(b: B); case C1(i: I); case D1(b: B); case E1(i: I); case F1(b: B); case G1(i: I); case H1(b: B); case I1(i: I); case J1(b: B);
+  case A2(i: I); case B2(b: B); case C2(i: I); case D2(b: B); case E2(i: I); case F2(b: B); case G2(i: I); case H2(b: B); case I2(i: I); case J2(b: B);
+  case A3(i: I); case B3(b: B); case C3(i: I); case D3(b: B); case E3(i: I); case F3(b: B); case G3(i: I); case H3(b: B); case I3(i: I); case J3(b: B);
+  case A4(i: I); case B4(b: B); case C4(i: I); case D4(b: B); case E4(i: I); case F4(b: B); case G4(i: I); case H4(b: B); case I4(i: I); case J4(b: B);
 }
 enum C60 {
-  case A0(i: I); case B0(b: B); case C0(i: I); case D0(b: B); case E0(i: I); case F0(b: B); case G0(i: I); case H0(b: B);
-  case A1(i: I); case B1(b: B); case C1(i: I); case D1(b: B); case E1(i: I); case F1(b: B); case G1(i: I); case H1(b: B);
-  case A2(i: I); case B2(b: B); case C2(i: I); case D2(b: B); case E2(i: I); case F2(b: B); case G2(i: I); case H2(b: B);
-  case A3(i: I); case B3(b: B); case C3(i: I); case D3(b: B); case E3(i: I); case F3(b: B); case G3(i: I); case H3(b: B);
-  case A4(i: I); case B4(b: B); case C4(i: I); case D4(b: B); case E4(i: I); case F4(b: B); case G4(i: I); case H4(b: B);
-  case A5(i: I); case B5(b: B); case C5(i: I); case D5(b: B); case E5(i: I); case F5(b: B); case G5(i: I); case H5(b: B);
+  case A0(i: I); case B0(b: B); case C0(i: I); case D0(b: B); case E0(i: I); case F0(b: B); case G0(i: I); case H0(b: B); case I0(i: I); case J0(b: B);
+  case A1(i: I); case B1(b: B); case C1(i: I); case D1(b: B); case E1(i: I); case F1(b: B); case G1(i: I); case H1(b: B); case I1(i: I); case J1(b: B);
+  case A2(i: I); case B2(b: B); case C2(i: I); case D2(b: B); case E2(i: I); case F2(b: B); case G2(i: I); case H2(b: B); case I2(i: I); case J2(b: B);
+  case A3(i: I); case B3(b: B); case C3(i: I); case D3(b: B); case E3(i: I); case F3(b: B); case G3(i: I); case H3(b: B); case I3(i: I); case J3(b: B);
+  case A4(i: I); case B4(b: B); case C4(i: I); case D4(b: B); case E4(i: I); case F4(b: B); case G4(i: I); case H4(b: B); case I4(i: I); case J4(b: B);
+  case A5(i: I); case B5(b: B); case C5(i: I); case D5(b: B); case E5(i: I); case F5(b: B); case G5(i: I); case H5(b: B); case I5(i: I); case J5(b: B);
 }
 enum C70 {
-  case A0(i: I); case B0(b: B); case C0(i: I); case D0(b: B); case E0(i: I); case F0(b: B); case G0(i: I); case H0(b: B);
-  case A1(i: I); case B1(b: B); case C1(i: I); case D1(b: B); case E1(i: I); case F1(b: B); case G1(i: I); case H1(b: B);
-  case A2(i: I); case B2(b: B); case C2(i: I); case D2(b: B); case E2(i: I); case F2(b: B); case G2(i: I); case H2(b: B);
-  case A3(i: I); case B3(b: B); case C3(i: I); case D3(b: B); case E3(i: I); case F3(b: B); case G3(i: I); case H3(b: B);
-  case A4(i: I); case B4(b: B); case C4(i: I); case D4(b: B); case E4(i: I); case F4(b: B); case G4(i: I); case H4(b: B);
-  case A5(i: I); case B5(b: B); case C5(i: I); case D5(b: B); case E5(i: I); case F5(b: B); case G5(i: I); case H5(b: B);
-  case A6(i: I); case B6(b: B); case C6(i: I); case D6(b: B); case E6(i: I); case F6(b: B); case G6(i: I); case H6(b: B);
+  case A0(i: I); case B0(b: B); case C0(i: I); case D0(b: B); case E0(i: I); case F0(b: B); case G0(i: I); case H0(b: B); case I0(i: I); case J0(b: B);
+  case A1(i: I); case B1(b: B); case C1(i: I); case D1(b: B); case E1(i: I); case F1(b: B); case G1(i: I); case H1(b: B); case I1(i: I); case J1(b: B);
+  case A2(i: I); case B2(b: B); case C2(i: I); case D2(b: B); case E2(i: I); case F2(b: B); case G2(i: I); case H2(b: B); case I2(i: I); case J2(b: B);
+  case A3(i: I); case B3(b: B); case C3(i: I); case D3(b: B); case E3(i: I); case F3(b: B); case G3(i: I); case H3(b: B); case I3(i: I); case J3(b: B);
+  case A4(i: I); case B4(b: B); case C4(i: I); case D4(b: B); case E4(i: I); case F4(b: B); case G4(i: I); case H4(b: B); case I4(i: I); case J4(b: B);
+  case A5(i: I); case B5(b: B); case C5(i: I); case D5(b: B); case E5(i: I); case F5(b: B); case G5(i: I); case H5(b: B); case I5(i: I); case J5(b: B);
+  case A6(i: I); case B6(b: B); case C6(i: I); case D6(b: B); case E6(i: I); case F6(b: B); case G6(i: I); case H6(b: B); case I6(i: I); case J6(b: B);
 }
 enum C80 {
-  case A0(i: I); case B0(b: B); case C0(i: I); case D0(b: B); case E0(i: I); case F0(b: B); case G0(i: I); case H0(b: B);
-  case A1(i: I); case B1(b: B); case C1(i: I); case D1(b: B); case E1(i: I); case F1(b: B); case G1(i: I); case H1(b: B);
-  case A2(i: I); case B2(b: B); case C2(i: I); case D2(b: B); case E2(i: I); case F2(b: B); case G2(i: I); case H2(b: B);
-  case A3(i: I); case B3(b: B); case C3(i: I); case D3(b: B); case E3(i: I); case F3(b: B); case G3(i: I); case H3(b: B);
-  case A4(i: I); case B4(b: B); case C4(i: I); case D4(b: B); case E4(i: I); case F4(b: B); case G4(i: I); case H4(b: B);
-  case A5(i: I); case B5(b: B); case C5(i: I); case D5(b: B); case E5(i: I); case F5(b: B); case G5(i: I); case H5(b: B);
-  case A6(i: I); case B6(b: B); case C6(i: I); case D6(b: B); case E6(i: I); case F6(b: B); case G6(i: I); case H6(b: B);
-  case A7(i: I); case B7(b: B); case C7(i: I); case D7(b: B); case E7(i: I); case F7(b: B); case G7(i: I); case H7(b: B);
+  case A0(i: I); case B0(b: B); case C0(i: I); case D0(b: B); case E0(i: I); case F0(b: B); case G0(i: I); case H0(b: B); case I0(i: I); case J0(b: B);
+  case A1(i: I); case B1(b: B); case C1(i: I); case D1(b: B); case E1(i: I); case F1(b: B); case G1(i: I); case H1(b: B); case I1(i: I); case J1(b: B);
+  case A2(i: I); case B2(b: B); case C2(i: I); case D2(b: B); case E2(i: I); case F2(b: B); case G2(i: I); case H2(b: B); case I2(i: I); case J2(b: B);
+  case A3(i: I); case B3(b: B); case C3(i: I); case D3(b: B); case E3(i: I); case F3(b: B); case G3(i: I); case H3(b: B); case I3(i: I); case J3(b: B);
+  case A4(i: I); case B4(b: B); case C4(i: I); case D4(b: B); case E4(i: I); case F4(b: B); case G4(i: I); case H4(b: B); case I4(i: I); case J4(b: B);
+  case A5(i: I); case B5(b: B); case C5(i: I); case D5(b: B); case E5(i: I); case F5(b: B); case G5(i: I); case H5(b: B); case I5(i: I); case J5(b: B);
+  case A6(i: I); case B6(b: B); case C6(i: I); case D6(b: B); case E6(i: I); case F6(b: B); case G6(i: I); case H6(b: B); case I6(i: I); case J6(b: B);
+  case A7(i: I); case B7(b: B); case C7(i: I); case D7(b: B); case E7(i: I); case F7(b: B); case G7(i: I); case H7(b: B); case I7(i: I); case J7(b: B);
 }
 enum C90 {
-  case A0(i: I); case B0(b: B); case C0(i: I); case D0(b: B); case E0(i: I); case F0(b: B); case G0(i: I); case H0(b: B);
-  case A1(i: I); case B1(b: B); case C1(i: I); case D1(b: B); case E1(i: I); case F1(b: B); case G1(i: I); case H1(b: B);
-  case A2(i: I); case B2(b: B); case C2(i: I); case D2(b: B); case E2(i: I); case F2(b: B); case G2(i: I); case H2(b: B);
-  case A3(i: I); case B3(b: B); case C3(i: I); case D3(b: B); case E3(i: I); case F3(b: B); case G3(i: I); case H3(b: B);
-  case A4(i: I); case B4(b: B); case C4(i: I); case D4(b: B); case E4(i: I); case F4(b: B); case G4(i: I); case H4(b: B);
-  case A5(i: I); case B5(b: B); case C5(i: I); case D5(b: B); case E5(i: I); case F5(b: B); case G5(i: I); case H5(b: B);
-  case A6(i: I); case B6(b: B); case C6(i: I); case D6(b: B); case E6(i: I); case F6(b: B); case G6(i: I); case H6(b: B);
-  case A7(i: I); case B7(b: B); case C7(i: I); case D7(b: B); case E7(i: I); case F7(b: B); case G7(i: I); case H7(b: B);
-  case A8(i: I); case B8(b: B); case C8(i: I); case D8(b: B); case E8(i: I); case F8(b: B); case G8(i: I); case H8(b: B);
+  case A0(i: I); case B0(b: B); case C0(i: I); case D0(b: B); case E0(i: I); case F0(b: B); case G0(i: I); case H0(b: B); case I0(i: I); case J0(b: B);
+  case A1(i: I); case B1(b: B); case C1(i: I); case D1(b: B); case E1(i: I); case F1(b: B); case G1(i: I); case H1(b: B); case I1(i: I); case J1(b: B);
+  case A2(i: I); case B2(b: B); case C2(i: I); case D2(b: B); case E2(i: I); case F2(b: B); case G2(i: I); case H2(b: B); case I2(i: I); case J2(b: B);
+  case A3(i: I); case B3(b: B); case C3(i: I); case D3(b: B); case E3(i: I); case F3(b: B); case G3(i: I); case H3(b: B); case I3(i: I); case J3(b: B);
+  case A4(i: I); case B4(b: B); case C4(i: I); case D4(b: B); case E4(i: I); case F4(b: B); case G4(i: I); case H4(b: B); case I4(i: I); case J4(b: B);
+  case A5(i: I); case B5(b: B); case C5(i: I); case D5(b: B); case E5(i: I); case F5(b: B); case G5(i: I); case H5(b: B); case I5(i: I); case J5(b: B);
+  case A6(i: I); case B6(b: B); case C6(i: I); case D6(b: B); case E6(i: I); case F6(b: B); case G6(i: I); case H6(b: B); case I6(i: I); case J6(b: B);
+  case A7(i: I); case B7(b: B); case C7(i: I); case D7(b: B); case E7(i: I); case F7(b: B); case G7(i: I); case H7(b: B); case I7(i: I); case J7(b: B);
+  case A8(i: I); case B8(b: B); case C8(i: I); case D8(b: B); case E8(i: I); case F8(b: B); case G8(i: I); case H8(b: B); case I8(i: I); case J8(b: B);
 }
 enum C100 {
-  case A0(i: I); case B0(b: B); case C0(i: I); case D0(b: B); case E0(i: I); case F0(b: B); case G0(i: I); case H0(b: B);
-  case A1(i: I); case B1(b: B); case C1(i: I); case D1(b: B); case E1(i: I); case F1(b: B); case G1(i: I); case H1(b: B);
-  case A2(i: I); case B2(b: B); case C2(i: I); case D2(b: B); case E2(i: I); case F2(b: B); case G2(i: I); case H2(b: B);
-  case A3(i: I); case B3(b: B); case C3(i: I); case D3(b: B); case E3(i: I); case F3(b: B); case G3(i: I); case H3(b: B);
-  case A4(i: I); case B4(b: B); case C4(i: I); case D4(b: B); case E4(i: I); case F4(b: B); case G4(i: I); case H4(b: B);
-  case A5(i: I); case B5(b: B); case C5(i: I); case D5(b: B); case E5(i: I); case F5(b: B); case G5(i: I); case H5(b: B);
-  case A6(i: I); case B6(b: B); case C6(i: I); case D6(b: B); case E6(i: I); case F6(b: B); case G6(i: I); case H6(b: B);
-  case A7(i: I); case B7(b: B); case C7(i: I); case D7(b: B); case E7(i: I); case F7(b: B); case G7(i: I); case H7(b: B);
-  case A8(i: I); case B8(b: B); case C8(i: I); case D8(b: B); case E8(i: I); case F8(b: B); case G8(i: I); case H8(b: B);
-  case A9(i: I); case B9(b: B); case C9(i: I); case D9(b: B); case E9(i: I); case F9(b: B); case G9(i: I); case H9(b: B);
+  case A0(i: I); case B0(b: B); case C0(i: I); case D0(b: B); case E0(i: I); case F0(b: B); case G0(i: I); case H0(b: B); case I0(i: I); case J0(b: B);
+  case A1(i: I); case B1(b: B); case C1(i: I); case D1(b: B); case E1(i: I); case F1(b: B); case G1(i: I); case H1(b: B); case I1(i: I); case J1(b: B);
+  case A2(i: I); case B2(b: B); case C2(i: I); case D2(b: B); case E2(i: I); case F2(b: B); case G2(i: I); case H2(b: B); case I2(i: I); case J2(b: B);
+  case A3(i: I); case B3(b: B); case C3(i: I); case D3(b: B); case E3(i: I); case F3(b: B); case G3(i: I); case H3(b: B); case I3(i: I); case J3(b: B);
+  case A4(i: I); case B4(b: B); case C4(i: I); case D4(b: B); case E4(i: I); case F4(b: B); case G4(i: I); case H4(b: B); case I4(i: I); case J4(b: B);
+  case A5(i: I); case B5(b: B); case C5(i: I); case D5(b: B); case E5(i: I); case F5(b: B); case G5(i: I); case H5(b: B); case I5(i: I); case J5(b: B);
+  case A6(i: I); case B6(b: B); case C6(i: I); case D6(b: B); case E6(i: I); case F6(b: B); case G6(i: I); case H6(b: B); case I6(i: I); case J6(b: B);
+  case A7(i: I); case B7(b: B); case C7(i: I); case D7(b: B); case E7(i: I); case F7(b: B); case G7(i: I); case H7(b: B); case I7(i: I); case J7(b: B);
+  case A8(i: I); case B8(b: B); case C8(i: I); case D8(b: B); case E8(i: I); case F8(b: B); case G8(i: I); case H8(b: B); case I8(i: I); case J8(b: B);
+  case A9(i: I); case B9(b: B); case C9(i: I); case D9(b: B); case E9(i: I); case F9(b: B); case G9(i: I); case H9(b: B); case I9(i: I); case J9(b: B);
 }
 
 case class PK0[A]()
@@ -1147,77 +1149,77 @@ case class PK100[A](
 )
 
 enum CK10[+A] {
-  case A0(a: A); case B0(b: B); case C0(a: A); case D0(b: B); case E0(a: A); case F0(b: B); case G0(a: A); case H0(b: B);
+  case A0(a: A); case B0(b: B); case C0(a: A); case D0(b: B); case E0(a: A); case F0(b: B); case G0(a: A); case H0(b: B); case I0(a: A); case J0(b: B);
 }
 enum CK20[+A] {
-  case A0(a: A); case B0(b: B); case C0(a: A); case D0(b: B); case E0(a: A); case F0(b: B); case G0(a: A); case H0(b: B);
-  case A1(a: A); case B1(b: B); case C1(a: A); case D1(b: B); case E1(a: A); case F1(b: B); case G1(a: A); case H1(b: B);
+  case A0(a: A); case B0(b: B); case C0(a: A); case D0(b: B); case E0(a: A); case F0(b: B); case G0(a: A); case H0(b: B); case I0(a: A); case J0(b: B);
+  case A1(a: A); case B1(b: B); case C1(a: A); case D1(b: B); case E1(a: A); case F1(b: B); case G1(a: A); case H1(b: B); case I1(a: A); case J1(b: B);
 }
 enum CK30[+A] {
-  case A0(a: A); case B0(b: B); case C0(a: A); case D0(b: B); case E0(a: A); case F0(b: B); case G0(a: A); case H0(b: B);
-  case A1(a: A); case B1(b: B); case C1(a: A); case D1(b: B); case E1(a: A); case F1(b: B); case G1(a: A); case H1(b: B);
-  case A2(a: A); case B2(b: B); case C2(a: A); case D2(b: B); case E2(a: A); case F2(b: B); case G2(a: A); case H2(b: B);
+  case A0(a: A); case B0(b: B); case C0(a: A); case D0(b: B); case E0(a: A); case F0(b: B); case G0(a: A); case H0(b: B); case I0(a: A); case J0(b: B);
+  case A1(a: A); case B1(b: B); case C1(a: A); case D1(b: B); case E1(a: A); case F1(b: B); case G1(a: A); case H1(b: B); case I1(a: A); case J1(b: B);
+  case A2(a: A); case B2(b: B); case C2(a: A); case D2(b: B); case E2(a: A); case F2(b: B); case G2(a: A); case H2(b: B); case I2(a: A); case J2(b: B);
 }
 enum CK40[+A] {
-  case A0(a: A); case B0(b: B); case C0(a: A); case D0(b: B); case E0(a: A); case F0(b: B); case G0(a: A); case H0(b: B);
-  case A1(a: A); case B1(b: B); case C1(a: A); case D1(b: B); case E1(a: A); case F1(b: B); case G1(a: A); case H1(b: B);
-  case A2(a: A); case B2(b: B); case C2(a: A); case D2(b: B); case E2(a: A); case F2(b: B); case G2(a: A); case H2(b: B);
-  case A3(a: A); case B3(b: B); case C3(a: A); case D3(b: B); case E3(a: A); case F3(b: B); case G3(a: A); case H3(b: B);
+  case A0(a: A); case B0(b: B); case C0(a: A); case D0(b: B); case E0(a: A); case F0(b: B); case G0(a: A); case H0(b: B); case I0(a: A); case J0(b: B);
+  case A1(a: A); case B1(b: B); case C1(a: A); case D1(b: B); case E1(a: A); case F1(b: B); case G1(a: A); case H1(b: B); case I1(a: A); case J1(b: B);
+  case A2(a: A); case B2(b: B); case C2(a: A); case D2(b: B); case E2(a: A); case F2(b: B); case G2(a: A); case H2(b: B); case I2(a: A); case J2(b: B);
+  case A3(a: A); case B3(b: B); case C3(a: A); case D3(b: B); case E3(a: A); case F3(b: B); case G3(a: A); case H3(b: B); case I3(a: A); case J3(b: B);
 }
 enum CK50[+A] {
-  case A0(a: A); case B0(b: B); case C0(a: A); case D0(b: B); case E0(a: A); case F0(b: B); case G0(a: A); case H0(b: B);
-  case A1(a: A); case B1(b: B); case C1(a: A); case D1(b: B); case E1(a: A); case F1(b: B); case G1(a: A); case H1(b: B);
-  case A2(a: A); case B2(b: B); case C2(a: A); case D2(b: B); case E2(a: A); case F2(b: B); case G2(a: A); case H2(b: B);
-  case A3(a: A); case B3(b: B); case C3(a: A); case D3(b: B); case E3(a: A); case F3(b: B); case G3(a: A); case H3(b: B);
-  case A4(a: A); case B4(b: B); case C4(a: A); case D4(b: B); case E4(a: A); case F4(b: B); case G4(a: A); case H4(b: B);
+  case A0(a: A); case B0(b: B); case C0(a: A); case D0(b: B); case E0(a: A); case F0(b: B); case G0(a: A); case H0(b: B); case I0(a: A); case J0(b: B);
+  case A1(a: A); case B1(b: B); case C1(a: A); case D1(b: B); case E1(a: A); case F1(b: B); case G1(a: A); case H1(b: B); case I1(a: A); case J1(b: B);
+  case A2(a: A); case B2(b: B); case C2(a: A); case D2(b: B); case E2(a: A); case F2(b: B); case G2(a: A); case H2(b: B); case I2(a: A); case J2(b: B);
+  case A3(a: A); case B3(b: B); case C3(a: A); case D3(b: B); case E3(a: A); case F3(b: B); case G3(a: A); case H3(b: B); case I3(a: A); case J3(b: B);
+  case A4(a: A); case B4(b: B); case C4(a: A); case D4(b: B); case E4(a: A); case F4(b: B); case G4(a: A); case H4(b: B); case I4(a: A); case J4(b: B);
 }
 enum CK60[+A] {
-  case A0(a: A); case B0(b: B); case C0(a: A); case D0(b: B); case E0(a: A); case F0(b: B); case G0(a: A); case H0(b: B);
-  case A1(a: A); case B1(b: B); case C1(a: A); case D1(b: B); case E1(a: A); case F1(b: B); case G1(a: A); case H1(b: B);
-  case A2(a: A); case B2(b: B); case C2(a: A); case D2(b: B); case E2(a: A); case F2(b: B); case G2(a: A); case H2(b: B);
-  case A3(a: A); case B3(b: B); case C3(a: A); case D3(b: B); case E3(a: A); case F3(b: B); case G3(a: A); case H3(b: B);
-  case A4(a: A); case B4(b: B); case C4(a: A); case D4(b: B); case E4(a: A); case F4(b: B); case G4(a: A); case H4(b: B);
-  case A5(a: A); case B5(b: B); case C5(a: A); case D5(b: B); case E5(a: A); case F5(b: B); case G5(a: A); case H5(b: B);
+  case A0(a: A); case B0(b: B); case C0(a: A); case D0(b: B); case E0(a: A); case F0(b: B); case G0(a: A); case H0(b: B); case I0(a: A); case J0(b: B);
+  case A1(a: A); case B1(b: B); case C1(a: A); case D1(b: B); case E1(a: A); case F1(b: B); case G1(a: A); case H1(b: B); case I1(a: A); case J1(b: B);
+  case A2(a: A); case B2(b: B); case C2(a: A); case D2(b: B); case E2(a: A); case F2(b: B); case G2(a: A); case H2(b: B); case I2(a: A); case J2(b: B);
+  case A3(a: A); case B3(b: B); case C3(a: A); case D3(b: B); case E3(a: A); case F3(b: B); case G3(a: A); case H3(b: B); case I3(a: A); case J3(b: B);
+  case A4(a: A); case B4(b: B); case C4(a: A); case D4(b: B); case E4(a: A); case F4(b: B); case G4(a: A); case H4(b: B); case I4(a: A); case J4(b: B);
+  case A5(a: A); case B5(b: B); case C5(a: A); case D5(b: B); case E5(a: A); case F5(b: B); case G5(a: A); case H5(b: B); case I5(a: A); case J5(b: B);
 }
 enum CK70[+A] {
-  case A0(a: A); case B0(b: B); case C0(a: A); case D0(b: B); case E0(a: A); case F0(b: B); case G0(a: A); case H0(b: B);
-  case A1(a: A); case B1(b: B); case C1(a: A); case D1(b: B); case E1(a: A); case F1(b: B); case G1(a: A); case H1(b: B);
-  case A2(a: A); case B2(b: B); case C2(a: A); case D2(b: B); case E2(a: A); case F2(b: B); case G2(a: A); case H2(b: B);
-  case A3(a: A); case B3(b: B); case C3(a: A); case D3(b: B); case E3(a: A); case F3(b: B); case G3(a: A); case H3(b: B);
-  case A4(a: A); case B4(b: B); case C4(a: A); case D4(b: B); case E4(a: A); case F4(b: B); case G4(a: A); case H4(b: B);
-  case A5(a: A); case B5(b: B); case C5(a: A); case D5(b: B); case E5(a: A); case F5(b: B); case G5(a: A); case H5(b: B);
-  case A6(a: A); case B6(b: B); case C6(a: A); case D6(b: B); case E6(a: A); case F6(b: B); case G6(a: A); case H6(b: B);
+  case A0(a: A); case B0(b: B); case C0(a: A); case D0(b: B); case E0(a: A); case F0(b: B); case G0(a: A); case H0(b: B); case I0(a: A); case J0(b: B);
+  case A1(a: A); case B1(b: B); case C1(a: A); case D1(b: B); case E1(a: A); case F1(b: B); case G1(a: A); case H1(b: B); case I1(a: A); case J1(b: B);
+  case A2(a: A); case B2(b: B); case C2(a: A); case D2(b: B); case E2(a: A); case F2(b: B); case G2(a: A); case H2(b: B); case I2(a: A); case J2(b: B);
+  case A3(a: A); case B3(b: B); case C3(a: A); case D3(b: B); case E3(a: A); case F3(b: B); case G3(a: A); case H3(b: B); case I3(a: A); case J3(b: B);
+  case A4(a: A); case B4(b: B); case C4(a: A); case D4(b: B); case E4(a: A); case F4(b: B); case G4(a: A); case H4(b: B); case I4(a: A); case J4(b: B);
+  case A5(a: A); case B5(b: B); case C5(a: A); case D5(b: B); case E5(a: A); case F5(b: B); case G5(a: A); case H5(b: B); case I5(a: A); case J5(b: B);
+  case A6(a: A); case B6(b: B); case C6(a: A); case D6(b: B); case E6(a: A); case F6(b: B); case G6(a: A); case H6(b: B); case I6(a: A); case J6(b: B);
 }
 enum CK80[+A] {
-  case A0(a: A); case B0(b: B); case C0(a: A); case D0(b: B); case E0(a: A); case F0(b: B); case G0(a: A); case H0(b: B);
-  case A1(a: A); case B1(b: B); case C1(a: A); case D1(b: B); case E1(a: A); case F1(b: B); case G1(a: A); case H1(b: B);
-  case A2(a: A); case B2(b: B); case C2(a: A); case D2(b: B); case E2(a: A); case F2(b: B); case G2(a: A); case H2(b: B);
-  case A3(a: A); case B3(b: B); case C3(a: A); case D3(b: B); case E3(a: A); case F3(b: B); case G3(a: A); case H3(b: B);
-  case A4(a: A); case B4(b: B); case C4(a: A); case D4(b: B); case E4(a: A); case F4(b: B); case G4(a: A); case H4(b: B);
-  case A5(a: A); case B5(b: B); case C5(a: A); case D5(b: B); case E5(a: A); case F5(b: B); case G5(a: A); case H5(b: B);
-  case A6(a: A); case B6(b: B); case C6(a: A); case D6(b: B); case E6(a: A); case F6(b: B); case G6(a: A); case H6(b: B);
-  case A7(a: A); case B7(b: B); case C7(a: A); case D7(b: B); case E7(a: A); case F7(b: B); case G7(a: A); case H7(b: B);
+  case A0(a: A); case B0(b: B); case C0(a: A); case D0(b: B); case E0(a: A); case F0(b: B); case G0(a: A); case H0(b: B); case I0(a: A); case J0(b: B);
+  case A1(a: A); case B1(b: B); case C1(a: A); case D1(b: B); case E1(a: A); case F1(b: B); case G1(a: A); case H1(b: B); case I1(a: A); case J1(b: B);
+  case A2(a: A); case B2(b: B); case C2(a: A); case D2(b: B); case E2(a: A); case F2(b: B); case G2(a: A); case H2(b: B); case I2(a: A); case J2(b: B);
+  case A3(a: A); case B3(b: B); case C3(a: A); case D3(b: B); case E3(a: A); case F3(b: B); case G3(a: A); case H3(b: B); case I3(a: A); case J3(b: B);
+  case A4(a: A); case B4(b: B); case C4(a: A); case D4(b: B); case E4(a: A); case F4(b: B); case G4(a: A); case H4(b: B); case I4(a: A); case J4(b: B);
+  case A5(a: A); case B5(b: B); case C5(a: A); case D5(b: B); case E5(a: A); case F5(b: B); case G5(a: A); case H5(b: B); case I5(a: A); case J5(b: B);
+  case A6(a: A); case B6(b: B); case C6(a: A); case D6(b: B); case E6(a: A); case F6(b: B); case G6(a: A); case H6(b: B); case I6(a: A); case J6(b: B);
+  case A7(a: A); case B7(b: B); case C7(a: A); case D7(b: B); case E7(a: A); case F7(b: B); case G7(a: A); case H7(b: B); case I7(a: A); case J7(b: B);
 }
 enum CK90[+A] {
-  case A0(a: A); case B0(b: B); case C0(a: A); case D0(b: B); case E0(a: A); case F0(b: B); case G0(a: A); case H0(b: B);
-  case A1(a: A); case B1(b: B); case C1(a: A); case D1(b: B); case E1(a: A); case F1(b: B); case G1(a: A); case H1(b: B);
-  case A2(a: A); case B2(b: B); case C2(a: A); case D2(b: B); case E2(a: A); case F2(b: B); case G2(a: A); case H2(b: B);
-  case A3(a: A); case B3(b: B); case C3(a: A); case D3(b: B); case E3(a: A); case F3(b: B); case G3(a: A); case H3(b: B);
-  case A4(a: A); case B4(b: B); case C4(a: A); case D4(b: B); case E4(a: A); case F4(b: B); case G4(a: A); case H4(b: B);
-  case A5(a: A); case B5(b: B); case C5(a: A); case D5(b: B); case E5(a: A); case F5(b: B); case G5(a: A); case H5(b: B);
-  case A6(a: A); case B6(b: B); case C6(a: A); case D6(b: B); case E6(a: A); case F6(b: B); case G6(a: A); case H6(b: B);
-  case A7(a: A); case B7(b: B); case C7(a: A); case D7(b: B); case E7(a: A); case F7(b: B); case G7(a: A); case H7(b: B);
-  case A8(a: A); case B8(b: B); case C8(a: A); case D8(b: B); case E8(a: A); case F8(b: B); case G8(a: A); case H8(b: B);
+  case A0(a: A); case B0(b: B); case C0(a: A); case D0(b: B); case E0(a: A); case F0(b: B); case G0(a: A); case H0(b: B); case I0(a: A); case J0(b: B);
+  case A1(a: A); case B1(b: B); case C1(a: A); case D1(b: B); case E1(a: A); case F1(b: B); case G1(a: A); case H1(b: B); case I1(a: A); case J1(b: B);
+  case A2(a: A); case B2(b: B); case C2(a: A); case D2(b: B); case E2(a: A); case F2(b: B); case G2(a: A); case H2(b: B); case I2(a: A); case J2(b: B);
+  case A3(a: A); case B3(b: B); case C3(a: A); case D3(b: B); case E3(a: A); case F3(b: B); case G3(a: A); case H3(b: B); case I3(a: A); case J3(b: B);
+  case A4(a: A); case B4(b: B); case C4(a: A); case D4(b: B); case E4(a: A); case F4(b: B); case G4(a: A); case H4(b: B); case I4(a: A); case J4(b: B);
+  case A5(a: A); case B5(b: B); case C5(a: A); case D5(b: B); case E5(a: A); case F5(b: B); case G5(a: A); case H5(b: B); case I5(a: A); case J5(b: B);
+  case A6(a: A); case B6(b: B); case C6(a: A); case D6(b: B); case E6(a: A); case F6(b: B); case G6(a: A); case H6(b: B); case I6(a: A); case J6(b: B);
+  case A7(a: A); case B7(b: B); case C7(a: A); case D7(b: B); case E7(a: A); case F7(b: B); case G7(a: A); case H7(b: B); case I7(a: A); case J7(b: B);
+  case A8(a: A); case B8(b: B); case C8(a: A); case D8(b: B); case E8(a: A); case F8(b: B); case G8(a: A); case H8(b: B); case I8(a: A); case J8(b: B);
 }
 enum CK100[+A] {
-  case A0(a: A); case B0(b: B); case C0(a: A); case D0(b: B); case E0(a: A); case F0(b: B); case G0(a: A); case H0(b: B);
-  case A1(a: A); case B1(b: B); case C1(a: A); case D1(b: B); case E1(a: A); case F1(b: B); case G1(a: A); case H1(b: B);
-  case A2(a: A); case B2(b: B); case C2(a: A); case D2(b: B); case E2(a: A); case F2(b: B); case G2(a: A); case H2(b: B);
-  case A3(a: A); case B3(b: B); case C3(a: A); case D3(b: B); case E3(a: A); case F3(b: B); case G3(a: A); case H3(b: B);
-  case A4(a: A); case B4(b: B); case C4(a: A); case D4(b: B); case E4(a: A); case F4(b: B); case G4(a: A); case H4(b: B);
-  case A5(a: A); case B5(b: B); case C5(a: A); case D5(b: B); case E5(a: A); case F5(b: B); case G5(a: A); case H5(b: B);
-  case A6(a: A); case B6(b: B); case C6(a: A); case D6(b: B); case E6(a: A); case F6(b: B); case G6(a: A); case H6(b: B);
-  case A7(a: A); case B7(b: B); case C7(a: A); case D7(b: B); case E7(a: A); case F7(b: B); case G7(a: A); case H7(b: B);
-  case A8(a: A); case B8(b: B); case C8(a: A); case D8(b: B); case E8(a: A); case F8(b: B); case G8(a: A); case H8(b: B);
-  case A9(a: A); case B9(b: B); case C9(a: A); case D9(b: B); case E9(a: A); case F9(b: B); case G9(a: A); case H9(b: B);
+  case A0(a: A); case B0(b: B); case C0(a: A); case D0(b: B); case E0(a: A); case F0(b: B); case G0(a: A); case H0(b: B); case I0(a: A); case J0(b: B);
+  case A1(a: A); case B1(b: B); case C1(a: A); case D1(b: B); case E1(a: A); case F1(b: B); case G1(a: A); case H1(b: B); case I1(a: A); case J1(b: B);
+  case A2(a: A); case B2(b: B); case C2(a: A); case D2(b: B); case E2(a: A); case F2(b: B); case G2(a: A); case H2(b: B); case I2(a: A); case J2(b: B);
+  case A3(a: A); case B3(b: B); case C3(a: A); case D3(b: B); case E3(a: A); case F3(b: B); case G3(a: A); case H3(b: B); case I3(a: A); case J3(b: B);
+  case A4(a: A); case B4(b: B); case C4(a: A); case D4(b: B); case E4(a: A); case F4(b: B); case G4(a: A); case H4(b: B); case I4(a: A); case J4(b: B);
+  case A5(a: A); case B5(b: B); case C5(a: A); case D5(b: B); case E5(a: A); case F5(b: B); case G5(a: A); case H5(b: B); case I5(a: A); case J5(b: B);
+  case A6(a: A); case B6(b: B); case C6(a: A); case D6(b: B); case E6(a: A); case F6(b: B); case G6(a: A); case H6(b: B); case I6(a: A); case J6(b: B);
+  case A7(a: A); case B7(b: B); case C7(a: A); case D7(b: B); case E7(a: A); case F7(b: B); case G7(a: A); case H7(b: B); case I7(a: A); case J7(b: B);
+  case A8(a: A); case B8(b: B); case C8(a: A); case D8(b: B); case E8(a: A); case F8(b: B); case G8(a: A); case H8(b: B); case I8(a: A); case J8(b: B);
+  case A9(a: A); case B9(b: B); case C9(a: A); case D9(b: B); case E9(a: A); case F9(b: B); case G9(a: A); case H9(b: B); case I9(a: A); case J9(b: B);
 }

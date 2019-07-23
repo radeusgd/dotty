@@ -50,28 +50,28 @@ class Benchmarks {
   val inlinedEqDerivedP90  = Inlined.Eq.derived[P90]
   val inlinedEqDerivedP100 = Inlined.Eq.derived[P100]
 
-  val stagedEqDerivedC10   = Eq.derived[C10]
-  val stagedEqDerivedC20   = Eq.derived[C20]
-  val stagedEqDerivedC30   = Eq.derived[C30]
-  val stagedEqDerivedC40   = Eq.derived[C40]
-  val stagedEqDerivedC50   = Eq.derived[C50]
-  val stagedEqDerivedC60   = Eq.derived[C60]
-  val stagedEqDerivedC70   = Eq.derived[C70]
-  val stagedEqDerivedC80   = Eq.derived[C80]
-  val stagedEqDerivedC90   = Eq.derived[C90]
-  val stagedEqDerivedC100  = Eq.derived[C100]
+  val stagedEqDerivedC10   = Staged.Eq.derived[C10]
+  val stagedEqDerivedC20   = Staged.Eq.derived[C20]
+  val stagedEqDerivedC30   = Staged.Eq.derived[C30]
+  val stagedEqDerivedC40   = Staged.Eq.derived[C40]
+  val stagedEqDerivedC50   = Staged.Eq.derived[C50]
+  val stagedEqDerivedC60   = Staged.Eq.derived[C60]
+  val stagedEqDerivedC70   = Staged.Eq.derived[C70]
+  val stagedEqDerivedC80   = Staged.Eq.derived[C80]
+  val stagedEqDerivedC90   = Staged.Eq.derived[C90]
+  val stagedEqDerivedC100  = Staged.Eq.derived[C100]
 
-  val stagedEqDerivedP0    = Eq.derived[P0]
-  val stagedEqDerivedP10   = Eq.derived[P10]
-  val stagedEqDerivedP20   = Eq.derived[P20]
-  val stagedEqDerivedP30   = Eq.derived[P30]
-  val stagedEqDerivedP40   = Eq.derived[P40]
-  val stagedEqDerivedP50   = Eq.derived[P50]
-  val stagedEqDerivedP60   = Eq.derived[P60]
-  val stagedEqDerivedP70   = Eq.derived[P70]
-  val stagedEqDerivedP80   = Eq.derived[P80]
-  val stagedEqDerivedP90   = Eq.derived[P90]
-  val stagedEqDerivedP100  = Eq.derived[P100]
+  val stagedEqDerivedP0    = Staged.Eq.derived[P0]
+  val stagedEqDerivedP10   = Staged.Eq.derived[P10]
+  val stagedEqDerivedP20   = Staged.Eq.derived[P20]
+  val stagedEqDerivedP30   = Staged.Eq.derived[P30]
+  val stagedEqDerivedP40   = Staged.Eq.derived[P40]
+  val stagedEqDerivedP50   = Staged.Eq.derived[P50]
+  val stagedEqDerivedP60   = Staged.Eq.derived[P60]
+  val stagedEqDerivedP70   = Staged.Eq.derived[P70]
+  val stagedEqDerivedP80   = Staged.Eq.derived[P80]
+  val stagedEqDerivedP90   = Staged.Eq.derived[P90]
+  val stagedEqDerivedP100  = Staged.Eq.derived[P100]
 
   val shapeless3EqDerivedC10   = Shapeless3.Eq.derived[C10]
   val shapeless3EqDerivedC20   = Shapeless3.Eq.derived[C20]
@@ -96,28 +96,28 @@ class Benchmarks {
   val shapeless3EqDerivedP90   = Shapeless3.Eq.derived[P90]
   val shapeless3EqDerivedP100  = Shapeless3.Eq.derived[P100]
 
-  val stagedFunctorDerivedCK10   = Functor.derived[CK10]
-  val stagedFunctorDerivedCK20   = Functor.derived[CK20]
-  val stagedFunctorDerivedCK30   = Functor.derived[CK30]
-  val stagedFunctorDerivedCK40   = Functor.derived[CK40]
-  val stagedFunctorDerivedCK50   = Functor.derived[CK50]
-  val stagedFunctorDerivedCK60   = Functor.derived[CK60]
-  val stagedFunctorDerivedCK70   = Functor.derived[CK70]
-  val stagedFunctorDerivedCK80   = Functor.derived[CK80]
-  val stagedFunctorDerivedCK90   = Functor.derived[CK90]
-  val stagedFunctorDerivedCK100  = Functor.derived[CK100]
+  val stagedFunctorDerivedCK10   = Staged.Functor.derived[CK10]
+  val stagedFunctorDerivedCK20   = Staged.Functor.derived[CK20]
+  val stagedFunctorDerivedCK30   = Staged.Functor.derived[CK30]
+  val stagedFunctorDerivedCK40   = Staged.Functor.derived[CK40]
+  val stagedFunctorDerivedCK50   = Staged.Functor.derived[CK50]
+  val stagedFunctorDerivedCK60   = Staged.Functor.derived[CK60]
+  val stagedFunctorDerivedCK70   = Staged.Functor.derived[CK70]
+  val stagedFunctorDerivedCK80   = Staged.Functor.derived[CK80]
+  val stagedFunctorDerivedCK90   = Staged.Functor.derived[CK90]
+  val stagedFunctorDerivedCK100  = Staged.Functor.derived[CK100]
 
-  val stagedFunctorDerivedPK0    = Functor.derived[PK0]
-  val stagedFunctorDerivedPK10   = Functor.derived[PK10]
-  val stagedFunctorDerivedPK20   = Functor.derived[PK20]
-  val stagedFunctorDerivedPK30   = Functor.derived[PK30]
-  val stagedFunctorDerivedPK40   = Functor.derived[PK40]
-  val stagedFunctorDerivedPK50   = Functor.derived[PK50]
-  val stagedFunctorDerivedPK60   = Functor.derived[PK60]
-  val stagedFunctorDerivedPK70   = Functor.derived[PK70]
-  val stagedFunctorDerivedPK80   = Functor.derived[PK80]
-  val stagedFunctorDerivedPK90   = Functor.derived[PK90]
-  val stagedFunctorDerivedPK100  = Functor.derived[PK100]
+  val stagedFunctorDerivedPK0    = Staged.Functor.derived[PK0]
+  val stagedFunctorDerivedPK10   = Staged.Functor.derived[PK10]
+  val stagedFunctorDerivedPK20   = Staged.Functor.derived[PK20]
+  val stagedFunctorDerivedPK30   = Staged.Functor.derived[PK30]
+  val stagedFunctorDerivedPK40   = Staged.Functor.derived[PK40]
+  val stagedFunctorDerivedPK50   = Staged.Functor.derived[PK50]
+  val stagedFunctorDerivedPK60   = Staged.Functor.derived[PK60]
+  val stagedFunctorDerivedPK70   = Staged.Functor.derived[PK70]
+  val stagedFunctorDerivedPK80   = Staged.Functor.derived[PK80]
+  val stagedFunctorDerivedPK90   = Staged.Functor.derived[PK90]
+  val stagedFunctorDerivedPK100  = Staged.Functor.derived[PK100]
 
   val shapeless3FunctorDerivedCK10   = Shapeless3.Functor.derived[CK10]
   val shapeless3FunctorDerivedCK20   = Shapeless3.Functor.derived[CK20]
@@ -235,26 +235,26 @@ class Benchmarks {
                  assert(p100_a == p100_b)
 
 
-  val c10_a: C10 = C10_J0(true)
-  val c10_b: C10 = C10_J0(true)
-  val c20_a: C20 = C20_J1(true)
-  val c20_b: C20 = C20_J1(true)
-  val c30_a: C30 = C30_J2(true)
-  val c30_b: C30 = C30_J2(true)
-  val c40_a: C40 = C40_J3(true)
-  val c40_b: C40 = C40_J3(true)
-  val c50_a: C50 = C50_J4(true)
-  val c50_b: C50 = C50_J4(true)
-  val c60_a: C60 = C60_J5(true)
-  val c60_b: C60 = C60_J5(true)
-  val c70_a: C70 = C70_J6(true)
-  val c70_b: C70 = C70_J6(true)
-  val c80_a: C80 = C80_J7(true)
-  val c80_b: C80 = C80_J7(true)
-  val c90_a: C90 = C90_J8(true)
-  val c90_b: C90 = C90_J8(true)
-  val c100_a: C100 = C100_J9(true)
-  val c100_b: C100 = C100_J9(true)
+  val c10_a: C10 = C10.J0(true)
+  val c10_b: C10 = C10.J0(true)
+  val c20_a: C20 = C20.J1(true)
+  val c20_b: C20 = C20.J1(true)
+  val c30_a: C30 = C30.J2(true)
+  val c30_b: C30 = C30.J2(true)
+  val c40_a: C40 = C40.J3(true)
+  val c40_b: C40 = C40.J3(true)
+  val c50_a: C50 = C50.J4(true)
+  val c50_b: C50 = C50.J4(true)
+  val c60_a: C60 = C60.J5(true)
+  val c60_b: C60 = C60.J5(true)
+  val c70_a: C70 = C70.J6(true)
+  val c70_b: C70 = C70.J6(true)
+  val c80_a: C80 = C80.J7(true)
+  val c80_b: C80 = C80.J7(true)
+  val c90_a: C90 = C90.J8(true)
+  val c90_b: C90 = C90.J8(true)
+  val c100_a: C100 = C100.J9(true)
+  val c100_b: C100 = C100.J9(true)
 
   @Benchmark def assertInlinedEqDerivedC10EqvC10AC10B: Unit =
                  assert(inlinedEqDerivedC10.eqv(c10_a, c10_b))
@@ -355,16 +355,16 @@ class Benchmarks {
   val pk90: PK90[Int] = PK90[Int](0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1)
   val pk100: PK100[Int] = PK100[Int](0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1)
 
-  val ck10: CK10[Int] = CK10_I0(1)
-  val ck20: CK20[Int] = CK20_I1(1)
-  val ck30: CK30[Int] = CK30_I2(1)
-  val ck40: CK40[Int] = CK40_I3(1)
-  val ck50: CK50[Int] = CK50_I4(1)
-  val ck60: CK60[Int] = CK60_I5(1)
-  val ck70: CK70[Int] = CK70_I6(1)
-  val ck80: CK80[Int] = CK80_I7(1)
-  val ck90: CK90[Int] = CK90_I8(1)
-  val ck100: CK100[Int] = CK100_I9(1)
+  val ck10: CK10[Int] = CK10.I0(1)
+  val ck20: CK20[Int] = CK20.I1(1)
+  val ck30: CK30[Int] = CK30.I2(1)
+  val ck40: CK40[Int] = CK40.I3(1)
+  val ck50: CK50[Int] = CK50.I4(1)
+  val ck60: CK60[Int] = CK60.I5(1)
+  val ck70: CK70[Int] = CK70.I6(1)
+  val ck80: CK80[Int] = CK80.I7(1)
+  val ck90: CK90[Int] = CK90.I8(1)
+  val ck100: CK100[Int] = CK100.I9(1)
 
   @Benchmark def stagedFunctorDerivedCK10MapCK10Inc: Unit =
                  stagedFunctorDerivedCK10.map(ck10)(inc)

@@ -1,6 +1,4 @@
-// A publishLocal is needed to get the first two commit of the branch...
-// .settings(scalaVersion := "0.17.0-bin-20190627-c3dbd50-NIGHTLY")
-scalaVersion := "0.17.0-bin-SNAPSHOT"
+scalaVersion := "0.17.0-bin-20190711-e2130b9-NIGHTLY"
 updateOptions := updateOptions.value.withLatestSnapshots(false)
 
 scalacOptions ++= Seq("-Xmax-inlines", "1000")

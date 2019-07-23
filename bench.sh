@@ -10,14 +10,14 @@ o() {
 mkdir "$HOME/out2" >/dev/null 2>&1 && sbt "run -d $HOME/out2 bench/jmh-dotty/src/main/scala/1.scala"
 
 for framework in Inlined Shapeless3 Staged; do
-  for type in P0 P10 P20 P30 P40 P50 P60 P70 P80 P90 P100 C10 C20 C30 C40 C50 C60 C70 C80 C90 C100; do
+  for type in P0; do # P10 P20 P30 P40 P50 P60 P70 P80 P90 P100 C10 C20 C30 C40 C50 C60 C70 C80 C90 C100; do
     test -f "bench/$framework-eq-$type.log" ||\
     sbt "dotty-bench-bootstrapped/jmh:run 0 1 $(echo "val x = $framework.Eq.derived[$type]" | o) -classpath $HOME/out2 -Xmax-inlines 1000" | tee "bench/$framework-eq-$type.log"
   done
 done
 
 for framework in Shapeless3 Staged; do
-  for type in PK0 PK10 PK20 PK30 PK40 PK50 PK60 PK70 PK80 PK90 PK100  CK10 CK20 CK30 CK40 CK50 CK60 CK70 CK80 CK90 CK100; do
+  for type in PK0; do # PK10 PK20 PK30 PK40 PK50 PK60 PK70 PK80 PK90 PK100  CK10 CK20 CK30 CK40 CK50 CK60 CK70 CK80 CK90 CK100; do
     test -f "bench/$framework-functor-$type.log" ||\
     sbt "dotty-bench-bootstrapped/jmh:run 0 1 $(echo "val x = $framework.Functor.derived[$type]" | o) -classpath $HOME/out2 -Xmax-inlines 1000" | tee "bench/$framework-functor-$type.log"
   done
@@ -30,14 +30,14 @@ cmd=""
 mkdir -p "bench/outs"
 
 for framework in Inlined Shapeless3 Staged; do
-  for type in P0 P10 P20 P30 P40 P50 P60 P70 P80 P90 P100 C10 C20 C30 C40 C50 C60 C70 C80 C90 C100; do
+  for type in P0; do # P10 P20 P30 P40 P50 P60 P70 P80 P90 P100 C10 C20 C30 C40 C50 C60 C70 C80 C90 C100; do
     mkdir -p "bench/outs/$framework-$type"
     cmd="$cmd ; run $(echo "val x = $framework.Eq.derived[$type]" | o) -classpath $HOME/out2 -Xmax-inlines 1000 -d bench/outs/$framework-$type"
   done
 done
 
 for framework in Shapeless3 Staged; do
-  for type in PK0 PK10 PK20 PK30 PK40 PK50 PK60 PK70 PK80 PK90 PK100 CK10 CK20 CK30 CK40 CK50 CK60 CK70 CK80 CK90 CK100; do
+  for type in PK0; do # PK10 PK20 PK30 PK40 PK50 PK60 PK70 PK80 PK90 PK100 CK10 CK20 CK30 CK40 CK50 CK60 CK70 CK80 CK90 CK100; do
     mkdir -p "bench/outs/$framework-$type"
     cmd="$cmd ; run $(echo "val x = $framework.Functor.derived[$type]" | o) -classpath $HOME/out2 -Xmax-inlines 1000 -d bench/outs/$framework-$type"
   done
@@ -48,14 +48,14 @@ sbt "$cmd"
 
 rm "bench/bytecode-sizes.log" || true
 for framework in Inlined Shapeless3 Staged; do
-  for type in P0 P10 P20 P30 P40 P50 P60 P70 P80 P90 P100 C10 C20 C30 C40 C50 C60 C70 C80 C90 C100; do
+  for type in P0; do # P10 P20 P30 P40 P50 P60 P70 P80 P90 P100 C10 C20 C30 C40 C50 C60 C70 C80 C90 C100; do
     printf "$framework-$type,\t" >> "bench/bytecode-sizes.log"
     { find "bench/outs/$framework-$type" -type f -name "*.class" -printf "%s+"; echo 0; } | bc >> "bench/bytecode-sizes.log"
   done
 done
 
 for framework in Shapeless3 Staged; do
-  for type in PK0 PK10 PK20 PK30 PK40 PK50 PK60 PK70 PK80 PK90 PK100 CK10 CK20 CK30 CK40 CK50 CK60 CK70 CK80 CK90 CK100; do
+  for type in PK0; do # PK10 PK20 PK30 PK40 PK50 PK60 PK70 PK80 PK90 PK100 CK10 CK20 CK30 CK40 CK50 CK60 CK70 CK80 CK90 CK100; do
     printf "$framework-$type,\t" >> "bench/bytecode-sizes.log"
     { find "bench/outs/$framework-$type" -type f -name "*.class" -printf "%s+"; echo 0; } | bc >> "bench/bytecode-sizes.log"
   done
@@ -70,7 +70,7 @@ echo --
 echo; echo "Compile time P"
 
 for framework in Inlined Shapeless3 Staged; do
-  for type in P0 P10 P20 P30 P40 P50 P60 P70 P80 P90 P100; do
+  for type in P0; do # P10 P20 P30 P40 P50 P60 P70 P80 P90 P100; do
     printf "$framework.$type"
     cat "bench/$framework-eq-$type.log" | grep '±(' | grep -oP '.*(?=±)' | sed "s/  /,\t/"
   done
@@ -79,7 +79,7 @@ done
 echo; echo "Compile time C"
 
 for framework in Inlined Shapeless3 Staged; do
-  for type in C10 C20 C30 C40 C50 C60 C70 C80 C90 C100; do
+  for type in C10; do # C20 C30 C40 C50 C60 C70 C80 C90 C100; do
     printf "$framework.$type"
     cat "bench/$framework-eq-$type.log" | grep '±(' | grep -oP '.*(?=±)' | sed "s/  /,\t/"
   done
@@ -88,7 +88,7 @@ done
 echo; echo "Compile time PK"
 
 for framework in Shapeless3 Staged; do
-  for type in PK0 PK10 PK20 PK30 PK40 PK50 PK60 PK70 PK80 PK90 PK100; do
+  for type in PK0; do # PK10 PK20 PK30 PK40 PK50 PK60 PK70 PK80 PK90 PK100; do
     printf "$framework.$type"
     cat "bench/$framework-functor-$type.log" | grep '±(' | grep -oP '.*(?=±)' | sed "s/  /,\t/"
   done
@@ -97,7 +97,7 @@ done
 echo; echo "Compile time CK"
 
 for framework in Shapeless3 Staged; do
-  for type in CK10 CK20 CK30 CK40 CK50 CK60 CK70 CK80 CK90 CK100 ; do
+  for type in CK10; do # CK20 CK30 CK40 CK50 CK60 CK70 CK80 CK90 CK100 ; do
     printf "$framework.$type"
     cat "bench/$framework-functor-$type.log" | grep '±(' | grep -oP '.*(?=±)' | sed "s/  /,\t/"
   done
