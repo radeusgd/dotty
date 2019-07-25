@@ -11,7 +11,6 @@ object Shapeless3 {
   type Const[c] = [t] =>> c
   case class Wrap[T](t: T)
 
-
   type ~>[A[_], B[_]] = [t] => A[t] => B[t]
 
   inline def summon[T] = implicit match {
@@ -438,6 +437,8 @@ object Shapeless3 {
       def eqv(x: String, y: String): Boolean = x == y
     }
 
+    import K0.Ops._
+
     given eqGen[A] as Eq[A] given (inst: K0.ProductInstances[Eq, A]) {
       def eqv(x: A, y: A): Boolean = inst.foldLeft2(x, y)(true: Boolean)(
         [t] => (acc: Boolean, eqt: Eq[t], t0: t, t1: t) => Complete(!eqt.eqv(t0, t1))(false)(true)
@@ -451,8 +452,8 @@ object Shapeless3 {
     }
 
     inline def derived[A] given (gen: K0.Generic[A]): Eq[A] = inline gen match {
-      case p: K0.ProductGeneric[A]   => given as p.type = p ; eqGen
-      case c: K0.CoproductGeneric[A] => given as c.type = c ; eqGenC
+      case p: K0.ProductGeneric[A]   => eqGen  given (K0.mkProductInstances given p)
+      case c: K0.CoproductGeneric[A] => eqGenC given (K0.mkCoproductInstances given c)
     }
   }
 
@@ -471,6 +472,8 @@ object Shapeless3 {
       def map[A, B](fga: F[G[A]])(f: A => B): F[G[B]] = ff.map(fga)(ga => fg.map(ga)(f))
     }
 
+    import K1.Ops._
+
     given functorGen[F[_]] as Functor[F] given (inst: => K1.Instances[Functor, F]) {
       def map[A, B](fa: F[A])(f: A => B): F[B] = inst.map(fa)([t[_]] => (ft: Functor[t], ta: t[A]) => ft.map(ta)(f))
     }
@@ -479,7 +482,8 @@ object Shapeless3 {
       def map[A, B](t: T)(f: A => B): T = t
     }
 
-    inline def derived[F[_]] given (gen: K1.Generic[F]): Functor[F] = functorGen
+    inline def derived[F[_]] given (gen: K1.Generic[F]): Functor[F] =
+      functorGen given (K1.mkInstances given gen)
   }
 }
 
