@@ -12,14 +12,14 @@ mkdir "$(pwd)/bench/out2" >/dev/null 2>&1 && sbt "run -d $(pwd)/bench/out2 bench
 for framework in Inlined Shapeless3 Staged; do
   for type in P0 P10 P20 P30 P40 P50 P60 P70 P80 P90 P100 C10 C20 C30 C40 C50 C60 C70 C80 C90 C100; do
     test -f "bench/$framework-eq-$type.log" ||\
-    sbt "dotty-bench-bootstrapped/jmh:run 0 1 $(echo "val x = $framework.Eq.derived[$type]" | o) -classpath $(pwd)/bench/out2 -Xmax-inlines 1000" | tee "bench/$framework-eq-$type.log"
+    sbt "dotty-bench-bootstrapped/jmh:run 0 1 $(echo "import given Shapeless3.K0._; val x = $framework.Eq.derived[$type]" | o) -classpath $(pwd)/bench/out2 -Xmax-inlines 1000" | tee "bench/$framework-eq-$type.log"
   done
 done
 
 for framework in Shapeless3 Staged; do
   for type in PK0 PK10 PK20 PK30 PK40 PK50 PK60 PK70 PK80 PK90 PK100  CK10 CK20 CK30 CK40 CK50 CK60 CK70 CK80 CK90 CK100; do
     test -f "bench/$framework-functor-$type.log" ||\
-    sbt "dotty-bench-bootstrapped/jmh:run 0 1 $(echo "val x = $framework.Functor.derived[$type]" | o) -classpath $(pwd)/bench/out2 -Xmax-inlines 1000" | tee "bench/$framework-functor-$type.log"
+    sbt "dotty-bench-bootstrapped/jmh:run 0 1 $(echo "import given Shapeless3.K1._; val x = $framework.Functor.derived[$type]" | o) -classpath $(pwd)/bench/out2 -Xmax-inlines 1000" | tee "bench/$framework-functor-$type.log"
   done
 done
 
@@ -32,14 +32,14 @@ mkdir -p "bench/outs"
 for framework in Inlined Shapeless3 Staged; do
   for type in P0 P10 P20 P30 P40 P50 P60 P70 P80 P90 P100 C10 C20 C30 C40 C50 C60 C70 C80 C90 C100; do
     mkdir -p "bench/outs/$framework-$type"
-    cmd="$cmd ; run $(echo "val x = $framework.Eq.derived[$type]" | o) -classpath $(pwd)/bench/out2 -Xmax-inlines 1000 -d bench/outs/$framework-$type"
+    cmd="$cmd ; run $(echo "import given Shapeless3.K0._; val x = $framework.Eq.derived[$type]" | o) -classpath $(pwd)/bench/out2 -Xmax-inlines 1000 -d bench/outs/$framework-$type"
   done
 done
 
 for framework in Shapeless3 Staged; do
   for type in PK0 PK10 PK20 PK30 PK40 PK50 PK60 PK70 PK80 PK90 PK100 CK10 CK20 CK30 CK40 CK50 CK60 CK70 CK80 CK90 CK100; do
     mkdir -p "bench/outs/$framework-$type"
-    cmd="$cmd ; run $(echo "val x = $framework.Functor.derived[$type]" | o) -classpath $(pwd)/bench/out2 -Xmax-inlines 1000 -d bench/outs/$framework-$type"
+    cmd="$cmd ; run $(echo "import given Shapeless3.K1._; val x = $framework.Functor.derived[$type]" | o) -classpath $(pwd)/bench/out2 -Xmax-inlines 1000 -d bench/outs/$framework-$type"
   done
 done
 
