@@ -39,7 +39,7 @@ object opaques {
     def (arr: IArray[Float]) length: Int = arr.asInstanceOf[Array[Float]].length
     def (arr: IArray[Double]) length: Int = arr.asInstanceOf[Array[Double]].length
     def (arr: IArray[Object]) length: Int = arr.asInstanceOf[Array[Object]].length
-    def (arr: IArray[T]) length[T] : Int = ??? // arr.asInstanceOf[Array[T]].length
+    def (arr: IArray[T]) length[T] : Int = arr.asInstanceOf[Array[T]].length
   }
 }
 type IArray[+T] = opaques.IArray[T]
