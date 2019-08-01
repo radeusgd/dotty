@@ -73,6 +73,8 @@ trait TypeOrBoundsOps extends Core {
     }
 
     object ConstantType {
+      def apply(const: Constant) given (ctx: Context): ConstantType =
+        internal.ConstantType_apply(const)
       def unapply(typeOrBounds: TypeOrBounds) given (ctx: Context): Option[Constant] =
         internal.matchConstantType(typeOrBounds).map(_.constant)
     }
@@ -84,6 +86,8 @@ trait TypeOrBoundsOps extends Core {
     }
 
     object SymRef {
+      def apply(qual: Type, sym: Symbol) given (ctx: Context): SymRef =
+        internal.SymRef_apply(qual, sym)
       def unapply(typeOrBounds: TypeOrBounds) given (ctx: Context): Option[(Symbol, TypeOrBounds /* Type | NoPrefix */)] =
         internal.matchSymRef_unapply(typeOrBounds)
     }
@@ -109,6 +113,8 @@ trait TypeOrBoundsOps extends Core {
     }
 
     object TypeRef {
+      def apply(qual: Type, name: String) given (ctx: Context): TypeRef =
+        internal.TypeRef_apply(qual, name)
       def unapply(typeOrBounds: TypeOrBounds) given (ctx: Context): Option[(String, TypeOrBounds /* Type | NoPrefix */)] =
         internal.matchTypeRef(typeOrBounds).map(x => (x.name, x.qualifier))
     }
@@ -120,6 +126,8 @@ trait TypeOrBoundsOps extends Core {
     }
 
     object SuperType {
+      def apply(thistpe: Type, supertpe: Type) given (ctx: Context): SuperType =
+        internal.SuperType_apply(thistpe, supertpe)
       def unapply(typeOrBounds: TypeOrBounds) given (ctx: Context): Option[(Type, Type)] =
         internal.matchSuperType(typeOrBounds).map(x => (x.thistpe, x.supertpe))
     }
@@ -131,6 +139,8 @@ trait TypeOrBoundsOps extends Core {
     }
 
     object Refinement {
+      def apply(parent: Type, name: String, info: Type) given (ctx: Context): Refinement =
+        internal.Refinement_apply(parent, name, info)
       def unapply(typeOrBounds: TypeOrBounds) given (ctx: Context): Option[(Type, String, TypeOrBounds /* Type | TypeBounds */)] =
         internal.matchRefinement(typeOrBounds).map(x => (x.parent, x.name, x.info))
     }
@@ -142,6 +152,8 @@ trait TypeOrBoundsOps extends Core {
     }
 
     object AppliedType {
+      def apply(tycon: Type, args: List[Type]) given (ctx: Context): AppliedType =
+        internal.AppliedType_apply(tycon, args)
       def unapply(typeOrBounds: TypeOrBounds) given (ctx: Context): Option[(Type, List[TypeOrBounds /* Type | TypeBounds */])] =
         internal.matchAppliedType(typeOrBounds).map(x => (x.tycon, x.args))
     }
@@ -153,6 +165,8 @@ trait TypeOrBoundsOps extends Core {
     }
 
     object AnnotatedType {
+      def apply(parent: Type, annot: Term) given (ctx: Context): AnnotatedType =
+        internal.AnnotatedType_apply(parent, annot)
       def unapply(typeOrBounds: TypeOrBounds) given (ctx: Context): Option[(Type, Term)] =
         internal.matchAnnotatedType(typeOrBounds).map(x => (x.underlying, x.annot))
     }
@@ -164,6 +178,8 @@ trait TypeOrBoundsOps extends Core {
     }
 
     object AndType {
+      def apply(left: Type, right: Type) given (ctx: Context): AndType =
+        internal.AndType_apply(left, right)
       def unapply(typeOrBounds: TypeOrBounds) given (ctx: Context): Option[(Type, Type)] =
         internal.matchAndType(typeOrBounds).map(x => (x.left, x.right))
     }
@@ -175,6 +191,8 @@ trait TypeOrBoundsOps extends Core {
     }
 
     object OrType {
+      def apply(left: Type, right: Type) given (ctx: Context): OrType =
+        internal.OrType_apply(left, right)
       def unapply(typeOrBounds: TypeOrBounds) given (ctx: Context): Option[(Type, Type)] =
         internal.matchOrType(typeOrBounds).map(x => (x.left, x.right))
     }
@@ -197,6 +215,8 @@ trait TypeOrBoundsOps extends Core {
     }
 
     object ByNameType {
+      def apply(underlying: Type) given Context: ByNameType =
+        internal.ByNameType_apply(underlying)
       def unapply(typeOrBounds: TypeOrBounds) given (ctx: Context): Option[Type] =
         internal.matchByNameType(typeOrBounds).map(_.underlying)
     }

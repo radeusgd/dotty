@@ -2482,7 +2482,7 @@ object Types {
   final class CachedSuperType(thistpe: Type, supertpe: Type) extends SuperType(thistpe, supertpe)
 
   object SuperType {
-    def apply(thistpe: Type, supertpe: Type)(implicit ctx: Context): Type = {
+    def apply(thistpe: Type, supertpe: Type)(implicit ctx: Context): SuperType = {
       assert(thistpe != NoPrefix)
       unique(new CachedSuperType(thistpe, supertpe))
     }

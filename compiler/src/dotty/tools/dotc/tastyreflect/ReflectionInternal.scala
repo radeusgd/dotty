@@ -1143,6 +1143,9 @@ class ReflectionCompilerInterface(val rootContext: core.Contexts.Context) extend
     case _ => None
   }
 
+  def ConstantType_apply(const: Constant) given (ctx: Context): ConstantType =
+    Types.ConstantType(const)
+
   def ConstantType_constant(self: ConstantType) given Context: Constant = self.value
 
   type SymRef = Types.NamedType
@@ -1155,6 +1158,9 @@ class ReflectionCompilerInterface(val rootContext: core.Contexts.Context) extend
       }
     case _ => None
   }
+
+  def SymRef_apply(qual: Type, sym: Symbol) given (ctx: Context): SymRef =
+    Types.NamedType(qual, sym)
 
   def SymRef_qualifier(self: SymRef) given Context: TypeOrBounds = self.prefix
 
@@ -1179,11 +1185,11 @@ class ReflectionCompilerInterface(val rootContext: core.Contexts.Context) extend
     case _ => None
   }
 
-  def TermRef_name(self: TermRef) given Context: String = self.name.toString
-  def TermRef_qualifier(self: TermRef) given Context: TypeOrBounds = self.prefix
-
   def TermRef_apply(qual: TypeOrBounds, name: String) given Context: TermRef =
     Types.TermRef(qual, name.toTermName)
+
+  def TermRef_name(self: TermRef) given Context: String = self.name.toString
+  def TermRef_qualifier(self: TermRef) given Context: TypeOrBounds = self.prefix
 
   type TypeRef = Types.NamedType
 
@@ -1196,6 +1202,9 @@ class ReflectionCompilerInterface(val rootContext: core.Contexts.Context) extend
     case _ => None
   }
 
+  def TypeRef_apply(qual: Type, name: String) given (ctx: Context): TypeRef =
+    Types.NamedType(qual, name.toTypeName)
+
   def TypeRef_name(self: TypeRef) given Context: String = self.name.toString
   def TypeRef_qualifier(self: TypeRef) given Context: TypeOrBounds = self.prefix
 
@@ -1206,6 +1215,9 @@ class ReflectionCompilerInterface(val rootContext: core.Contexts.Context) extend
     case _ => None
   }
 
+  def SuperType_apply(thistpe: Type, supertpe: Type) given Context: SuperType =
+    Types.SuperType(thistpe, supertpe)
+
   def SuperType_thistpe(self: SuperType) given Context: Type = self.thistpe
   def SuperType_supertpe(self: SuperType) given Context: Type = self.supertpe
 
@@ -1215,6 +1227,9 @@ class ReflectionCompilerInterface(val rootContext: core.Contexts.Context) extend
     case tpe: Types.RefinedType => Some(tpe)
     case _ => None
   }
+
+  def Refinement_apply(parent: Type, name: String, info: Type) given Context: Refinement =
+    Types.RefinedType(parent, name.toTypeName, info)
 
   def Refinement_parent(self: Refinement) given Context: Type = self.parent
   def Refinement_name(self: Refinement) given Context: String = self.refinedName.toString
@@ -1227,6 +1242,9 @@ class ReflectionCompilerInterface(val rootContext: core.Contexts.Context) extend
     case _ => None
   }
 
+  def AppliedType_apply(tycon: Type, args: List[Type]) given Context: AppliedType =
+    Types.AppliedType(tycon, args)
+
   def AppliedType_tycon(self: AppliedType) given Context: Type = self.tycon
   def AppliedType_args(self: AppliedType) given Context: List[TypeOrBounds] = self.args
 
@@ -1236,6 +1254,9 @@ class ReflectionCompilerInterface(val rootContext: core.Contexts.Context) extend
     case tpe: Types.AnnotatedType => Some(tpe)
     case _ => None
   }
+
+  def AnnotatedType_apply(parent: Type, annot: Term) given Context: AnnotatedType =
+    Types.AnnotatedType(parent, Annotations.Annotation(annot))
 
   def AnnotatedType_underlying(self: AnnotatedType) given Context: Type = self.underlying.stripTypeVar
   def AnnotatedType_annot(self: AnnotatedType) given Context: Term = self.annot.tree
@@ -1247,6 +1268,9 @@ class ReflectionCompilerInterface(val rootContext: core.Contexts.Context) extend
     case _ => None
   }
 
+  def AndType_apply(left: Type, right: Type) given Context: AndType =
+    Types.AndType(left, right)
+
   def AndType_left(self: AndType) given Context: Type = self.tp1.stripTypeVar
   def AndType_right(self: AndType) given Context: Type = self.tp2.stripTypeVar
 
@@ -1256,6 +1280,9 @@ class ReflectionCompilerInterface(val rootContext: core.Contexts.Context) extend
     case tpe: Types.OrType => Some(tpe)
     case _ => None
   }
+
+  def OrType_apply(left: Type, right: Type) given Context: OrType =
+    Types.OrType(left, right)
 
   def OrType_left(self: OrType) given Context: Type = self.tp1.stripTypeVar
   def OrType_right(self: OrType) given Context: Type = self.tp2.stripTypeVar
@@ -1277,6 +1304,9 @@ class ReflectionCompilerInterface(val rootContext: core.Contexts.Context) extend
     case tpe: Types.ExprType => Some(tpe)
     case _ => None
   }
+
+  def ByNameType_apply(underlying: Type) given Context: ByNameType =
+    Types.ExprType(underlying)
 
   def ByNameType_underlying(self: ByNameType) given Context: Type = self.resType.stripTypeVar
 

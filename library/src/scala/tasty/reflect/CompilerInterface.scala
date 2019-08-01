@@ -923,12 +923,16 @@ trait CompilerInterface {
 
   def matchConstantType(tpe: TypeOrBounds) given (ctx: Context): Option[ConstantType]
 
+  def ConstantType_apply(const: Constant) given (ctx: Context): ConstantType
+
   def ConstantType_constant(self: ConstantType) given (ctx: Context): Constant
 
   /** Type of a reference to a symbol */
   type SymRef <: Type
 
   def matchSymRef(tpe: TypeOrBounds) given (ctx: Context): Option[SymRef]
+
+  def SymRef_apply(qual: Type, sym: Symbol) given (ctx: Context): SymRef
 
   // TODO remove this method. May require splitting SymRef into TypeSymRef and TermSymRef
   def matchSymRef_unapply(tpe: TypeOrBounds) given (ctx: Context): Option[(Symbol, TypeOrBounds /* Type | NoPrefix */)]
@@ -940,15 +944,18 @@ trait CompilerInterface {
 
   def matchTermRef(tpe: TypeOrBounds) given (ctx: Context): Option[TermRef]
 
+  def TermRef_apply(qual: TypeOrBounds, name: String) given Context: TermRef
+
   def TermRef_name(self: TermRef) given (ctx: Context): String
   def TermRef_qualifier(self: TermRef) given (ctx: Context): TypeOrBounds
 
-  def TermRef_apply(qual: TypeOrBounds, name: String) given (ctx: Context): TermRef
 
   /** Type of a reference to a type */
   type TypeRef <: Type
 
   def matchTypeRef(tpe: TypeOrBounds) given (ctx: Context): Option[TypeRef]
+
+  def TypeRef_apply(qual: Type, name: String) given (ctx: Context): TypeRef
 
   def TypeRef_name(self: TypeRef) given (ctx: Context): String
   def TypeRef_qualifier(self: TypeRef) given (ctx: Context): TypeOrBounds
@@ -958,6 +965,8 @@ trait CompilerInterface {
 
   def matchSuperType(tpe: TypeOrBounds) given (ctx: Context): Option[SuperType]
 
+  def SuperType_apply(thistpe: Type, supertpe: Type) given Context: SuperType
+
   def SuperType_thistpe(self: SuperType) given (ctx: Context): Type
   def SuperType_supertpe(self: SuperType) given (ctx: Context): Type
 
@@ -965,6 +974,8 @@ trait CompilerInterface {
   type Refinement <: Type
 
   def matchRefinement(tpe: TypeOrBounds) given (ctx: Context): Option[Refinement]
+
+  def Refinement_apply(parent: Type, name: String, info: Type) given Context: Refinement
 
   def Refinement_parent(self: Refinement) given (ctx: Context): Type
   def Refinement_name(self: Refinement) given (ctx: Context): String
@@ -975,6 +986,8 @@ trait CompilerInterface {
 
   def matchAppliedType(tpe: TypeOrBounds) given (ctx: Context): Option[AppliedType]
 
+  def AppliedType_apply(tycon: Type, args: List[Type]) given Context: AppliedType
+
   def AppliedType_tycon(self: AppliedType) given (ctx: Context): Type
   def AppliedType_args(self: AppliedType) given (ctx: Context): List[TypeOrBounds]
 
@@ -982,6 +995,8 @@ trait CompilerInterface {
   type AnnotatedType <: Type
 
   def matchAnnotatedType(tpe: TypeOrBounds) given (ctx: Context): Option[AnnotatedType]
+
+  def AnnotatedType_apply(parent: Type, annot: Term) given Context: AnnotatedType
 
   def AnnotatedType_underlying(self: AnnotatedType) given (ctx: Context): Type
   def AnnotatedType_annot(self: AnnotatedType) given (ctx: Context): Term
@@ -991,6 +1006,8 @@ trait CompilerInterface {
 
   def matchAndType(tpe: TypeOrBounds) given (ctx: Context): Option[AndType]
 
+  def AndType_apply(left: Type, right: Type) given Context: AndType
+
   def AndType_left(self: AndType) given (ctx: Context): Type
   def AndType_right(self: AndType) given (ctx: Context): Type
 
@@ -998,6 +1015,8 @@ trait CompilerInterface {
   type OrType <: Type
 
   def matchOrType(tpe: TypeOrBounds) given (ctx: Context): Option[OrType]
+
+  def OrType_apply(left: Type, right: Type) given Context: OrType
 
   def OrType_left(self: OrType) given (ctx: Context): Type
   def OrType_right(self: OrType) given (ctx: Context): Type
@@ -1015,6 +1034,8 @@ trait CompilerInterface {
   type ByNameType <: Type
 
   def matchByNameType(tpe: TypeOrBounds) given (ctx: Context): Option[ByNameType]
+
+  def ByNameType_apply(underlying: Type) given Context: ByNameType
 
   def ByNameType_underlying(self: ByNameType) given (ctx: Context): Type
 
