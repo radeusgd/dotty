@@ -1,4 +1,5 @@
-scalaVersion := "0.17.0-bin-SNAPSHOT"
+scalaVersion := "0.18.0-bin-20190725-8095c23-NIGHTLY"
+
 updateOptions := updateOptions.value.withLatestSnapshots(false)
 
 scalacOptions ++= Seq("-Xmax-inlines", "1000")
