@@ -10,15 +10,15 @@ object Test {
   def main(args: Array[String]): Unit = run {
     println("hello")
 
-    def printApp[S: Type, D[_]](sd: StaDyn[S, D]) given Lift[D[S], Expr[S]]: Expr[Unit] =
-      '{ println(${cd(sd).show.toExpr}); println(${cd(sd)}); println() }
+    def printApp(sd: StaDyn[Int, BagOfExpr]): Expr[Unit] =
+      '{ println(${sd.code.show.toExpr}); println(${sd.code}); println() }
 
     '{
       val x: Int = 5
       ${ printApp(sta[Int, BagOfExpr](3) * sta[Int, BagOfExpr](2) * sta[Int, BagOfExpr](2)) }
-      ${ val xx = Bag.sigleton('x); printApp[Int, BagOfExpr](dyn(xx)) }
-      ${ val xx = Bag.sigleton('x); printApp[Int, BagOfExpr](dyn[Int, BagOfExpr](xx) * dyn[Int, BagOfExpr](xx) * dyn[Int, BagOfExpr](xx) * dyn[Int, BagOfExpr](xx) * dyn[Int, BagOfExpr](xx) * dyn[Int, BagOfExpr](xx) * dyn[Int, BagOfExpr](xx) * dyn[Int, BagOfExpr](xx)) }
-      ${ val xx = Bag.sigleton('x); printApp[Int, BagOfExpr](sta[Int, BagOfExpr](3) * dyn[Int, BagOfExpr](xx) * sta[Int, BagOfExpr](2) * sta[Int, BagOfExpr](3) * dyn[Int, BagOfExpr](xx) * dyn[Int, BagOfExpr](xx) * dyn[Int, BagOfExpr](xx) * dyn[Int, BagOfExpr](xx) * dyn[Int, BagOfExpr](xx) * sta[Int, BagOfExpr](1)) }
+      ${ val xx = Bag.sigleton('x); printApp(dyn(xx)) }
+      ${ val xx = Bag.sigleton('x); printApp(dyn[Int, BagOfExpr](xx) * dyn[Int, BagOfExpr](xx) * dyn[Int, BagOfExpr](xx) * dyn[Int, BagOfExpr](xx) * dyn[Int, BagOfExpr](xx) * dyn[Int, BagOfExpr](xx) * dyn[Int, BagOfExpr](xx) * dyn[Int, BagOfExpr](xx)) }
+      ${ val xx = Bag.sigleton('x); printApp(sta[Int, BagOfExpr](3) * dyn[Int, BagOfExpr](xx) * sta[Int, BagOfExpr](2) * sta[Int, BagOfExpr](3) * dyn[Int, BagOfExpr](xx) * dyn[Int, BagOfExpr](xx) * dyn[Int, BagOfExpr](xx) * dyn[Int, BagOfExpr](xx) * dyn[Int, BagOfExpr](xx) * sta[Int, BagOfExpr](1)) }
     }
   }
 }
@@ -67,15 +67,13 @@ delegate [T: Liftable] for Lift[T, Expr[T]] given QuoteContext = (x: T) => x.toE
 // STATIC DYNAMIC
 //
 
-case class StaDyn[S, D[S]](sta: Option[S], dyn: D[S])
+case class StaDyn[S, D[S]](sta: Option[S], dyn: D[S]) {
+  def code given (lift: Lift[D[S], Expr[S]]): Expr[S] = lift(dyn)
+}
 
 object StaDyn {
-
   def sta[S, D[_]](i: S) given (lift: Lift[S, D[S]]): StaDyn[S, D] = StaDyn(Some(i), lift(i))
   def dyn[S, D[_]](d: D[S]): StaDyn[S, D] = StaDyn(None, d)
-
-  def cd[S, D[_]](x: StaDyn[S, D]) given (lift: Lift[D[S], Expr[S]]): Expr[S] = lift(x.dyn)
-
 }
 
 //
