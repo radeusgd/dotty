@@ -4,33 +4,28 @@ import Monoid._
 
 object Test {
   implicit def toolbox: scala.quoted.Toolbox = scala.quoted.Toolbox.make(getClass.getClassLoader)
-  import SD._
-  import delegate SD._
+  import StaDyn._
+  import delegate StaDyn._
 
   def main(args: Array[String]): Unit = run {
     println("hello")
-    // def printApp[T: Type](sd: StaDyn[T]) given Monoid[Expr[T]]: Expr[Unit] =
-    //   '{ println(${cd(sd).show.toExpr}); println(${cd(sd)}); println() }
 
-    // '{
-    //   val x: Int = 5
-    //   ${ printApp(sta(3) * sta(2) * sta(2)) }
-    //   ${ val xx = 'x; printApp(dyn(xx) * dyn(xx) * dyn(xx) * dyn(xx) * dyn(xx) * dyn(xx) * dyn(xx) * dyn(xx)) }
-    //   ${ val xx = 'x; printApp(sta(3) * dyn(xx) * sta(2) * sta(3) * dyn(xx) * dyn(xx) * dyn(xx) * dyn(xx) * dyn(xx) * sta(1)) }
-    // }
-
-    def printApp[S: Type, D](sd: StaDyn2[S, D]) given Lift[D, Expr[S]]: Expr[Unit] =
-      '{ println(${cd2(sd).show.toExpr}); println(${cd2(sd)}); println() }
+    def printApp[S: Type, D[_]](sd: StaDyn[S, D]) given Lift[D[S], Expr[S]]: Expr[Unit] =
+      '{ println(${cd(sd).show.toExpr}); println(${cd(sd)}); println() }
 
     '{
       val x: Int = 5
-      ${ printApp(sta2(3) * sta2(2) * sta2(2)) }
-      ${ val xx = Bag.sigleton('x); printApp(dyn2(xx)) }
-      // ${ val xx = Bag.sigleton('x); printApp(dyn2(xx) * dyn2(xx) * dyn2(xx) * dyn2(xx) * dyn2(xx) * dyn2(xx) * dyn2(xx) * dyn2(xx)) }
-      // ${ val xx = Bag.sigleton('x); printApp(sta2(3) * dyn2(xx) * sta2(2) * sta2(3) * dyn2(xx) * dyn2(xx) * dyn2(xx) * dyn2(xx) * dyn2(xx) * sta2(1)) }
+      ${ printApp(sta[Int, BagOfExpr](3) * sta[Int, BagOfExpr](2) * sta[Int, BagOfExpr](2)) }
+      ${ val xx = Bag.sigleton('x); printApp[Int, BagOfExpr](dyn(xx)) }
+      ${ val xx = Bag.sigleton('x); printApp[Int, BagOfExpr](dyn[Int, BagOfExpr](xx) * dyn[Int, BagOfExpr](xx) * dyn[Int, BagOfExpr](xx) * dyn[Int, BagOfExpr](xx) * dyn[Int, BagOfExpr](xx) * dyn[Int, BagOfExpr](xx) * dyn[Int, BagOfExpr](xx) * dyn[Int, BagOfExpr](xx)) }
+      ${ val xx = Bag.sigleton('x); printApp[Int, BagOfExpr](sta[Int, BagOfExpr](3) * dyn[Int, BagOfExpr](xx) * sta[Int, BagOfExpr](2) * sta[Int, BagOfExpr](3) * dyn[Int, BagOfExpr](xx) * dyn[Int, BagOfExpr](xx) * dyn[Int, BagOfExpr](xx) * dyn[Int, BagOfExpr](xx) * dyn[Int, BagOfExpr](xx) * sta[Int, BagOfExpr](1)) }
     }
   }
 }
+
+//
+// BAG
+//
 
 class Bag[T](private[Bag] val mp: Map[T, Int]) {
   def toList: List[(T, Int)] = mp.toList
@@ -43,9 +38,10 @@ object Bag {
 }
 
 type BagOfExpr[X] = Bag[Expr[X]]
-case class StaDyn[T](sta: Option[T], dyn: Bag[Expr[T]])
 
-case class StaDyn2[S, D](sta: Option[S], dyn: D)
+//
+// LIFT
+//
 
 trait Lift[S, D] {
   def apply(s: S): D
@@ -63,60 +59,38 @@ delegate [T: Type] for Lift[Bag[Expr[T]], Expr[T]] given (m: Monoid[Expr[T]]) gi
   }
 }
 
-delegate [T] for Lift[T, T] { def apply(x: T) = x }
-delegate [T: Liftable] for Lift[T, Expr[T]] given QuoteContext {
-  def apply(x: T) = x.toExpr
-}
+delegate [T] for Lift[T, T] = (x: T) => x
+delegate [T, U] for Lift[T, Bag[U]] given Monoid[U] given (lift: Lift[T, U]) = (x: T) => Bag.sigleton(lift(x))
+delegate [T: Liftable] for Lift[T, Expr[T]] given QuoteContext = (x: T) => x.toExpr
 
-object SD {
-  // type Bag[T] = Map[T, Int]
+//
+// STATIC DYNAMIC
+//
 
-  def sta[T: Monoid: Liftable](i: T) given QuoteContext: StaDyn[T] =
-    StaDyn(Some(i), Bag.sigleton(i.toExpr))
+case class StaDyn[S, D[S]](sta: Option[S], dyn: D[S])
 
-  def dyn[T](i: Expr[T]) given Monoid[Expr[T]]: StaDyn[T] =
-    StaDyn(None, Bag.sigleton(i))
+object StaDyn {
 
-  def dyn[T](bag: Bag[Expr[T]]) given Monoid[Bag[Expr[T]]]: StaDyn[T] =
-    StaDyn(None, bag)
+  def sta[S, D[_]](i: S) given (lift: Lift[S, D[S]]): StaDyn[S, D] = StaDyn(Some(i), lift(i))
+  def dyn[S, D[_]](d: D[S]): StaDyn[S, D] = StaDyn(None, d)
 
-  def sta2[S, D](i: S) given (lift: Lift[S, D]): StaDyn2[S, D] = StaDyn2(Some(i), lift(i))
-  def dyn2[S, D](d: D): StaDyn2[S, D] = StaDyn2(None, d)
+  def cd[S, D[_]](x: StaDyn[S, D]) given (lift: Lift[D[S], Expr[S]]): Expr[S] = lift(x.dyn)
 
-  def cd[T: Type](x: StaDyn[T]) given (m: Monoid[Expr[T]]) given QuoteContext: Expr[T] = {
-    def pow(x: Expr[T], n: Int): Expr[T] =
-      if (n == 0) m.one
-      else if (n == 1) x // Avoid the extra 1
-      else if (n == 2) x * x // Avoid the extra val
-      else if (n % 2 == 0) '{ val y = ${m.prod(x, x)}; ${pow('y, n / 2)}  }
-      else m.prod(x, pow(x, n - 1))
-    x._2.toList.map((x, i) => pow(x, i)).reduce((a, b) => m.prod(a, b))
-  }
-
-  def cd2[S, D](x: StaDyn2[S, D]) given (lift: Lift[D, Expr[S]]): Expr[S] = lift(x.dyn)
-
-  delegate [S, D] for Monoid[StaDyn2[S, D]] given (sm: Monoid[S], dm: Monoid[D], lift: Lift[S, D]) given QuoteContext {
-    val one = sta2(`1`)
+  delegate [S, D[_]] for Monoid[StaDyn[S, D]] given (sm: Monoid[S], dm: Monoid[D[S]], lift: Lift[S, D[S]]) given QuoteContext {
+    val one = sta(`1`)
     val prod = (x, y) => (x, y) match {
-      case (StaDyn2(Some(a), _), StaDyn2(Some(b), _)) => sta2(a * b)
-      case (StaDyn2(Some(sm.one),_), y) => y
-      case (x, StaDyn2(Some(sm.one), _)) => x
-      case (StaDyn2(_, dynx), StaDyn2(_, dyny)) => dyn2(dynx * dyny)
+      case (StaDyn(Some(a), _), StaDyn(Some(b), _)) => sta(a * b)
+      case (StaDyn(Some(sm.one),_), y) => y
+      case (x, StaDyn(Some(sm.one), _)) => x
+      case (StaDyn(_, dynx), StaDyn(_, dyny)) => dyn(dynx * dyny)
     }
   }
-
-  delegate [T: Type: Liftable] for Monoid[StaDyn[T]] given (m: Monoid[T], m2: Monoid[Bag[Expr[T]]]) given QuoteContext {
-    val one = StaDyn(Some(`1`), `1`)
-    val prod = (x, y) => (x.sta, y.sta) match {
-      case (Some(a), Some(b)) => sta(a * b)
-      case (Some(m.one), _) => y
-      case (_, Some(m.one)) => x
-      case _ => dyn(x._2 * y._2)
-    }
-  }
-
 
 }
+
+//
+// MONOIDS
+//
 
 trait Monoid[X] {
   val one: X
@@ -141,6 +115,10 @@ delegate for Monoid[Bag[Expr[Int]]] given QuoteContext {
   val one = Bag.empty
   val prod = (x, y) => x.union(y)
 }
+
+//
+// CMONOIDS
+//
 
 trait CMonoid[X] extends Monoid[X]
 
