@@ -67,13 +67,16 @@ delegate [T: Liftable] for Lift[T, Expr[T]] given QuoteContext = (x: T) => x.toE
 // STATIC DYNAMIC
 //
 
-case class StaDyn[S, D[S]](sta: Option[S], dyn: D[S]) {
+sealed trait StaDyn[S, D[S]] {
+  def dyn: D[S]
   def code given (lift: Lift[D[S], Expr[S]]): Expr[S] = lift(dyn)
 }
+final case class Sta[S, D[S]](sta: S)(val dyn: D[S]) extends StaDyn[S, D]
+final case class Dyn[S, D[S]](dyn: D[S]) extends StaDyn[S, D]
 
 object StaDyn {
-  def sta[S, D[_]](i: S) given (lift: Lift[S, D[S]]): StaDyn[S, D] = StaDyn(Some(i), lift(i))
-  def dyn[S, D[_]](d: D[S]): StaDyn[S, D] = StaDyn(None, d)
+  def sta[S, D[_]](i: S) given (lift: Lift[S, D[S]]): StaDyn[S, D] = Sta(i)(lift(i))
+  def dyn[S, D[_]](d: D[S]): StaDyn[S, D] = Dyn(d)
 }
 
 //
@@ -107,10 +110,10 @@ delegate for Monoid[Bag[Expr[Int]]] given QuoteContext {
 delegate [S, D[_]] for Monoid[StaDyn[S, D]] given (sm: Monoid[S], dm: Monoid[D[S]], lift: Lift[S, D[S]]) given QuoteContext {
   val one = StaDyn.sta(`1`)
   val prod = (x, y) => (x, y) match {
-    case (StaDyn(Some(a), _), StaDyn(Some(b), _)) => StaDyn.sta(a * b)
-    case (StaDyn(Some(sm.one),_), y) => y
-    case (x, StaDyn(Some(sm.one), _)) => x
-    case (StaDyn(_, dynx), StaDyn(_, dyny)) => StaDyn.dyn(dynx * dyny)
+    case (Sta(a), Sta(b)) => StaDyn.sta(a * b)
+    case (Sta(sm.one), y) => y
+    case (x, Sta(sm.one)) => x
+    case (x, y) => StaDyn.dyn(x.dyn * y.dyn)
   }
 }
 
