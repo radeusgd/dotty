@@ -76,16 +76,6 @@ object StaDyn {
 
   def cd[S, D[_]](x: StaDyn[S, D]) given (lift: Lift[D[S], Expr[S]]): Expr[S] = lift(x.dyn)
 
-  delegate [S, D[_]] for Monoid[StaDyn[S, D]] given (sm: Monoid[S], dm: Monoid[D[S]], lift: Lift[S, D[S]]) given QuoteContext {
-    val one = sta(`1`)
-    val prod = (x, y) => (x, y) match {
-      case (StaDyn(Some(a), _), StaDyn(Some(b), _)) => sta(a * b)
-      case (StaDyn(Some(sm.one),_), y) => y
-      case (x, StaDyn(Some(sm.one), _)) => x
-      case (StaDyn(_, dynx), StaDyn(_, dyny)) => dyn(dynx * dyny)
-    }
-  }
-
 }
 
 //
@@ -114,6 +104,16 @@ delegate for Monoid[Expr[Int]] given QuoteContext {
 delegate for Monoid[Bag[Expr[Int]]] given QuoteContext {
   val one = Bag.empty
   val prod = (x, y) => x.union(y)
+}
+
+delegate [S, D[_]] for Monoid[StaDyn[S, D]] given (sm: Monoid[S], dm: Monoid[D[S]], lift: Lift[S, D[S]]) given QuoteContext {
+  val one = StaDyn.sta(`1`)
+  val prod = (x, y) => (x, y) match {
+    case (StaDyn(Some(a), _), StaDyn(Some(b), _)) => StaDyn.sta(a * b)
+    case (StaDyn(Some(sm.one),_), y) => y
+    case (x, StaDyn(Some(sm.one), _)) => x
+    case (StaDyn(_, dynx), StaDyn(_, dyny)) => StaDyn.dyn(dynx * dyny)
+  }
 }
 
 //
