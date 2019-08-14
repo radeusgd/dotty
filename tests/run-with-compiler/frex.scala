@@ -28,6 +28,7 @@ object Test {
 //
 
 class Bag[T](private[Bag] val mp: Map[T, Int]) {
+  def isEmpty = mp.isEmpty
   def toList: List[(T, Int)] = mp.toList
   def union(that: Bag[T]): Bag[T] = new Bag(mp.transform((x, n) => n + that.mp.getOrElse(x, 0)) ++ that.mp.filter(x => !mp.contains(x._1)))
 }
@@ -55,7 +56,8 @@ delegate [T: Type] for Lift[Bag[Expr[T]], Expr[T]] given (m: Monoid[Expr[T]]) gi
       else if (n == 2) x * x // Avoid the extra val
       else if (n % 2 == 0) '{ val y = ${m.prod(x, x)}; ${pow('y, n / 2)}  }
       else m.prod(x, pow(x, n - 1))
-    x.toList.map((x, i) => pow(x, i)).reduce((a, b) => m.prod(a, b))
+    if (x.isEmpty) m.one
+    else x.toList.map((x, i) => pow(x, i)).reduce((a, b) => m.prod(a, b))
   }
 }
 
