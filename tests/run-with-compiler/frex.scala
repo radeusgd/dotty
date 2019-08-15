@@ -69,16 +69,59 @@ delegate [T: Liftable] for Lift[T, Expr[T]] given QuoteContext = (x: T) => x.toE
 // STATIC DYNAMIC
 //
 
+// type BindingTime
+// type Sta <: BindingTime
+// type Dyn <: BindingTime
+
+// trait BT[X <: BindingTime]
+// object BTSta extends BT[Sta]
+// object BTDyn extends BT[Dyn]
+
+// trait SD[T <: BindingTime, A]
+// case class S[A](v: A) extends SD[Sta, A]
+// case class D[A](v: Expr[A]) extends SD[Dyn, A]
+
+// trait Mag[T <: BindingTime, A]
+// case class Leaf[T, A](v: SD[Sta, A]) extends Mag[T, A]
+// case class Br1[A](left: Mag[Sta, A], right: Mag[Dyn, A]) extends Mag[Dyn, A]
+// case class Br2[A](left: Mag[Dyn, A], right: Mag[Sta, A]) extends Mag[Dyn, A]
+
+// enum Tree[A] {
+//   case Leaf(v: A)
+//   case Branch(left: Tree[A], right: Tree[A])
+// }
+
+// trait Magma[A] {
+//   val mag: (A, A) => A
+// }
+
+// delegate [A] for Magma[Tree[A]] {
+//   val mag = Tree.Branch(_, _)
+// }
+
+// delegate [A] for Magma[Exists[Mag, A]] {
+//   val mag: (A, A) => A = ???
+// }
+
+// instance Magma a ⇒ Magma (Exists Mag a) where
+// E a • E b = case (btMag a, btMag b, a, b) of
+// (BTSta, BTSta, LeafM (S a), LeafM (S b)) → E (LeafM (S (a • b)))
+// (BTSta, BTDyn, l, r) → E (Br1 l r)
+// (BTDyn, _ , l, r) → E (Br2 l r)
+
+case class Exists[A[_, _], B](v: B)
+// data Exists (f :: k1 →k2 →*) a where E :: f b a → Exists f a
+
 sealed trait StaDyn[S, D[S]] {
   def dyn: D[S]
   def code given (lift: Lift[D[S], Expr[S]]): Expr[S] = lift(dyn)
 }
-final case class Sta[S, D[S]](sta: S)(val dyn: D[S]) extends StaDyn[S, D]
-final case class Dyn[S, D[S]](dyn: D[S]) extends StaDyn[S, D]
+final case class Sta2[S, D[S]](sta: S)(val dyn: D[S]) extends StaDyn[S, D]
+final case class Dyn2[S, D[S]](dyn: D[S]) extends StaDyn[S, D]
 
 object StaDyn {
-  def sta[S, D[_]](i: S) given (lift: Lift[S, D[S]]): StaDyn[S, D] = Sta(i)(lift(i))
-  def dyn[S, D[_]](d: D[S]): StaDyn[S, D] = Dyn(d)
+  def sta[S, D[S]](i: S) given (lift: Lift[S, D[S]]): StaDyn[S, D] = Sta2(i)(lift(i))
+  def dyn[S, D[S]](d: D[S]): StaDyn[S, D] = Dyn2(d)
 }
 
 //
@@ -112,9 +155,9 @@ delegate for Monoid[Bag[Expr[Int]]] given QuoteContext {
 delegate [S, D[_]] for Monoid[StaDyn[S, D]] given (sm: Monoid[S], dm: Monoid[D[S]], lift: Lift[S, D[S]]) given QuoteContext {
   val one = StaDyn.sta(`1`)
   val prod = (x, y) => (x, y) match {
-    case (Sta(a), Sta(b)) => StaDyn.sta(a * b)
-    case (Sta(sm.one), y) => y
-    case (x, Sta(sm.one)) => x
+    case (Sta2(a), Sta2(b)) => StaDyn.sta(a * b)
+    case (Sta2(sm.one), y) => y
+    case (x, Sta2(sm.one)) => x
     case (x, y) => StaDyn.dyn(x.dyn * y.dyn)
   }
 }
@@ -124,4 +167,22 @@ delegate [S, D[_]] for Monoid[StaDyn[S, D]] given (sm: Monoid[S], dm: Monoid[D[S
 //
 
 trait CMonoid[X] extends Monoid[X]
+
+//
+// MAGMA
+//
+
+// enum Mag[S, D[S]] {
+//   case Leaf(v: StaDyn[S, D])
+//   case Br1(left: Mag[S, D], right: Mag[S, D])
+// }
+
+//
+// ALTERNATE
+//
+
+trait Alternate[X, Y]
+case class Empty[A, B]() extends Alternate[A, B]
+case class ConsA[A, B](head: A, tail: ConsB[A, B] | Empty[A, B]) extends Alternate[A, B]
+case class ConsB[A, B](head: B, tail: ConsA[A, B] | Empty[A, B]) extends Alternate[A, B]
 
