@@ -12,17 +12,20 @@ object Test {
     def extend[A, B](c: C[A] => B): C[A] => C[B]
   }
 
-  case class CArray[A](a: Array[A], i: Int)
+  trait IArray[A](
+    arr: Array[A],
+    i: Int,
+    indices: List[Int],
+    assoc: List[(Int, A)])
 
-  given as Comonad[CArray] {
-    var cursor = 0
+  given as Comonad[IArray] {
 
-    def extract[A](c: CArray[A]): A = c.a(cursor)
+    def extract[A](c: IArray[A]): A = c.arr(c.i)
 
-    def extend[A, B: ClassTag](f: CArray[A] => B): CArray[A] => CArray[B] = (c: CArray[A]) => {
-      val es = (0 until c.a.size).map(j => f(CArray(c.a, j)))
+    def extend[A, B: ClassTag](f: IArray[A] => B): IArray[A] => IArray[B] = (c: IArray[A]) => {
+      var es = c.arr.indices.map(i => (i, f(IArray(c.arr, c.i, c.indices)))).toArray[B]
 
-      CArray[B](es.toArray[B], c.i)
+      IArray[B](es, c.i, c.indices, es)
     }
   }
 }
