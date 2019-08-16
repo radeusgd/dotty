@@ -1,6 +1,7 @@
 import scala.quoted._
 
 import Monoid._
+import Semigroup._
 
 object Test {
   implicit def toolbox: scala.quoted.Toolbox = scala.quoted.Toolbox.make(getClass.getClassLoader)
@@ -13,14 +14,22 @@ object Test {
     def printApp(sd: StaDyn[Int, BagOfExpr]): Expr[Unit] =
       '{ println(${sd.code.show.toExpr}); println(${sd.code}); println() }
 
+    def printAppNat(sd: StaDyn[Nat.T, BagOfExpr]): Expr[Unit] =
+      '{ println(${sd.code.show.toExpr}); println(${sd.code}); println() }
+
     '{
-      val x: Int = 5
+      val x = Nat(5)
       ${ printApp(sta[Int, BagOfExpr](3) * sta[Int, BagOfExpr](2) * sta[Int, BagOfExpr](2)) }
       ${ val xx = Bag.sigleton('x); printApp(dyn(xx)) }
       ${ val xx = Bag.sigleton('x); printApp(dyn[Int, BagOfExpr](xx) * dyn[Int, BagOfExpr](xx) * dyn[Int, BagOfExpr](xx) * dyn[Int, BagOfExpr](xx) * dyn[Int, BagOfExpr](xx) * dyn[Int, BagOfExpr](xx) * dyn[Int, BagOfExpr](xx) * dyn[Int, BagOfExpr](xx)) }
       ${ val xx = Bag.sigleton('x); printApp(sta[Int, BagOfExpr](3) * dyn[Int, BagOfExpr](xx) * sta[Int, BagOfExpr](2) * sta[Int, BagOfExpr](3) * dyn[Int, BagOfExpr](xx) * dyn[Int, BagOfExpr](xx) * dyn[Int, BagOfExpr](xx) * dyn[Int, BagOfExpr](xx) * dyn[Int, BagOfExpr](xx) * sta[Int, BagOfExpr](1)) }
     }
   }
+}
+
+object Nat {
+  opaque type T = Int
+  def apply(n: Int): T = n
 }
 
 //
@@ -69,49 +78,6 @@ delegate [T: Liftable] for Lift[T, Expr[T]] given QuoteContext = (x: T) => x.toE
 // STATIC DYNAMIC
 //
 
-// type BindingTime
-// type Sta <: BindingTime
-// type Dyn <: BindingTime
-
-// trait BT[X <: BindingTime]
-// object BTSta extends BT[Sta]
-// object BTDyn extends BT[Dyn]
-
-// trait SD[T <: BindingTime, A]
-// case class S[A](v: A) extends SD[Sta, A]
-// case class D[A](v: Expr[A]) extends SD[Dyn, A]
-
-// trait Mag[T <: BindingTime, A]
-// case class Leaf[T, A](v: SD[Sta, A]) extends Mag[T, A]
-// case class Br1[A](left: Mag[Sta, A], right: Mag[Dyn, A]) extends Mag[Dyn, A]
-// case class Br2[A](left: Mag[Dyn, A], right: Mag[Sta, A]) extends Mag[Dyn, A]
-
-// enum Tree[A] {
-//   case Leaf(v: A)
-//   case Branch(left: Tree[A], right: Tree[A])
-// }
-
-// trait Magma[A] {
-//   val mag: (A, A) => A
-// }
-
-// delegate [A] for Magma[Tree[A]] {
-//   val mag = Tree.Branch(_, _)
-// }
-
-// delegate [A] for Magma[Exists[Mag, A]] {
-//   val mag: (A, A) => A = ???
-// }
-
-// instance Magma a ⇒ Magma (Exists Mag a) where
-// E a • E b = case (btMag a, btMag b, a, b) of
-// (BTSta, BTSta, LeafM (S a), LeafM (S b)) → E (LeafM (S (a • b)))
-// (BTSta, BTDyn, l, r) → E (Br1 l r)
-// (BTDyn, _ , l, r) → E (Br2 l r)
-
-case class Exists[A[_, _], B](v: B)
-// data Exists (f :: k1 →k2 →*) a where E :: f b a → Exists f a
-
 sealed trait StaDyn[S, D[S]] {
   def dyn: D[S]
   def code given (lift: Lift[D[S], Expr[S]]): Expr[S] = lift(dyn)
@@ -128,26 +94,35 @@ object StaDyn {
 // MONOIDS
 //
 
-trait Monoid[X] {
-  val one: X
+trait Semigroup[X] {
   val prod : (X, X) => X
+}
+object Semigroup {
+  def (a: T) * [T](b: T): given Semigroup[T] => T = the[Semigroup[T]].prod(a, b)
+}
+
+trait CSemigroup[X] extends Semigroup[X]
+
+trait Monoid[X] extends Semigroup[X] {
+  val one: X
 }
 object Monoid {
   def `1`[T]: given Monoid[T] => T = the[Monoid[T]].one
-  def (a: T) * [T](b: T): given Monoid[T] => T = the[Monoid[T]].prod(a, b)
 }
 
-delegate for Monoid[Int] {
+trait CMonoid[X] extends Monoid[X] with CSemigroup[X]
+
+delegate for CMonoid[Int] {
   val one = 1
   val prod = (x, y) => x * y
 }
 
-delegate for Monoid[Expr[Int]] given QuoteContext {
+delegate for CMonoid[Expr[Int]] given QuoteContext {
   val one = '{1}
   val prod = (x, y) => '{ $x * $y }
 }
 
-delegate for Monoid[Bag[Expr[Int]]] given QuoteContext {
+delegate for CMonoid[Bag[Expr[Int]]] given QuoteContext {
   val one = Bag.empty
   val prod = (x, y) => x.union(y)
 }
@@ -163,26 +138,31 @@ delegate [S, D[_]] for Monoid[StaDyn[S, D]] given (sm: Monoid[S], dm: Monoid[D[S
 }
 
 //
-// CMONOIDS
+// SEMI
 //
 
-trait CMonoid[X] extends Monoid[X]
+trait Semi[T]
+case class LeafS[T](value: T) extends Semi[T]
+case class LeafD[T](value: Expr[T]) extends Semi[T]
+case class ConsS[T](value: T, tail: Semi[T]) extends Semi[T]
+case class ConsD[T](expr: Expr[T], tail: Semi[T]) extends Semi[T]
 
-//
-// MAGMA
-//
+object Semi {
+  def consS[T: Semigroup](h: T, tail: Semi[T]): Semi[T] = tail match {
+    case LeafS(v) => LeafS(h * v)
+    case ConsS(v, tail) => ConsS(h * v, tail)
+    case _ => ConsS(h, tail)
+  }
 
-// enum Mag[S, D[S]] {
-//   case Leaf(v: StaDyn[S, D])
-//   case Br1(left: Mag[S, D], right: Mag[S, D])
-// }
+  def consD[T](h: Expr[T], tail: Semi[T]): Semi[T] =
+    ConsD(h, tail)
+}
 
-//
-// ALTERNATE
-//
-
-trait Alternate[X, Y]
-case class Empty[A, B]() extends Alternate[A, B]
-case class ConsA[A, B](head: A, tail: ConsB[A, B] | Empty[A, B]) extends Alternate[A, B]
-case class ConsB[A, B](head: B, tail: ConsA[A, B] | Empty[A, B]) extends Alternate[A, B]
-
+delegate [T: Semigroup] for Semigroup[Semi[T]] {
+  val prod = (x, y) => x match {
+    case LeafS(v) => Semi.consS(v, y)
+    case LeafD(e) => Semi.consD(e, y)
+    case ConsS(v, t) => Semi.consS(v, t * y)
+    case ConsD(e, t) => Semi.consD(e, t * y)
+  }
+}
