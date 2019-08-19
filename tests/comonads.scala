@@ -1,5 +1,6 @@
 import scala.reflect.ClassTag
 
+// https://github.com/dorchard/codo-notation/blob/master/arrays.lhs
 
 object Test {
 
