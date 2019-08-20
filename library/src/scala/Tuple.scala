@@ -18,7 +18,7 @@ sealed trait Tuple extends Any {
     DynamicTuple.dynamicToIArray(this)
 
   /** Return a new tuple by prepending the element to `this` tuple.
-   *  This opteration is O(this.size)
+   *  This operation is O(this.size)
    */
   inline def *: [H, This >: this.type <: Tuple] (x: H): H *: This =
     DynamicTuple.dynamicCons[H, This](x, this)
@@ -74,6 +74,18 @@ object Tuple {
     case h *: t => F[h] *: Map[t, F]
   }
 
+  class View[T <: Tuple](tup: Tuple, offset: Int) {
+
+    def toTuple: T = ???
+
+    override def toString: String = s"View($tup)"
+
+  }
+
+  object View {
+    def (t: View[T]) tail[T <: NonEmptyTuple]: View[Tail[T]] = ???
+  }
+
   /** Convert an array into a tuple of unknown arity and types */
   def fromArray[T](xs: Array[T]): Tuple = {
     val xs2 = xs match {
@@ -114,11 +126,10 @@ sealed trait NonEmptyTuple extends Tuple {
   inline def head[This >: this.type <: NonEmptyTuple]: Head[This] =
     DynamicTuple.dynamicApply[This, 0](this, 0)
 
-  /** Get the tail of this tuple.
-   *  This opteration is O(this.size)
+  /** Get the tuple view of the tail.
+   *  This operation is O(1)
    */
-  inline def tail[This >: this.type <: NonEmptyTuple]: Tail[This] =
-    DynamicTuple.dynamicTail[This](this)
+  inline def tail[This >: this.type <: NonEmptyTuple]: View[Tail[This]] = new View(this, 1)
 
 }
 
@@ -126,5 +137,9 @@ sealed trait NonEmptyTuple extends Tuple {
 sealed abstract class *:[+H, +T <: Tuple] extends NonEmptyTuple
 
 object *: {
+  /** Get the head and a tuple view of the tail.
+   *  This operation is O(1)
+   */
   inline def unapply[H, T <: Tuple](x: H *: T) = (x.head, x.tail)
+  inline def unapply[H, T <: Tuple](x: Tuple.View[H *: T]) = ??? //(x.head, x.tail)
 }
