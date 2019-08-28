@@ -344,7 +344,9 @@ trait QuotesAndSplices { self: Typer =>
       }
     }
 
-    val splicePat = typed(untpd.Tuple(splices.map(x => untpd.TypedSplice(replaceBindingsInTree.transform(x)))).withSpan(quoted.span), patType)
+    val splicePat =
+      if (splices.isEmpty) typed(untpd.TypedSplice(ref(defn.Tuple0Module)), patType)
+      else typed(untpd.Tuple(splices.map(x => untpd.TypedSplice(replaceBindingsInTree.transform(x)))).withSpan(quoted.span), patType)
 
     UnApply(
       fun = ref(defn.InternalQuotedMatcher_unapply.termRef).appliedToTypeTrees(typeBindingsTuple :: TypeTree(patType) :: Nil),

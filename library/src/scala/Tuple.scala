@@ -18,13 +18,13 @@ sealed trait Tuple extends Any {
     DynamicTuple.dynamicToIArray(this)
 
   /** Return a new tuple by prepending the element to `this` tuple.
-   *  This opteration is O(this.size)
+   *  This operation is O(this.size)
    */
   inline def *: [H, This >: this.type <: Tuple] (x: H): H *: This =
     DynamicTuple.dynamicCons[H, This](x, this)
 
   /** Return a new tuple by concatenating `this` tuple with `that` tuple.
-   *  This opteration is O(this.size + that.size)
+   *  This operation is O(this.size + that.size)
    */
   inline def ++ [This >: this.type <: Tuple](that: Tuple): Concat[This, that.type] =
     DynamicTuple.dynamicConcat[This, that.type](this, that)
@@ -37,7 +37,7 @@ sealed trait Tuple extends Any {
    *  `((a1, b1), ..., (an, bn))`. If the two tuples have different sizes,
    *  the extra elements of the larger tuple will be disregarded.
    *  The result is typed as `((A1, B1), ..., (An, Bn))` if at least one of the
-   *  tuple types has a `Unit` tail. Otherwise the result type is
+   *  tuple types has a `Tuple0` tail. Otherwise the result type is
    *  `(A1, B1) *: ... *: (Ai, Bi) *: Tuple`
    */
   inline def zip[This >: this.type <: Tuple, T2 <: Tuple](t2: T2): Zip[This, T2] =
@@ -46,7 +46,7 @@ sealed trait Tuple extends Any {
  /** Called on a tuple `(a1, ..., an)`, returns a new tuple `(f(a1), ..., f(an))`.
   *  The result is typed as `(F[A1], ..., F[An])` if the tuple type is fully known.
   *  If the tuple is of the form `a1 *: ... *: Tuple` (that is, the tail is not known
-  *  to be the cons type.
+  *  to be the `*:` type.
   */
   inline def map[F[_]](f: [t] => t => F[t]): Map[this.type, F] =
     DynamicTuple.dynamicMap(this, f)
@@ -66,7 +66,7 @@ object Tuple {
 
   /** Type of the concatenation of two tuples */
   type Concat[X <: Tuple, +Y <: Tuple] <: Tuple = X match {
-    case Unit => Y
+    case Tuple0 => Y
     case x1 *: xs1 => x1 *: Concat[xs1, Y]
   }
 
@@ -81,25 +81,25 @@ object Tuple {
 
   /** Literal constant Int size of a tuple */
   type Size[X <: Tuple] <: Int = X match {
-    case Unit => 0
+    case Tuple0 => 0
     case x *: xs => S[Size[xs]]
   }
 
   /** Converts a tuple `(T1, ..., Tn)` to `(F[T1], ..., F[Tn])` */
   type Map[Tup <: Tuple, F[_]] <: Tuple = Tup match {
-    case Unit => Unit
+    case Tuple0 => Tuple0
     case h *: t => F[h] *: Map[t, F]
   }
 
   /** Given two tuples, `A1 *: ... *: An * At` and `B1 *: ... *: Bn *: Bt`
-   *  where at least one of `At` or `Bt` is `Unit` or `Tuple`,
+   *  where at least one of `At` or `Bt` is `Tuple0` or `Tuple`,
    *  returns the tuple type `(A1, B1) *: ... *: (An, Bn) *: Ct`
-   *  where `Ct` is `Unit` if `At` or `Bt` is `Unit`, otherwise `Ct` is `Tuple`.
+   *  where `Ct` is `Tuple0` if `At` or `Bt` is `Tuple0`, otherwise `Ct` is `Tuple`.
    */
   type Zip[T1 <: Tuple, T2 <: Tuple] <: Tuple = (T1, T2) match {
     case (h1 *: t1, h2 *: t2) => (h1, h2) *: Zip[t1, t2]
-    case (Unit, _) => Unit
-    case (_, Unit) => Unit
+    case (_, Tuple0) => Tuple0
+    case (Tuple0, _) => Tuple0
     case _ => Tuple
   }
 
@@ -131,6 +131,15 @@ object Tuple {
     Tuple.fromArray(p.productIterator.toArray).asInstanceOf[m.MirroredElemTypes] // TODO use toIArray of Object to avoid double/triple array copy
 }
 
+// TODO move to its own source file
+class Tuple0 extends Tuple {
+  override def toString: String = "()"
+}
+object Tuple0 extends Tuple0 {
+  def apply(): Tuple0 = this
+  def unapply(arg: Tuple0): Boolean = true
+}
+
 /** Tuple of arbitrary non-zero arity */
 sealed trait NonEmptyTuple extends Tuple {
   import Tuple._
@@ -146,7 +155,7 @@ sealed trait NonEmptyTuple extends Tuple {
     DynamicTuple.dynamicApply[This, 0](this, 0)
 
   /** Get the tail of this tuple.
-   *  This opteration is O(this.size)
+   *  This operation is O(this.size)
    */
   inline def tail[This >: this.type <: NonEmptyTuple]: Tail[This] =
     DynamicTuple.dynamicTail[This](this)

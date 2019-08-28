@@ -199,7 +199,7 @@ inline def summon[T]: T = given match {
 }
 
 inline def summonAll[T <: Tuple]: List[Eq[_]] = inline erasedValue[T] match {
-  case _: Unit => Nil
+  case _: Tuple0 => Nil
   case _: (t *: ts) => summon[Eq[t]] :: summonAll[ts]
 }
 ```
@@ -247,7 +247,7 @@ inline def summon[T]: T = given match {
 }
 
 inline def summonAll[T <: Tuple]: List[Eq[_]] = inline erasedValue[T] match {
-  case _: Unit => Nil
+  case _: Tuple0 => Nil
   case _: (t *: ts) => summon[Eq[t]] :: summonAll[ts]
 }
 

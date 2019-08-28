@@ -132,7 +132,7 @@ object Lst {
 
   type Shape[T] = Shape.Cases[(
     Shape.Case[Cons[T], (T, Lst[T])],
-    Shape.Case[Nil.type, Unit]
+    Shape.Case[Nil.type, Tuple0]
   )]
 
   val genericClass = new GenericClass("Cons\000hd\000tl\001Nil")
@@ -185,8 +185,8 @@ object Either {
   import TypeLevel._
 
   type Shape[L, R] = Shape.Cases[(
-    Shape.Case[Left[L], L *: Unit],
-    Shape.Case[Right[R], R *: Unit]
+    Shape.Case[Left[L], L *: Tuple0],
+    Shape.Case[Right[R], R *: Tuple0]
   )]
 
   val genericClass = new GenericClass("Left\000x\001Right\000x")
@@ -223,7 +223,7 @@ object Show {
         val formal = elems.elementLabel(n)
         val actual = tryShow[elem](elems(n).asInstanceOf)
         s"$formal = $actual" :: showElems[elems1](elems, n + 1)
-      case _: Unit =>
+      case _: Tuple0 =>
         Nil
     }
 
@@ -245,7 +245,7 @@ object Show {
           case _ =>
             error("invalid call to showCases: one of Alts is not a subtype of T")
         }
-      case _: Unit =>
+      case _: Tuple0 =>
         throw new MatchError(x)
     }
 

@@ -18,8 +18,8 @@ package internal {
   object TupledFunction {
 
     def tupledFunction0[F, G]: TupledFunction[F, G] = new TupledFunction {
-      def tupled(f: F): G = ((args: Unit) => f.asInstanceOf[() => Any].apply()).asInstanceOf[G]
-      def untupled(g: G): F = (() => g.asInstanceOf[Unit => Any].apply(())).asInstanceOf[F]
+      def tupled(f: F): G = ((args: Tuple0) => f.asInstanceOf[() => Any].apply()).asInstanceOf[G]
+      def untupled(g: G): F = (() => g.asInstanceOf[Tuple0 => Any].apply(Tuple0())).asInstanceOf[F]
     }
 
     def tupledFunction1[F, G]: TupledFunction[F, G] = new TupledFunction {

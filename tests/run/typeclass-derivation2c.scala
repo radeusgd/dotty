@@ -173,18 +173,18 @@ case class Right[R](elem: R) extends Either[Nothing, R]
 object Left extends Generic.Product[Left[_]] {
   def fromProduct(p: Product): Left[_] = Left(productElement[Any](p, 0))
   implicit def GenericLeft[L]: Generic.Product[Left[L]] {
-    type ElemTypes = L *: Unit
+    type ElemTypes = L *: Tuple0
     type CaseLabel = "Left"
-    type ElemLabels = "x" *: Unit
+    type ElemLabels = "x" *: Tuple0
   } = this.asInstanceOf
 }
 
 object Right extends Generic.Product[Right[_]] {
   def fromProduct(p: Product): Right[_] = Right(productElement[Any](p, 0))
   implicit def GenericRight[R]: Generic.Product[Right[R]] {
-    type ElemTypes = R *: Unit
+    type ElemTypes = R *: Tuple0
     type CaseLabel = "Right"
-    type ElemLabels = "x" *: Unit
+    type ElemLabels = "x" *: Tuple0
   } = this.asInstanceOf
 }
 
@@ -221,7 +221,7 @@ object Eq {
       case _: (elem *: elems1) =>
         tryEql[elem](productElement[elem](x, n), productElement[elem](y, n)) &&
         eqlElems[elems1](n + 1)(x, y)
-      case _: Unit =>
+      case _: Tuple0 =>
         true
     }
 
@@ -276,7 +276,7 @@ object Pickler {
       case _: (elem *: elems1) =>
         tryPickle[elem](buf, productElement[elem](x, n))
         pickleElems[elems1](n + 1)(buf, x)
-      case _: Unit =>
+      case _: Tuple0 =>
     }
 
   inline def pickleProduct[T](g: Generic.Product[T])(buf: mutable.ListBuffer[Int], x: Any): Unit =
@@ -301,7 +301,7 @@ object Pickler {
       case _: (elem *: elems1) =>
         elems(n) = tryUnpickle[elem](buf).asInstanceOf[AnyRef]
         unpickleElems[elems1](n + 1)(buf, elems)
-      case _: Unit =>
+      case _: Tuple0 =>
     }
 
   inline def unpickleProduct[T](g: Generic.Product[T])(buf: mutable.ListBuffer[Int]): T = {
@@ -370,7 +370,7 @@ object Show {
             val actual = tryShow(productElement[elem](x, n))
             s"$formal = $actual" :: showElems[elems1, labels1](n + 1)(x)
         }
-      case _: Unit =>
+      case _: Tuple0 =>
         Nil
     }
 

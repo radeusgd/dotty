@@ -6,7 +6,7 @@ object Test {
   }
 
   type Len[X] <: Int = X match {
-    case Unit => 0
+    case Tuple0 => 0
     case x *: xs => S[Len[xs]]
   }
 
@@ -28,7 +28,7 @@ object Test {
   erased val z1: Head[(Int, String)] = 22
 
   type Concat[X <: Tuple, Y <: Tuple] <: Tuple = X match {
-    case Unit => Y
+    case Tuple0 => Y
     case x1 *: xs1 => x1 *: Concat[xs1, Y]
   }
 
@@ -55,12 +55,12 @@ object Test {
   erased val y4: Elem[(String, Int, Boolean), 2] = erasedValue[Boolean]
   erased val z4: Boolean = erasedValue[Elem[(String, Int, Boolean), 2]]
 
-  erased val y5: Concat[Unit, (String, Int)] = erasedValue[(String, Int)]
-  erased val z5: (String, Int) = erasedValue[Concat[Unit, (String, Int)]]
+  erased val y5: Concat[Tuple0, (String, Int)] = erasedValue[(String, Int)]
+  erased val z5: (String, Int) = erasedValue[Concat[Tuple0, (String, Int)]]
   erased val y6: Concat[(Boolean, Boolean), (String, Int)] = erasedValue[Boolean *: Boolean *: (String, Int)]
   erased val z6: Boolean *: Boolean *: (String, Int) = erasedValue[Concat[(Boolean, Boolean), (String, Int)]]
-  erased val y7: (Boolean, Boolean, String, Int) = erasedValue[Concat[(Boolean, Boolean), String *: Int *: Unit]]
-  erased val z7: Concat[(Boolean, Boolean), String *: Int *: Unit] = erasedValue[(Boolean, Boolean, String, Int)]
+  erased val y7: (Boolean, Boolean, String, Int) = erasedValue[Concat[(Boolean, Boolean), String *: Int *: Tuple0]]
+  erased val z7: Concat[(Boolean, Boolean), String *: Int *: Tuple0] = erasedValue[(Boolean, Boolean, String, Int)]
 
   def index[Xs <: NonEmptyTuple](xs: Xs, n: Int): Elem[Xs, n.type] = xs(n).asInstanceOf
 

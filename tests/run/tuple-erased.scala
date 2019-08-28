@@ -49,11 +49,11 @@ object Test {
     assert(t23.isInstanceOf[*:[_, _]])
     assert(t24.isInstanceOf[*:[_, _]])
 
-    val x = ()
+    val x = Tuple0()
     assert(x.asInstanceOf[Tuple] == x)
     assert(x.asInstanceOf[Any] == x)
 
-    val y: *:[Int, *:[String, Unit]] = (1, "s")
+    val y: *:[Int, *:[String, Tuple0]] = (1, "s")
     y: Tuple
   }
 }

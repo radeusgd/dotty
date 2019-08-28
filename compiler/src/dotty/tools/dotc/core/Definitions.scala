@@ -685,6 +685,9 @@ class Definitions {
   @tu lazy val NonEmptyTupleTypeRef: TypeRef = ctx.requiredClassRef("scala.NonEmptyTuple")
   def NonEmptyTupleClass(implicit ctx: Context): ClassSymbol = NonEmptyTupleTypeRef.symbol.asClass
     lazy val NonEmptyTuple_tail: Symbol = NonEmptyTupleClass.requiredMethod("tail")
+  @tu lazy val Tuple0TypeRef: TypeRef = ctx.requiredClassRef("scala.Tuple0")
+  def Tuple0Class(implicit ctx: Context): ClassSymbol = Tuple0TypeRef.symbol.asClass
+  @tu lazy val Tuple0Module: Symbol = ctx.requiredModule("scala.Tuple0")
 
   @tu lazy val PairClass: ClassSymbol = ctx.requiredClass("scala.*:")
   @tu lazy val TupleXXLClass: ClassSymbol = ctx.requiredClass("scala.TupleXXL")
@@ -1073,7 +1076,7 @@ class Definitions {
       case _ if bound < 0 => Some(acc.reverse)
       case tp: AppliedType if defn.PairClass == tp.classSymbol => rec(tp.args(1), tp.args.head :: acc, bound - 1)
       case tp: AppliedType if defn.isTupleClass(tp.tycon.classSymbol) => Some(acc.reverse ::: tp.args)
-      case tp if tp.classSymbol == defn.UnitClass => Some(acc.reverse)
+      case tp if tp.classSymbol == defn.Tuple0Class => Some(acc.reverse)
       case _ => None
     }
     rec(tp.stripTypeVar, Nil, bound)
@@ -1169,7 +1172,7 @@ class Definitions {
     def syntheticParent(tparams: List[TypeSymbol]): Type =
       if (tparams.isEmpty) TupleTypeRef
       else TypeOps.nestedPairs(tparams.map(_.typeRef))
-    if (isTupleClass(cls) || cls == UnitClass) parents :+ syntheticParent(tparams)
+    if (isTupleClass(cls) || cls == Tuple0Class) parents :+ syntheticParent(tparams)
     else parents
   }
 

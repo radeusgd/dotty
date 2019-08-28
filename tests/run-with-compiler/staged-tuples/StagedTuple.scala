@@ -38,7 +38,7 @@ object StagedTuple {
     if (!specialize) '{dynamicFromArray[T]($xs)}
     else xs.bind { xs =>
       val tup: Expr[Any] = size match {
-        case Some(0)  => '{}
+        case Some(0)  => '{Tuple0()}
         case Some(1)  => '{Tuple1( $xs(0))}
         case Some(2)  => '{Tuple2( $xs(0), $xs(1))}
         case Some(3)  => '{Tuple3( $xs(0), $xs(1), $xs(2))}
@@ -106,7 +106,7 @@ object StagedTuple {
     else {
       val res = size match {
         case Some(1) =>
-          '{}
+          '{Tuple0()}
         case Some(2) =>
           tup.as[Tuple2[_, _]].bind(t => '{Tuple1($t._2)})
         case Some(3) =>

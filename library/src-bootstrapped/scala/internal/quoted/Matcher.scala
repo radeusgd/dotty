@@ -14,7 +14,7 @@ object Matcher {
    *
    *  Examples:
    *    - `Matcher.unapply('{ f(0, myInt) })('{ f(0, myInt) }, _)`
-   *       will return `Some(())` (where `()` is a tuple of arity 0)
+   *       will return `Some(Tuple0())`
    *    - `Matcher.unapply('{ f(0, myInt) })('{ f(patternHole[Int], patternHole[Int]) }, _)`
    *       will return `Some(Tuple2('{0}, '{ myInt }))`
    *    - `Matcher.unapply('{ f(0, "abc") })('{ f(0, patternHole[Int]) }, _)`
@@ -360,7 +360,7 @@ object Matcher {
   private object Matching {
 
     def notMatched: Matching = None
-    val matched: Matching = Some(())
+    val matched: Matching = Some(Tuple0())
     def matched(x: Any): Matching = Some(Tuple1(x))
 
     def (self: Matching) asOptionOfTuple: Option[Tuple] = self
@@ -384,7 +384,7 @@ object Matcher {
      */
     def foldMatchings(matchings: Matching*): Matching = {
       // TODO improve performance
-      matchings.foldLeft[Matching](Some(())) {
+      matchings.foldLeft[Matching](Some(Tuple0())) {
         case (Some(acc), Some(holes)) => Some(acc ++ holes)
         case (_, _) => None
       }

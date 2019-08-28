@@ -46,7 +46,7 @@ package object quoted {
     def (seq: Seq[Expr[_]]) toExprOfTuple given QuoteContext: Expr[Tuple] = {
       seq match {
         case Seq() =>
-          Expr.unitExpr
+          '{ Tuple0() }
         case Seq('{ $x1: $t1 }) =>
           '{ Tuple1($x1) }
         case Seq('{ $x1: $t1 }, '{ $x2: $t2 }) =>

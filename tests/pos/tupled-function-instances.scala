@@ -3,7 +3,7 @@ object Test {
     type T
     type R
 
-    the[TupledFunction[() => R, Unit => R]]
+    the[TupledFunction[() => R, Tuple0 => R]]
     the[TupledFunction[T => R, Tuple1[T] => R]]
     the[TupledFunction[(T, T) => R, ((T, T)) => R]]
     the[TupledFunction[(T, T, T) => R, ((T, T, T)) => R]]

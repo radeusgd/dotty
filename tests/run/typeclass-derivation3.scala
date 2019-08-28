@@ -41,7 +41,7 @@ object typeclasses {
         case _: (elem *: elems1) =>
           tryEql[elem](productElement[elem](x, n), productElement[elem](y, n)) &&
           eqlElems[elems1](n + 1)(x, y)
-        case _: Unit =>
+        case _: Tuple0 =>
           true
       }
 
@@ -56,7 +56,7 @@ object typeclasses {
               case m: Mirror.ProductOf[`alt`] => eqlElems[m.MirroredElemTypes](0)(x, y)
             }
           else eqlCases[alts1](n + 1)(x, y, ord)
-        case _: Unit =>
+        case _: Tuple0 =>
           false
       }
 
@@ -98,7 +98,7 @@ object typeclasses {
         case _: (elem *: elems1) =>
           tryPickle[elem](buf, productElement[elem](x, n))
           pickleElems[elems1](n + 1)(buf, x)
-        case _: Unit =>
+        case _: Tuple0 =>
       }
 
     inline def pickleCases[Alts <: Tuple](n: Int)(buf: mutable.ListBuffer[Int], x: Any, ord: Int): Unit =
@@ -109,7 +109,7 @@ object typeclasses {
               case m: Mirror.ProductOf[`alt`] => pickleElems[m.MirroredElemTypes](0)(buf, x)
             }
           else pickleCases[alts1](n + 1)(buf, x, ord)
-        case _: Unit =>
+        case _: Tuple0 =>
       }
 
     inline def tryUnpickle[T](buf: mutable.ListBuffer[Int]): T = delegate match {
@@ -121,7 +121,7 @@ object typeclasses {
         case _: (elem *: elems1) =>
           elems(n) = tryUnpickle[elem](buf).asInstanceOf[AnyRef]
           unpickleElems[elems1](n + 1)(buf, elems)
-        case _: Unit =>
+        case _: Tuple0 =>
       }
 
     inline def unpickleCase[T, Elems <: Tuple](buf: mutable.ListBuffer[Int], m: Mirror.ProductOf[T]): T = {
@@ -144,7 +144,7 @@ object typeclasses {
                 unpickleCase[`alt` & T, m.MirroredElemTypes](buf, m)
             }
           else unpickleCases[T, alts1](n + 1)(buf, ord)
-        case _: Unit =>
+        case _: Tuple0 =>
           throw new IndexOutOfBoundsException(s"unexpected ordinal number: $ord")
       }
 
@@ -196,7 +196,7 @@ object typeclasses {
               val actual = tryShow(productElement[elem](x, n))
               s"$formal = $actual" :: showElems[elems1, labels1](n + 1)(x)
           }
-        case _: Unit =>
+        case _: Tuple0 =>
           Nil
     }
 
@@ -217,7 +217,7 @@ object typeclasses {
                 showCase(x, m)
             }
           else showCases[alts1](n + 1)(x, ord)
-        case _: Unit =>
+        case _: Tuple0 =>
           throw new MatchError(x)
       }
 

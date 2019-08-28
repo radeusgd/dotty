@@ -70,8 +70,8 @@ class TupleOptimizations extends MiniPhase with IdentityDenotTransformer {
         val size = tpes.size
         assert(size > 0)
         if (size == 1) {
-          // ()
-          Literal(Constant(()))
+          // Tuple0()
+          ref(defn.Tuple0Module).select(nme.apply).appliedToArgs(Nil)
         }
         else if (size <= 5) {
           // val t = tup.asInstanceOf[TupleN[...]]
@@ -203,8 +203,7 @@ class TupleOptimizations extends MiniPhase with IdentityDenotTransformer {
 
   private def knownTupleFromIterator(size: Int, it: Tree)(implicit ctx: Context): Tree = {
     if (size == 0) {
-      // Unit for empty tuple
-      Literal(Constant(())) // TODO should this code be here? Or assert(size > specializedSize)
+      ref(defn.Tuple0Module).select(nme.apply).appliedToArgs(Nil)
     }
     else if (size <= MaxTupleArity) {
       // TupleN(it.next(), ..., it.next())

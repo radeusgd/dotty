@@ -108,9 +108,9 @@ object Lst extends Mirror.Sum {
 
     implicit def mirror: Mirror.Singleton {
       type _MonoType = Nil.type
-      type ElemTypes = Unit
+      type ElemTypes = Tuple0
       type CaseLabel = "Nil"
-      type ElemLabels = Unit
+      type ElemLabels = Tuple0
     } = this.asInstanceOf
   }
 
@@ -173,9 +173,9 @@ object Left extends Mirror.Product {
   def _fromProduct(p: Product): Left[_] = Left(productElement[Any](p, 0))
   implicit def mirror[L]: Mirror.Product {
     type _MonoType = Left[L]
-    type ElemTypes = L *: Unit
+    type ElemTypes = L *: Tuple0
     type CaseLabel = "Left"
-    type ElemLabels = "x" *: Unit
+    type ElemLabels = "x" *: Tuple0
   } = this.asInstanceOf
 }
 
@@ -184,9 +184,9 @@ object Right extends Mirror.Product {
   def _fromProduct(p: Product): Right[_] = Right(productElement[Any](p, 0))
   implicit def mirror[R]: Mirror.Product {
     type _MonoType = Right[R]
-    type ElemTypes = R *: Unit
+    type ElemTypes = R *: Tuple0
     type CaseLabel = "Right"
-    type ElemLabels = "x" *: Unit
+    type ElemLabels = "x" *: Tuple0
   } = this.asInstanceOf
 }
 
@@ -208,7 +208,7 @@ object Eq {
       case _: (elem *: elems1) =>
         tryEql[elem](productElement[elem](x, n), productElement[elem](y, n)) &&
         eqlElems[elems1](n + 1)(x, y)
-      case _: Unit =>
+      case _: Tuple0 =>
         true
     }
 
@@ -223,7 +223,7 @@ object Eq {
             case m: Mirror.ProductOf[`alt`] => eqlElems[m.ElemTypes](0)(x, y)
           }
         else eqlCases[alts1](n + 1)(x, y, ord)
-      case _: Unit =>
+      case _: Tuple0 =>
         false
     }
 
@@ -264,7 +264,7 @@ object Pickler {
       case _: (elem *: elems1) =>
         tryPickle[elem](buf, productElement[elem](x, n))
         pickleElems[elems1](n + 1)(buf, x)
-      case _: Unit =>
+      case _: Tuple0 =>
     }
 
   inline def pickleCases[Alts <: Tuple](n: Int)(buf: mutable.ListBuffer[Int], x: Any, ord: Int): Unit =
@@ -275,7 +275,7 @@ object Pickler {
             case m: Mirror.ProductOf[`alt`] => pickleElems[m.ElemTypes](0)(buf, x)
           }
         else pickleCases[alts1](n + 1)(buf, x, ord)
-      case _: Unit =>
+      case _: Tuple0 =>
     }
 
   inline def tryUnpickle[T](buf: mutable.ListBuffer[Int]): T = delegate match {
@@ -287,7 +287,7 @@ object Pickler {
       case _: (elem *: elems1) =>
         elems(n) = tryUnpickle[elem](buf).asInstanceOf[AnyRef]
         unpickleElems[elems1](n + 1)(buf, elems)
-      case _: Unit =>
+      case _: Tuple0 =>
     }
 
   inline def unpickleCase[T, Elems <: Tuple](buf: mutable.ListBuffer[Int], m: Mirror.ProductOf[T]): T = {
@@ -310,7 +310,7 @@ object Pickler {
               unpickleCase[`alt` & T, m.ElemTypes](buf, m)
           }
         else unpickleCases[T, alts1](n + 1)(buf, ord)
-      case _: Unit =>
+      case _: Tuple0 =>
         throw new IndexOutOfBoundsException(s"unexpected ordinal number: $ord")
     }
 
@@ -361,7 +361,7 @@ object Show {
             val actual = tryShow(productElement[elem](x, n))
             s"$formal = $actual" :: showElems[elems1, labels1](n + 1)(x)
         }
-      case _: Unit =>
+      case _: Tuple0 =>
         Nil
   }
 
@@ -382,7 +382,7 @@ object Show {
               showCase(x, m)
           }
         else showCases[alts1](n + 1)(x, ord)
-      case _: Unit =>
+      case _: Tuple0 =>
         throw new MatchError(x)
     }
 
