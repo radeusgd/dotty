@@ -43,11 +43,11 @@ sealed trait Tuple extends Any with Product {
   inline def zip[This >: this.type <: Tuple, T2 <: Tuple](t2: T2): Zip[This, T2] =
     DynamicTuple.dynamicZip(this, t2)
 
- /** Called on a tuple `(a1, ..., an)`, returns a new tuple `(f(a1), ..., f(an))`.
-  *  The result is typed as `(F[A1], ..., F[An])` if the tuple type is fully known.
-  *  If the tuple is of the form `a1 *: ... *: Tuple` (that is, the tail is not known
-  *  to be the `*:` type.
-  */
+  /** Called on a tuple `(a1, ..., an)`, returns a new tuple `(f(a1), ..., f(an))`.
+   *  The result is typed as `(F[A1], ..., F[An])` if the tuple type is fully known.
+   *  If the tuple is of the form `a1 *: ... *: Tuple` (that is, the tail is not known
+   *  to be the `*:` type.
+   */
   inline def map[F[_]](f: [t] => t => F[t]): Map[this.type, F] =
     DynamicTuple.dynamicMap(this, f)
 }
@@ -129,16 +129,6 @@ object Tuple {
 
   def fromProductTyped[P <: Product](p: P) given (m: scala.deriving.Mirror.ProductOf[P]): m.MirroredElemTypes =
     Tuple.fromArray(p.productIterator.toArray).asInstanceOf[m.MirroredElemTypes] // TODO use toIArray of Object to avoid double/triple array copy
-}
-
-// TODO move to its own source file
-class Tuple0 extends Tuple with Product0 {
-  override def canEqual(that: Any): Boolean = that.isInstanceOf[Tuple0]
-  override def toString: String = "()"
-}
-object Tuple0 extends Tuple0 {
-  def apply(): Tuple0 = this
-  def unapply(arg: Tuple0): Boolean = true
 }
 
 /** Tuple of arbitrary non-zero arity */
