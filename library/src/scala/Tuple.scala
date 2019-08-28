@@ -6,7 +6,7 @@ import internal._
 import scala.runtime.DynamicTuple
 
 /** Tuple of arbitrary arity */
-sealed trait Tuple extends Any {
+sealed trait Tuple extends Any with Product {
   import Tuple._
 
   /** Create a copy this tuple as an Array */
@@ -132,7 +132,8 @@ object Tuple {
 }
 
 // TODO move to its own source file
-class Tuple0 extends Tuple {
+class Tuple0 extends Tuple with Product0 {
+  override def canEqual(that: Any): Boolean = that.isInstanceOf[Tuple0]
   override def toString: String = "()"
 }
 object Tuple0 extends Tuple0 {

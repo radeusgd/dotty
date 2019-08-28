@@ -9,7 +9,7 @@ object DynamicTuple {
   def to$Array(xs: Tuple, n: Int) = {
     val arr = new Array[Object](n)
     var i = 0
-    val it = xs.asInstanceOf[Product].productIterator
+    val it = xs.productIterator
     while (i < n) {
       arr(i) = it.next().asInstanceOf[Object]
       i += 1
@@ -250,20 +250,19 @@ object DynamicTuple {
   }
 
   def dynamicZip[This <: Tuple, T2 <: Tuple](t1: This, t2: T2): Zip[This, T2] = {
-    if (t1.size == 0 || t2.size == 0) Tuple0().asInstanceOf[Zip[This, T2]]
-    else Tuple.fromArray(
-      t1.asInstanceOf[Product].productIterator.zip(
-      t2.asInstanceOf[Product].productIterator).toArray // TODO use toIArray of Object to avoid double/triple array copy
+    Tuple.fromArray(
+      t1.productIterator.zip(
+      t2.productIterator).toArray // TODO use toIArray of Object to avoid double/triple array copy
     ).asInstanceOf[Zip[This, T2]]
   }
 
   def dynamicMap[This <: Tuple, F[_]](self: This, f: [t] => t => F[t]): Map[This, F] =
-    Tuple.fromArray(self.asInstanceOf[Product].productIterator.map(f(_)).toArray) // TODO use toIArray of Object to avoid double/triple array copy
+    Tuple.fromArray(self.productIterator.map(f(_)).toArray) // TODO use toIArray of Object to avoid double/triple array copy
       .asInstanceOf[Map[This, F]]
 
   def consIterator(head: Any, tail: Tuple): Iterator[Any] =
-    Iterator.single(head) ++ tail.asInstanceOf[Product].productIterator
+    Iterator.single(head) ++ tail.productIterator
 
   def concatIterator(tup1: Tuple, tup2: Tuple): Iterator[Any] =
-    tup1.asInstanceOf[Product].productIterator ++ tup2.asInstanceOf[Product].productIterator
+    tup1.productIterator ++ tup2.productIterator
 }

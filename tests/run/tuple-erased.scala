@@ -51,6 +51,7 @@ object Test {
 
     val x = Tuple0()
     assert(x.asInstanceOf[Tuple] == x)
+    assert(x.asInstanceOf[Product] == x)
     assert(x.asInstanceOf[Any] == x)
 
     val y: *:[Int, *:[String, Tuple0]] = (1, "s")
