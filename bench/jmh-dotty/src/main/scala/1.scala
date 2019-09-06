@@ -573,14 +573,29 @@ object Staged {
     // { def map(x: T)(f: [t] => (F[t], t) => t): T }
 
     trait StagedProductInstances[F[_], T] extends StagedInstances[F, T] {
+      implicit val tag: Type[T]
       def instances: List[Any]
       def accessorsE(value: E[T])(implicit q: QuoteContext): List[E[Any]]
       def constructorE(fields: List[E[Any]])(implicit q: QuoteContext): E[T]
 
-      def foldLeft2E[Acc](x: E[T], y: E[T])(i: E[Acc])(f: [t] => (E[Acc], F[t], E[t], E[t]) => E[Acc]): RE[Acc] =
-        accessorsE(x).safeZip(accessorsE(y)).safeZip(instances).foldLeft(i) {
-          case (acc, ((xn, yn), in)) => f(acc, in.asInstanceOf, xn, yn)
+      def foldLeft2E[Acc: Type](x0: E[T], y0: E[T])(i: E[Acc])(f: [t] => (E[Acc], F[t], E[t], E[t]) => E[Acc]): RE[Acc] = {
+        def re(x: E[T], y: E[T]) =
+          accessorsE(x).safeZip(accessorsE(y)).safeZip(instances).foldLeft(i) {
+            case (acc, ((xn, yn), in)) =>
+              f(acc, in.asInstanceOf, xn, yn)
+          }
+        // val instanceOrRecurse = null
+        '{
+          def foo(x: T, y: T) =
+            ${ re('x, 'y) }
+          foo($x0, $y0)
         }
+         //   def merge(a: E[T], b: E[T]): E[Acc] = {
+         //     $re
+         //   }
+         //   ${ merge(x, y) }
+         // }
+      }
     }
 
     object StagedProductInstances {
@@ -590,6 +605,8 @@ object Staged {
           t: Type[T],
           s: SummonInstances[F, m.MirroredElemTypes]
         ): StagedProductInstances[F, T] = new StagedProductInstances[F, T] {
+          val tag = t
+
           def instances: List[Any] = s.instances
 
           def accessorsE(value: E[T])(implicit q: QuoteContext): List[E[Any]] = {
@@ -941,7 +958,7 @@ case object CNil extends CList[Nothing]
 object CList
 
 // Benchmarks
-
+/*
 type I = Int
 type B = Boolean
 
@@ -1900,3 +1917,4 @@ object Hand {
   //   cat /home/olivier/workspace/dotty/bench/jmh-dotty/src/main/scala/1.scala | sed -n "/$h /,/$h/p" >> "/home/olivier/workspace/dotty/bench/jmh-dotty/src/main/hand/$h.scala"
   // done
 }
+*/
