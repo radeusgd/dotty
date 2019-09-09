@@ -3895,6 +3895,20 @@ object Types {
     override def tryNormalize(implicit ctx: Context): Type = reduced.normalized
 
     def reduced(implicit ctx: Context): Type = {
+      def fullyInstantiated(tp: Type): Boolean = new TypeAccumulator[Boolean] {
+        override def apply(x: Boolean, t: Type) =
+          x && {
+            t match {
+              case tp: TypeRef if tp.symbol.isAbstractOrParamType => false
+              case _: SkolemType | _: TypeVar | _: TypeParamRef => false
+              case _ => foldOver(x, t)
+            }
+          }
+      }.apply(true, tp)
+
+      if (!fullyInstantiated(scrutinee))
+        return NoType
+
       val trackingCtx = ctx.fresh.setTypeComparerFn(new TrackingTypeComparer(_))
       val typeComparer = trackingCtx.typeComparer.asInstanceOf[TrackingTypeComparer]
 
