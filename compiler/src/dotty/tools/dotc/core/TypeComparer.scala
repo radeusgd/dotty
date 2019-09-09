@@ -2420,16 +2420,30 @@ class TrackingTypeComparer(initctx: Context) extends TypeComparer(initctx) {
       }.apply(tp)
 
       val defn.MatchCase(pat, body) = cas1
+
+      def fullyInstantiated(tp: Type): Boolean = new TypeAccumulator[Boolean] {
+        override def apply(x: Boolean, t: Type) =
+          x && {
+            t match {
+              case tp: TypeRef if tp.symbol.isAbstractOrParamType => false
+              case _: SkolemType | _: TypeVar | _: TypeParamRef => false
+              case _ => foldOver(x, t)
+            }
+          }
+      }.apply(true, tp)
+
       if (isSubType(scrut, pat))
         // `scrut` is a subtype of `pat`: *It's a Match!*
-        Some {
-          caseLambda match {
-            case caseLambda: HKTypeLambda =>
+        // println(s"matchCases(${scrut.show}, ${cases.map(_.show)})")
+        caseLambda match {
+          case caseLambda: HKTypeLambda =>
+            if (fullyInstantiated(scrut)) {
               val instances = paramInstances(new Array(caseLambda.paramNames.length), pat)
-              instantiateParams(instances)(body)
-            case _ =>
-              body
-          }
+              Some(instantiateParams(instances)(body))
+            }
+            else Some(NoType)
+          case _ =>
+            Some(body)
         }
       else if (isSubType(widenAbstractTypes(scrut), widenAbstractTypes(pat)))
         Some(NoType)

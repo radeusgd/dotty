@@ -3906,8 +3906,8 @@ object Types {
           }
       }.apply(true, tp)
 
-      if (!fullyInstantiated(scrutinee))
-        return NoType
+      // if (!fullyInstantiated(scrutinee))
+      //   return NoType
 
       val trackingCtx = ctx.fresh.setTypeComparerFn(new TrackingTypeComparer(_))
       val typeComparer = trackingCtx.typeComparer.asInstanceOf[TrackingTypeComparer]

@@ -11,7 +11,7 @@ import Base._
 object UpperBoundParametricVariant {
   trait Cov[+T]
   type M[t] = t match {
-    case Cov[t] => N[t]
+    case Cov[x] => N[x]
   }
 
   trait Root[A] {
