@@ -2228,7 +2228,8 @@ class TypeComparer(initctx: Context) extends ConstraintHandling[AbsentContext] w
                     x && {
                       t match {
                         case tp: TypeRef if tp.symbol.isAbstractOrParamType => false
-                        case _: SkolemType | _: TypeVar | _: TypeParamRef => false
+                        case tv: TypeVar if !tv.isInstantiated => false
+                        case _: SkolemType | _: TypeParamRef => false
                         case _ => foldOver(x, t)
                       }
                     }
@@ -2425,8 +2426,17 @@ class TrackingTypeComparer(initctx: Context) extends TypeComparer(initctx) {
         override def apply(x: Boolean, t: Type) =
           x && {
             t match {
-              case tp: TypeRef if tp.symbol.isAbstractOrParamType => false
-              case _: SkolemType | _: TypeVar | _: TypeParamRef => false
+              // case TypeParamRef(b, n) if b `eq` caseLambda =>
+              //   println(tp)
+              //   true
+              case tp: TypeRef if tp.symbol.isAbstractOrParamType =>
+                println(tp)
+                println(tp.show)
+                println(tp.symbol)
+                println
+                false
+              case tv: TypeVar if !tv.isInstantiated => false
+              // case _: SkolemType => false
               case _ => foldOver(x, t)
             }
           }
