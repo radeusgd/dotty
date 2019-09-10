@@ -1,9 +1,9 @@
 object TupleExample {
   import Tuple._
 
-  type A
-  type B
-  type C
+  trait A
+  trait B
+  trait C
 
   the[Concat[A *: B *: Unit, C *: Unit]    =:=    A *: B *: C *: Unit]
 
