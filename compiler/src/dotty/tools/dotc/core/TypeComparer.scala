@@ -2369,6 +2369,15 @@ class TrackingTypeComparer(initctx: Context) extends TypeComparer(initctx) {
       }
     }
 
+    def invariantBinds(tpe: Type): Boolean = new TypeAccumulator[Boolean] {
+      def apply(x: Boolean, t: Type) = x && (t match {
+        case t @ TypeParamRef(b, n) if b `eq` caseLambda =>
+          variance == 0
+        case _ =>
+          foldOver(x, t)
+      })
+    }.apply(true, tpe)
+
     def instantiateParams(inst: Array[Type]) = new TypeMap {
       def apply(t: Type) = t match {
         case t @ TypeParamRef(b, n) if b `eq` caseLambda => inst(n)
@@ -2426,17 +2435,9 @@ class TrackingTypeComparer(initctx: Context) extends TypeComparer(initctx) {
         override def apply(x: Boolean, t: Type) =
           x && {
             t match {
-              // case TypeParamRef(b, n) if b `eq` caseLambda =>
-              //   println(tp)
-              //   true
-              case tp: TypeRef if tp.symbol.isAbstractOrParamType =>
-                println(tp)
-                println(tp.show)
-                println(tp.symbol)
-                println
-                false
+              case tp: TypeRef if tp.symbol.isAbstractOrParamType => false
               case tv: TypeVar if !tv.isInstantiated => false
-              // case _: SkolemType => false
+              case _: SkolemType => false
               case _ => foldOver(x, t)
             }
           }
@@ -2444,10 +2445,9 @@ class TrackingTypeComparer(initctx: Context) extends TypeComparer(initctx) {
 
       if (isSubType(scrut, pat))
         // `scrut` is a subtype of `pat`: *It's a Match!*
-        // println(s"matchCases(${scrut.show}, ${cases.map(_.show)})")
         caseLambda match {
           case caseLambda: HKTypeLambda =>
-            if (fullyInstantiated(scrut)) {
+            if (invariantBinds(pat) || fullyInstantiated(scrut)) {
               val instances = paramInstances(new Array(caseLambda.paramNames.length), pat)
               Some(instantiateParams(instances)(body))
             }
