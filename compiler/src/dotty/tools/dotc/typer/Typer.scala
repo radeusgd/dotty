@@ -2680,9 +2680,6 @@ class Typer extends Namer
       *  Examples for these cases are found in run/implicitFuns.scala and neg/i2006.scala.
       */
     def adaptNoArgsUnappliedMethod(wtp: MethodType, functionExpected: Boolean, arity: Int): Tree = {
-      def isExpandableApply =
-        defn.isImplicitFunctionClass(tree.symbol.maybeOwner) && functionExpected
-
       /** Is reference to this symbol `f` automatically expanded to `f()`? */
       def isAutoApplied(sym: Symbol): Boolean =
         sym.isConstructor ||
@@ -2699,7 +2696,7 @@ class Typer extends Namer
           !tree.symbol.isConstructor &&
           !tree.symbol.isAllOf(InlineMethod) &&
           !ctx.mode.is(Mode.Pattern) &&
-          !(isSyntheticApply(tree) && !isExpandableApply)) {
+          !(isSyntheticApply(tree) && !functionExpected)) {
         if (!defn.isFunctionType(pt))
           pt match {
             case SAMType(_) if !pt.classSymbol.hasAnnotation(defn.FunctionalInterfaceAnnot) =>
@@ -2724,10 +2721,11 @@ class Typer extends Namer
         defn.isImplicitFunctionClass(underlying.classSymbol)
     }
 
-    def adaptNoArgsOther(wtp: Type): Tree = {
+    def adaptNoArgsOther(wtp: Type, functionExpected: Boolean): Tree = {
       ctx.typeComparer.GADTused = false
-      if (isImplicitFunctionRef(wtp) &&
-          !untpd.isContextualClosure(tree) &&
+      val implicitFun = isImplicitFunctionRef(wtp) && !untpd.isContextualClosure(tree)
+      def caseCompanion = functionExpected && tree.symbol.is(Module) && tree.symbol.companionClass.is(Case)
+      if ((implicitFun || caseCompanion) &&
           !isApplyProto(pt) &&
           pt != AssignProto &&
           !ctx.mode.is(Mode.Pattern) &&
@@ -2843,7 +2841,7 @@ class Typer extends Namer
             }
           adaptNoArgsUnappliedMethod(wtp, funExpected, arity)
         case _ =>
-          adaptNoArgsOther(wtp)
+          adaptNoArgsOther(wtp, functionExpected)
       }
     }
 

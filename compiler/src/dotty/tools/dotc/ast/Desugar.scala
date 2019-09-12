@@ -680,15 +680,6 @@ object desugar {
           mods.is(Private) || (!mods.is(Protected) && mods.hasPrivateWithin)
         }
 
-        val companionParent =
-          if (constrTparams.nonEmpty ||
-              constrVparamss.length > 1 ||
-              mods.is(Abstract) ||
-              restrictedAccess ||
-              isEnumCase) anyRef
-          else
-            // todo: also use anyRef if constructor has a dependent method type (or rule that out)!
-            constrVparamss.foldRight(classTypeRef)((vparams, restpe) => Function(vparams map (_.tpt), restpe))
         def widenedCreatorExpr =
           widenDefs.foldLeft(creatorExpr)((rhs, meth) => Apply(Ident(meth.name), rhs :: Nil))
         val applyMeths =
@@ -714,7 +705,7 @@ object desugar {
           DefDef(methName, derivedTparams, (unapplyParam :: Nil) :: Nil, TypeTree(), unapplyRHS)
             .withMods(synthetic)
         }
-        companionDefs(companionParent, applyMeths ::: unapplyMeth :: companionMembers)
+        companionDefs(anyRef, applyMeths ::: unapplyMeth :: companionMembers)
       }
       else if (companionMembers.nonEmpty || companionDerived.nonEmpty || isEnum)
         companionDefs(anyRef, companionMembers)
