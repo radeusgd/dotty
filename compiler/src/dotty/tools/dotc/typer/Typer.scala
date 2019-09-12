@@ -77,6 +77,14 @@ object Typer {
    *  search was tried on a tree. This will in some cases be reported in error messages
    */
   private[typer] val HiddenSearchFailure = new Property.Key[SearchFailure]
+
+  /** Is tree a compiler-generated `.apply` node that refers to the
+   *  apply of a function class?
+   */
+  private[typer] def isSyntheticApply(tree: tpd.Tree): Boolean = tree match {
+    case tree: tpd.Select => tree.hasAttachment(InsertedApply)
+    case _ => false
+  }
 }
 
 
@@ -2358,11 +2366,6 @@ class Typer extends Namer
       case _ => false
     }
 
-    def isSyntheticApply(tree: Tree): Boolean = tree match {
-      case tree: Select => tree.hasAttachment(InsertedApply)
-      case _ => false
-    }
-
     def tryApply(implicit ctx: Context) = {
       val pt1 = pt.withContext(ctx)
       val sel = typedSelect(untpd.Select(untpd.TypedSplice(tree), nme.apply), pt1)
@@ -2732,7 +2735,8 @@ class Typer extends Namer
           !ctx.isAfterTyper &&
           !ctx.isInlineContext) {
         typr.println(i"insert apply on implicit $tree")
-        typed(untpd.Select(untpd.TypedSplice(tree), nme.apply), pt, locked)
+        val sel = untpd.Select(untpd.TypedSplice(tree), nme.apply).withAttachment(InsertedApply, ())
+        try typed(sel, pt, locked) finally sel.removeAttachment(InsertedApply)
       }
       else if (ctx.mode is Mode.Pattern) {
         checkEqualityEvidence(tree, pt)
