@@ -28,4 +28,5 @@ object UpperBoundParametricVariant {
   // }
 
   // def explode = foo(new Asploder) // ClassCastException
+
 }

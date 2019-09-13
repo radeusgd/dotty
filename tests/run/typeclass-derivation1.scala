@@ -20,7 +20,7 @@ object Deriving {
 
     implicit def consShape[T]: HasProductShape[Lst.Cons[T], (T, Lst[T])] = new {
       def toProduct(xs: Lst.Cons[T]) = (xs.hd, xs.tl)
-      def fromProduct(xs: (T, Lst[T])): Lst.Cons[T] = Lst.Cons(xs(0), xs(1)).asInstanceOf
+      def fromProduct(xs: (T, Lst[T])): Lst.Cons[T] = Lst.Cons(xs._1, xs._2).asInstanceOf
     }
 
     implicit def nilShape[T]: HasProductShape[Lst.Nil.type, Unit] = new {
@@ -60,8 +60,8 @@ object Deriving {
       case _: (elem *: elems1) =>
         val xs1 = xs.asInstanceOf[elem *: elems1]
         val ys1 = ys.asInstanceOf[elem *: elems1]
-        tryEq[elem](xs1.head, ys1.head) &&
-        deriveForProduct[elems1](xs1.tail, ys1.tail)
+        tryEq[elem](xs1.head.asInstanceOf[elem], ys1.head.asInstanceOf[elem]) &&
+        deriveForProduct[elems1](xs1.tail.asInstanceOf[elems1], ys1.tail.asInstanceOf[elems1])
       case _: Unit =>
         true
     }

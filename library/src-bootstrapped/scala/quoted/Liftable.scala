@@ -290,7 +290,7 @@ object Liftable {
 
   given [H: Type: Liftable, T <: Tuple: Type: Liftable] as Liftable[H *: T] = new {
     def toExpr(tup: H *: T): given QuoteContext => Expr[H *: T] =
-      '{ ${the[Liftable[H]].toExpr(tup.head)} *: ${the[Liftable[T]].toExpr(tup.tail)} }
+      '{ ${the[Liftable[H]].toExpr(tup.head.asInstanceOf[H])} *: ${the[Liftable[T]].toExpr(tup.tail.asInstanceOf[T])} }
       // '{ ${tup.head.toExpr} *: ${tup.tail.toExpr} } // TODO figure out why this fails during CI documentation
   }
 
