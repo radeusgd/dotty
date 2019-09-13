@@ -103,3 +103,43 @@ export class TastyDecompilerFeature extends TextDocumentFeature<TextDocumentRegi
     return new TastyDecompilerProvider(client, options.documentSelector!, this.provider)
   }
 }
+
+export interface CompilerClientCapabilities {
+  compiler?: {
+    typechecked?: {
+      dynamicRegistration?: boolean
+    }
+  }
+}
+
+export interface CompilerServerCapabilities {
+  /**
+   * The server provides support for compiler/typechecked.
+   */
+  compilerTypecheckedProvider?: boolean
+}
+
+export class CompilerTypecheckedFeature extends TextDocumentFeature<TextDocumentRegistrationOptions> {
+  constructor(client: BaseLanguageClient) {
+    super(client, CompilerTypecheckedRequest.type)
+  }
+
+  public fillClientCapabilities(capabilities: ClientCapabilities & CompilerClientCapabilities): void {
+    ensure(ensure(capabilities, "compiler")!, "typechecked")!.dynamicRegistration = true
+  }
+
+  public initialize(capabilities: ServerCapabilities & CompilerServerCapabilities, documentSelector: DocumentSelector): void {
+    if (!capabilities.compilerTypecheckedProvider || !documentSelector) {
+      return
+    }
+    this.register(this.messages, {
+      id: generateUuid(),
+      registerOptions: Object.assign({}, { documentSelector: documentSelector })
+    })
+  }
+
+  protected registerLanguageProvider(options: TextDocumentRegistrationOptions): Disposable {
+    let client = this._client
+    return new CompilerProvider(client, options.documentSelector!)
+  }
+}

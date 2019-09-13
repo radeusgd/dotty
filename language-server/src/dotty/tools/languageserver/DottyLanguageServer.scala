@@ -33,6 +33,7 @@ import config.Printers.interactiv
 import languageserver.config.ProjectConfig
 import languageserver.worksheet.{Worksheet, WorksheetService}
 import languageserver.decompiler.{TastyDecompilerService}
+import languageserver.compiler._
 
 import lsp4j.services._
 
@@ -45,7 +46,8 @@ import lsp4j.services._
  *  - This implementation is based on the LSP4J library: https://github.com/eclipse/lsp4j
  */
 class DottyLanguageServer extends LanguageServer
-    with TextDocumentService with WorkspaceService with WorksheetService with TastyDecompilerService { thisServer =>
+    with TextDocumentService with WorkspaceService with WorksheetService with TastyDecompilerService 
+    with CompilerService { thisServer =>
   import ast.tpd._
 
   import DottyLanguageServer._

@@ -66,3 +66,15 @@ export namespace WorksheetPublishOutputNotification {
 export namespace TastyDecompileRequest {
 	export const type = new RequestType<TastyDecompileParams, TastyDecompileResult, void, void>("tasty/decompile")
 }
+
+/** The result of the `compiler/typechecked` request */
+export interface TypecheckedResult {
+  tastyTree: string
+  scala: string
+  error: number
+}
+
+/** The `compiler/typechecked` request */
+export namespace TypecheckedRequest {
+  export const type = new RequestType<TextDocumentPositionParams, TypecheckedResult, void, void>("compiler/typechecked")
+}
