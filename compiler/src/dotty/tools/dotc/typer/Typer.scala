@@ -2727,7 +2727,15 @@ class Typer extends Namer
     def adaptNoArgsOther(wtp: Type, functionExpected: Boolean): Tree = {
       ctx.typeComparer.GADTused = false
       val implicitFun = isImplicitFunctionRef(wtp) && !untpd.isContextualClosure(tree)
-      def caseCompanion = functionExpected && tree.symbol.is(Module) && tree.symbol.companionClass.is(Case)
+      def caseCompanion =
+          functionExpected &&
+          tree.symbol.is(Module) &&
+          tree.symbol.companionClass.is(Case) &&
+          !tree.tpe.widen.classSymbol.asClass.classParents.exists(defn.isFunctionType(_)) && {
+            ctx.warning("The method `apply` is inserted. The auto insertion will be deprecated, please write `" + tree.show + ".apply` explicitly.", tree.sourcePos)
+            true
+          }
+
       if ((implicitFun || caseCompanion) &&
           !isApplyProto(pt) &&
           pt != AssignProto &&
