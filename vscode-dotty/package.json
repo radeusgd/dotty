@@ -85,6 +85,11 @@
     },
     "commands": [
       {
+        "command": "dotty.compiler.typechecked",
+        "title": "Print typechecked expression",
+        "category": "Scala"
+      },
+      {
         "command": "dotty.worksheet.run",
         "title": "Run worksheet",
         "category": "Scala"

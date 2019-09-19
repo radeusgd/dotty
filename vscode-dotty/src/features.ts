@@ -10,6 +10,8 @@ import { Disposable } from 'vscode-jsonrpc'
 import { WorksheetRunRequest, TastyDecompileRequest } from './protocol'
 import { WorksheetProvider } from './worksheet'
 import { TastyDecompilerProvider, DecompiledDocumentProvider } from './tasty-decompiler'
+import { CompilerTypecheckedResult, CompilerTypecheckedRequest } from './protocol'
+import { CompilerProvider } from './compiler'
 
 // Remove this if
 // https://github.com/Microsoft/vscode-languageserver-node/issues/423 is fixed.

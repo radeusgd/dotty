@@ -1,6 +1,6 @@
 import * as vscode from 'vscode'
 import { RequestType, NotificationType } from 'vscode-jsonrpc'
-import { Range, VersionedTextDocumentIdentifier, TextDocumentIdentifier } from 'vscode-languageserver-protocol'
+import { TextDocumentPositionParams, Range, VersionedTextDocumentIdentifier, TextDocumentIdentifier } from 'vscode-languageserver-protocol'
 
 import { client } from './extension'
 
@@ -68,13 +68,11 @@ export namespace TastyDecompileRequest {
 }
 
 /** The result of the `compiler/typechecked` request */
-export interface TypecheckedResult {
-  tastyTree: string
-  scala: string
-  error: number
+export interface CompilerTypecheckedResult {
+  pos: string
 }
 
 /** The `compiler/typechecked` request */
-export namespace TypecheckedRequest {
-  export const type = new RequestType<TextDocumentPositionParams, TypecheckedResult, void, void>("compiler/typechecked")
+export namespace CompilerTypecheckedRequest {
+  export const type = new RequestType<TextDocumentPositionParams, CompilerTypecheckedResult, void, void>("compiler/typechecked")
 }

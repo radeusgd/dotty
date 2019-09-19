@@ -361,6 +361,7 @@ function run(serverOptions: ServerOptions, isOldServer: boolean) {
   client = new LanguageClient(extensionName, "Dotty", serverOptions, clientOptions)
   client.registerFeature(new features.WorksheetRunFeature(client))
   client.registerFeature(new features.TastyDecompilerFeature(client, provider))
+  client.registerFeature(new features.CompilerTypecheckedFeature(client))
 
   if (isOldServer)
     enableOldServerWorkaround(client)

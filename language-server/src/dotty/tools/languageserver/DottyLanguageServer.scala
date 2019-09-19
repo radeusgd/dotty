@@ -207,7 +207,8 @@ class DottyLanguageServer extends LanguageServer
     assert(rootUri != null)
 
     class DottyServerCapabilities(val worksheetRunProvider: Boolean = true,
-                                  val tastyDecompiler: Boolean = true) extends lsp4j.ServerCapabilities
+                                  val tastyDecompiler: Boolean = true,
+                                  val compilerTypecheckedProvider: Boolean = true) extends lsp4j.ServerCapabilities
 
     val c = new DottyServerCapabilities
     c.setTextDocumentSync(TextDocumentSyncKind.Full)

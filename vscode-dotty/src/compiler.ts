@@ -1,8 +1,7 @@
 import * as vscode from 'vscode'
 import * as path from 'path'
 import { CancellationTokenSource, ProgressLocation } from 'vscode'
-import { TastyDecompileRequest, TastyDecompileResult,
-         asTastyDecompileParams, } from './protocol'
+import { CompilerTypecheckedResult, CompilerTypecheckedRequest } from './protocol'
 import { BaseLanguageClient } from 'vscode-languageclient'
 import { Disposable } from 'vscode-jsonrpc'
 
@@ -16,12 +15,13 @@ export class CompilerProvider implements Disposable {
     readonly documentSelector: vscode.DocumentSelector) {
     this.disposables.push(
       vscode.commands.registerTextEditorCommand(compilerTypecheckedKey, (editor, edit) => {
-        let document = editor.document.uri 
+        let document = editor.document
        // check using documentSelector ...
-        let position = editor.position
+        let position = editor.selection.active
         this.client
           .sendRequest(CompilerTypecheckedRequest.type, client.code2ProtocolConverter.asTextDocumentPositionParams(document, position))
           .then(response => {
+            console.log("response: ", response)
             return null
           })
       })

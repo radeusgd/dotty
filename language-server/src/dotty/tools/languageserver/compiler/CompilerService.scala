@@ -11,8 +11,10 @@ import dotc.util.Spans._
 import dotc.core.tasty.TastyUnpickler.UnpickleException
 import dotc.fromtasty.TastyFileUtil
 import dotc.util._
+import dotc.interactive.Interactive
 
 import org.eclipse.lsp4j.jsonrpc.services._
+import org.eclipse.lsp4j._
 
 
 @JsonSegment("compiler")
