@@ -50,6 +50,11 @@ class InteractiveDriver(val settings: List[String]) extends Driver {
   }
   def openedTrees: Map[URI, List[SourceTree]] = myOpenedTrees
 
+  private val myOpenedUntypedTrees = new mutable.LinkedHashMap[URI, List[SourceUntypedTree]] {
+    override def default(key: URI) = Nil
+  }
+  def openedUntypedTrees: Map[URI, List[SourceUntypedTree]] = myOpenedUntypedTrees
+
   private val myCompilationUnits = new mutable.LinkedHashMap[URI, CompilationUnit]
   def compilationUnits: Map[URI, CompilationUnit] = myCompilationUnits
 
@@ -159,6 +164,7 @@ class InteractiveDriver(val settings: List[String]) extends Driver {
       val t = unit.tpdTree
       cleanup(t)
       myOpenedTrees(uri) = topLevelTrees(t, source)
+      myOpenedUntypedTrees(uri) = List(SourceUntypedTree(unit.untpdTree, source))
       myCompilationUnits(uri) = unit
 
       reporter.removeBufferedMessages
@@ -174,6 +180,7 @@ class InteractiveDriver(val settings: List[String]) extends Driver {
   def close(uri: URI): Unit = {
     myOpenedFiles.remove(uri)
     myOpenedTrees.remove(uri)
+    myOpenedUntypedTrees.remove(uri)
     myCompilationUnits.remove(uri)
   }
 

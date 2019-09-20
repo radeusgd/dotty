@@ -4,10 +4,14 @@ package interactive
 
 import scala.io.Codec
 
-import ast.tpd
+import ast.{tpd, untpd}
 import core._
 import Contexts._, NameOps._, Symbols._, StdNames._
 import util._, util.Spans._
+
+case class SourceUntypedTree(tree: untpd.Tree, source: SourceFile) {
+  final def pos(implicit ctx: Context): SourcePosition = source.atSpan(tree.span)
+}
 
 /**
  * A `tree` coming from `source`
