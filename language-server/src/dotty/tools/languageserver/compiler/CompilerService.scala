@@ -44,11 +44,24 @@ trait CompilerService {
           Nil
       }
 
-      println("path: " + path)
+      // println("path: " + path)
       val limit = path.indexWhere(_.isInstanceOf[untpd.DefTree | untpd.Block])
       println("limit: " + limit)
-      val u = path(limit-1).show
-      println("u: " + u)
+      val u = path(limit-1)
+      println("u: " + u.show)
+
+      val tpath = tpdTrees.find(_.pos.contains(pos)) match {
+        case Some(tree) =>
+           NavigateAST.pathTo(u.span, tree.tree, skipZeroExtent = true)
+             .collect { case t: untpd.Tree => t }
+        case None =>
+          Nil
+      }
+
+      val tlimit = tpath.indexWhere(node => node.span.start != u.span.start || node.span.end != u.span.end)
+      println("tlimit: " + tlimit)
+      val t = if (tlimit <= 0) tpath(0) else tpath(tlimit-1)
+      println("t: " + t.show)
 
       /*
       val path = Interactive.pathTo(uriTrees, pos)
@@ -58,7 +71,6 @@ trait CompilerService {
       val expr = path(limit-1).show
       */
 
-      val expr = u
-      TypecheckedResult(expr)
+      TypecheckedResult(t.show)
     }
 }
