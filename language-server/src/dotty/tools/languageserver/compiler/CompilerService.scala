@@ -43,11 +43,12 @@ trait CompilerService {
         case None =>
           Nil
       }
+
       println("path: " + path)
       val limit = path.indexWhere(_.isInstanceOf[untpd.DefTree | untpd.Block])
       println("limit: " + limit)
-      val untpd = path(limit-1).show
-      println("untpd: " + untpd)
+      val u = path(limit-1).show
+      println("u: " + u)
 
       /*
       val path = Interactive.pathTo(uriTrees, pos)
@@ -57,7 +58,7 @@ trait CompilerService {
       val expr = path(limit-1).show
       */
 
-      val expr = untpd
+      val expr = u
       TypecheckedResult(expr)
     }
 }
