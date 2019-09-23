@@ -1363,6 +1363,8 @@ class Typer extends Namer
           val (desugaredArg, argPt) =
             if (ctx.mode is Mode.Pattern)
               (if (untpd.isVarPattern(arg)) desugar.patternVar(arg) else arg, tparamBounds)
+            else if (ctx.mode.is(Mode.QuotedPattern) && arg.isInstanceOf[untpd.TypSplice])
+              (arg, tparamBounds)
             else
               (arg, WildcardType)
           if (tpt1.symbol.isClass)

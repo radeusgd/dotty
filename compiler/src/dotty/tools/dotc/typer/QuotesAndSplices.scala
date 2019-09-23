@@ -98,7 +98,7 @@ trait QuotesAndSplices {
       case _ =>
     }
     if (ctx.mode.is(Mode.QuotedPattern) && level == 1)
-      if (isFullyDefined(pt, ForceDegree.all)) {
+      if (isFullyDefined(pt, ForceDegree.all) && !pt.isInstanceOf[TypeBounds]) {
         ctx.error(i"Spliced type pattern must not be fully defined. Consider using $pt directly", tree.expr.sourcePos)
         tree.withType(UnspecifiedErrorType)
       }
@@ -111,11 +111,17 @@ trait QuotesAndSplices {
           case Bind(name, _) => ("$" + name).toTypeName
           case _ => NameKinds.UniqueName.fresh("$".toTypeName)
         }
-        val typeSym = ctx.newSymbol(spliceOwner(ctx), name, EmptyFlags, TypeBounds.empty, NoSymbol, tree.expr.span)
+
+        val bounds = pt match {
+          case pt: TypeBounds => TypeBounds(pt.hi, pt.hi)
+          case _ => TypeBounds.empty
+        }
+
+        val typeSym = ctx.newSymbol(spliceOwner(ctx), name, EmptyFlags, bounds, NoSymbol, tree.expr.span)
         typeSym.addAnnotation(Annotation(New(ref(defn.InternalQuoted_patternBindHoleAnnot.typeRef)).withSpan(tree.expr.span)))
         val pat = typedPattern(tree.expr, defn.QuotedTypeClass.typeRef.appliedTo(typeSym.typeRef))(
-            spliceContext.retractMode(Mode.QuotedPattern).withOwner(spliceOwner(ctx)))
-        pat.select(tpnme.splice)
+          spliceContext.retractMode(Mode.QuotedPattern).withOwner(spliceOwner(ctx)))
+        pat.select(tpnme.splice).withType(bounds)
       }
     else
       typedSelect(untpd.Select(tree.expr, tpnme.splice), pt)(spliceContext).withSpan(tree.span)
