@@ -1,6 +1,6 @@
 import * as vscode from 'vscode'
 import { RequestType, NotificationType } from 'vscode-jsonrpc'
-import { TextDocumentPositionParams, Range, VersionedTextDocumentIdentifier, TextDocumentIdentifier } from 'vscode-languageserver-protocol'
+import { TextEdit, TextDocumentPositionParams, Range, VersionedTextDocumentIdentifier, TextDocumentIdentifier } from 'vscode-languageserver-protocol'
 
 import { client } from './extension'
 
@@ -69,7 +69,7 @@ export namespace TastyDecompileRequest {
 
 /** The result of the `compiler/typechecked` request */
 export interface CompilerTypecheckedResult {
-  pos: string
+  replacement: TextEdit
 }
 
 /** The `compiler/typechecked` request */

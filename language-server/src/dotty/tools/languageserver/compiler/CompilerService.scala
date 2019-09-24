@@ -71,6 +71,6 @@ trait CompilerService {
       val expr = path(limit-1).show
       */
 
-      TypecheckedResult(t.show)
+      TypecheckedResult(TextEdit(range(t.sourcePos).get, t.show))
     }
 }

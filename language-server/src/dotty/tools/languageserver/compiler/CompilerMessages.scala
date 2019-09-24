@@ -7,6 +7,6 @@ import org.eclipse.lsp4j._
 // deserialization without relying on sun.misc.Unsafe.
 
 /** The response to a `compiler/typechecked` request. */
-case class TypecheckedResult(pos: String) {
+case class TypecheckedResult(replacement: TextEdit) {
   def this() = this(null)
 }

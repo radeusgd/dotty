@@ -22,7 +22,9 @@ export class CompilerProvider implements Disposable {
           .sendRequest(CompilerTypecheckedRequest.type, client.code2ProtocolConverter.asTextDocumentPositionParams(document, position))
           .then(response => {
             console.log("response: ", response)
-            return null
+            const edit = new vscode.WorkspaceEdit()
+            edit.set(document.uri, [ client.protocol2CodeConverter.asTextEdit(response.replacement) ])
+            vscode.workspace.applyEdit(edit)
           })
       })
     )
