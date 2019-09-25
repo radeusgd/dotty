@@ -1240,7 +1240,7 @@ class Inliner(call: tpd.Tree, rhsToInline: tpd.Tree)(implicit ctx: Context) {
 
     val dependencies = macroDependencies(body)
 
-    if (dependencies.nonEmpty) {
+    if (dependencies.nonEmpty && false) {
       var location = inlinedFrom.symbol
       if (location.isLocalDummy) location = location.owner
 

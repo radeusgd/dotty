@@ -48,8 +48,10 @@ object Splicer {
       }
       catch {
         case ex: StopInterpretation =>
-          ctx.error(ex.msg, ex.pos)
-          EmptyTree
+          // ctx.error(ex.msg, ex.pos)
+          // EmptyTree
+          ctx.echo(ex.msg, ex.pos)
+          ref(defn.Predef_undefined)
         case NonFatal(ex) =>
           val msg =
             s"""Failed to evaluate macro.
