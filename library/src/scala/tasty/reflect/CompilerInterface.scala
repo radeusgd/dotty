@@ -835,6 +835,8 @@ trait CompilerInterface {
 
   def Type_apply(clazz: Class[_])(given ctx: Context): Type
 
+  def Type_fullyApplied(self: Type)(given ctx: Context): Type
+
   def `Type_=:=`(self: Type)(that: Type)(given ctx: Context): Boolean
   def `Type_<:<`(self: Type)(that: Type)(given ctx: Context): Boolean
 
@@ -1189,6 +1191,10 @@ trait CompilerInterface {
    *  Then can be compared with == to know if the definition is the same.
    */
   type Symbol <: AnyRef
+
+  def Symbol_info(self: Symbol)(given ctx: Context): Type
+  def Symbol_namedType(self: Symbol)(given ctx: Context): Type
+  def Symbol_children(self: Symbol)(given ctx: Context): List[Symbol]
 
   /** Owner of this symbol. The owner is the symbol in which this symbol is defined. */
   def Symbol_owner(self: Symbol)(given ctx: Context): Symbol

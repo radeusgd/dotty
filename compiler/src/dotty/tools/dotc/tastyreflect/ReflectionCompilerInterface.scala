@@ -9,6 +9,7 @@ import dotty.tools.dotc.core.Flags._
 import dotty.tools.dotc.core.StdNames.nme
 import dotty.tools.dotc.core.quoted.PickledQuotes
 import dotty.tools.dotc.core.Symbols._
+import dotty.tools.dotc.transform.SymUtils._
 import dotty.tools.dotc.core.Decorators._
 import dotty.tools.dotc.core.Types.SingletonType
 import dotty.tools.dotc.tastyreflect.FromSymbol.{definitionFromSym, packageDefFromSym}
@@ -1047,6 +1048,17 @@ class ReflectionCompilerInterface(val rootContext: core.Contexts.Context) extend
     case _ => Some(x)
   }
 
+  def Type_fullyApplied(self: Type)(given ctx: Context): Type =
+    self match {
+      case self: TypeRef =>
+        val wildcards = self.symbol.typeParams.map { tparam =>
+          Types.TypeBounds.empty
+        }
+        self.appliedTo(wildcards)
+      case _ =>
+        self
+    }
+
   def Type_apply(clazz: Class[?])(given ctx: Context): Type =
     if (clazz.isPrimitive)
       if (clazz == classOf[Boolean]) defn.BooleanType
@@ -1453,6 +1465,10 @@ class ReflectionCompilerInterface(val rootContext: core.Contexts.Context) extend
   //
 
   type Symbol = core.Symbols.Symbol
+
+  def Symbol_info(self: Symbol)(given Context): Type = self.info
+  def Symbol_namedType(self: Symbol)(given Context): Type = self.namedType
+  def Symbol_children(self: Symbol)(given Context): List[Symbol] = self.children
 
   def Symbol_owner(self: Symbol)(given Context): Symbol = self.owner
 

@@ -16,6 +16,10 @@ trait SymbolOps extends Core { selfSymbolOps: FlagsOps =>
 
   implicit class SymbolAPI(self: Symbol) {
 
+    def info(given ctx: Context): Type = internal.Symbol_info(self)
+    def namedType(given ctx: Context): Type = internal.Symbol_namedType(self)
+    def children(given ctx: Context): List[Symbol] = internal.Symbol_children(self)
+
     /** Owner of this symbol. The owner is the symbol in which this symbol is defined */
     def owner(given ctx: Context): Symbol = internal.Symbol_owner(self)
 

@@ -8,6 +8,8 @@ trait TypeOrBoundsOps extends Core {
   def typeOf[T: scala.quoted.Type]: Type
 
   implicit class TypeAPI(self: Type) {
+    def fullyApplied(given ctx: Context): Type = internal.Type_fullyApplied(self)
+
     def =:=(that: Type)(given ctx: Context): Boolean = internal.`Type_=:=`(self)(that)
     def <:<(that: Type)(given ctx: Context): Boolean = internal.`Type_<:<`(self)(that)
     def widen(given ctx: Context): Type = internal.Type_widen(self)
