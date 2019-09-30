@@ -118,7 +118,10 @@ trait CompilerInterface {
   /** Root position of this tasty context. For macros it corresponds to the expansion site. */
   def rootPosition: Position
 
-  def applyEdit(edit: scala.tasty.interactive.WorkspaceEdit): Unit
+  type TextEdit <: AnyRef
+  def TextEdit(pos: Position, newText: String): TextEdit
+  type WorkspaceEdit = List[TextEdit]
+  def applyEdit(edit: WorkspaceEdit): Unit
 
   def settings: Settings
 
@@ -1117,7 +1120,7 @@ trait CompilerInterface {
   //
 
   /** Position in a source file */
-  type Position <: dotty.tools.dotc.interfaces.SourcePosition
+  type Position <: AnyRef
 
   /** The start offset in the source file */
   def Position_start(self: Position): Int

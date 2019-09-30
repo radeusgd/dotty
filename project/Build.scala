@@ -639,7 +639,6 @@ object Build {
     val jars = packageAll.value
     val scalaLib = findArtifactPath(externalDeps, "scala-library")
     val dottyLib = jars("dotty-library")
-    val dottyInterfaces = jars("dotty-interfaces")
     val dottyCompiler = jars("dotty-compiler")
     val args0: List[String] = spaceDelimited("<arg>").parsed.toList
     val decompile = args0.contains("-decompile")
@@ -654,7 +653,7 @@ object Build {
       else if (debugFromTasty) "dotty.tools.dotc.fromtasty.Debug"
       else "dotty.tools.dotc.Main"
 
-    var extraClasspath = Seq(scalaLib, dottyLib, dottyInterfaces)
+    var extraClasspath = Seq(scalaLib, dottyLib)
 
     if ((decompile || printTasty) && !args.contains("-classpath"))
       extraClasspath ++= Seq(".")
@@ -850,7 +849,6 @@ object Build {
       ideTestsCompilerVersion := (version in `dotty-compiler`).value,
       ideTestsCompilerArguments := Seq(),
       ideTestsDependencyClasspath := {
-        val dottyInterfaces = (classDirectory in `dotty-interfaces` in Compile).value
         val dottyLib = (classDirectory in `dotty-library-bootstrapped` in Compile).value
         val scalaLib =
           (dependencyClasspath in `dotty-library-bootstrapped` in Compile)

@@ -114,6 +114,9 @@ trait Core {
   /** Compilation context */
   type Context = internal.Context
 
+  type TextEdit = internal.TextEdit
+  type WorkspaceEdit = internal.WorkspaceEdit
+
   /** Settings */
   type Settings = internal.Settings
 

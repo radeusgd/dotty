@@ -39,7 +39,7 @@ import java.util.concurrent.atomic.AtomicInteger
 
 object Contexts {
   // Global state is good enough for a prototype.
-  val applyEdits: mutable.Map[util.SourcePosition, scala.tasty.interactive.WorkspaceEdit] =
+  val applyEdits: mutable.Map[util.SourcePosition, tastyreflect.interactive.WorkspaceEdit] =
     mutable.Map()
 
   private val (compilerCallbackLoc, store1) = Store.empty.newLocation[CompilerCallback]()

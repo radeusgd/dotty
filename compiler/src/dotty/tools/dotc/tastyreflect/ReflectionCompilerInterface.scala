@@ -29,7 +29,10 @@ class ReflectionCompilerInterface(val rootContext: core.Contexts.Context) extend
   def rootPosition: util.SourcePosition =
     tastyreflect.MacroExpansion.position.getOrElse(SourcePosition(rootContext.source, Spans.NoSpan))
 
-  def applyEdit(edit: scala.tasty.interactive.WorkspaceEdit): Unit =
+  type TextEdit = interactive.TextEdit
+  def TextEdit(pos: Position, newText: String): TextEdit = new interactive.TextEdit(pos, newText)
+
+  def applyEdit(edit: WorkspaceEdit): Unit =
     Contexts.applyEdits(rootPosition) = edit
 
   //

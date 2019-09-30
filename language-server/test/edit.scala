@@ -1,5 +1,4 @@
 import scala.quoted._
-import scala.tasty.interactive._
 
 private object MacroEdit {
   inline def hi(expr: => Any) <: Any =

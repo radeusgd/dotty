@@ -14,6 +14,4 @@ trait ContextOps extends Core {
 
   /** Context of the macro expansion */
   implicit def rootContext: Context = internal.rootContext
-
-  def applyEdit(edit: scala.tasty.interactive.WorkspaceEdit): Unit = internal.applyEdit(edit)
 }

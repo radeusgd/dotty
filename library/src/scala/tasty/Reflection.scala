@@ -28,4 +28,8 @@ class Reflection(private[scala] val internal: CompilerInterface)
   def typeOf[T: scala.quoted.Type]: Type =
     implicitly[scala.quoted.Type[T]].unseal.tpe
 
+  def TextEdit(pos: Position, newText: String): TextEdit =
+    internal.TextEdit(pos, newText)
+
+  def applyEdit(edit: WorkspaceEdit): Unit = internal.applyEdit(edit)
 }
