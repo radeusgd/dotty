@@ -1117,7 +1117,7 @@ trait CompilerInterface {
   //
 
   /** Position in a source file */
-  type Position <: AnyRef
+  type Position <: dotty.tools.dotc.interfaces.SourcePosition
 
   /** The start offset in the source file */
   def Position_start(self: Position): Int

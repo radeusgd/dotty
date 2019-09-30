@@ -168,10 +168,10 @@ class Run(comp: Compiler, ictx: Context) extends ImplicitRunInfo with Constraint
               Stats.record(s"retained typed trees at end of $phase", unit.tpdTree.treeSize)
           }
 
+      println("applyEdits: " + Contexts.applyEdits)
+
       profiler.finished()
     }
-
-    println("applyEdits: " + Contexts.applyEdits)
 
     val runCtx = ctx.fresh
     runCtx.setProfiler(Profiler())

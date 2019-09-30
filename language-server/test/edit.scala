@@ -1,13 +1,14 @@
 import scala.quoted._
+import scala.tasty.interactive._
 
 private object MacroEdit {
-  inline def edit(expr: => Any) <: Any =
-    ${ editImpl('expr) }
+  inline def hi(expr: => Any) <: Any =
+    ${ hiImpl('expr) }
 
-  def editImpl(expr: Expr[Any])(implicit qctx: QuoteContext) = {
+  def hiImpl(expr: Expr[Any])(implicit qctx: QuoteContext) = {
     import qctx.tasty._
 
-    applyEdit(expr.pos)
+    applyEdit(List(TextEdit(expr.unseal.pos, "duck")))
 
     expr
   }

@@ -8,6 +8,7 @@ import dotty.tools.dotc.interfaces.SourcePosition
 //   case WorkspaceEdit(edits: List[(URI, TextEdit)])
 // }
 
-type WorkspaceEdit = List[(URI, TextEdit)]
+type WorkspaceEdit = List[TextEdit]
+
 
 case class TextEdit(pos: SourcePosition, newText: String)
