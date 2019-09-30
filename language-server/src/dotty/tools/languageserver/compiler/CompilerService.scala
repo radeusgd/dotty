@@ -73,4 +73,17 @@ trait CompilerService {
 
       TypecheckedResult(TextEdit(range(t.sourcePos).get, t.show))
     }
+
+  // @JsonRequest
+  // def runCommand(params: TextDocumentPositionParams): CompletableFuture[TypecheckedResult] =
+  //   computeAsync { cancelChecker =>
+  //     val uri = new URI(params.getTextDocument.getUri)
+  //     val driver = driverFor(uri)
+  //     implicit def ctx: Context = driver.currentCtx
+
+  //     val pos = sourcePosition(driver, uri, params.getPosition)
+  //     val trees = driver.openedTrees(uri)
+  //     val tp = Interactive.enclosingType(trees, pos)
+
+  //   }
 }

@@ -118,6 +118,8 @@ trait CompilerInterface {
   /** Root position of this tasty context. For macros it corresponds to the expansion site. */
   def rootPosition: Position
 
+  def applyEdit(edit: scala.tasty.interactive.WorkspaceEdit): Unit
+
   def settings: Settings
 
   //

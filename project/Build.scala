@@ -1275,6 +1275,7 @@ object Build {
       settings(dottyCompilerSettings)
 
     def asDottyLibrary(implicit mode: Mode): Project = project.withCommonSettings.
+      dependsOn(`dotty-interfaces`).
       settings(
         libraryDependencies += "org.scala-lang" % "scala-library" % stdlibVersion
       ).

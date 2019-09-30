@@ -151,6 +151,8 @@ class InteractiveDriver(val settings: List[String]) extends Driver {
       val reporter =
         new StoreReporter(null) with UniqueMessagePositions with HideNonSensicalMessages
 
+      Contexts.applyEdits.clear()
+
       val run = {
         val freshCtx = myInitCtx.fresh.setReporter(reporter)
         MacroClassLoader.init(freshCtx)

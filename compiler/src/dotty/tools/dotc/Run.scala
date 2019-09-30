@@ -171,6 +171,8 @@ class Run(comp: Compiler, ictx: Context) extends ImplicitRunInfo with Constraint
       profiler.finished()
     }
 
+    println("applyEdits: " + Contexts.applyEdits)
+
     val runCtx = ctx.fresh
     runCtx.setProfiler(Profiler())
     ctx.phases.foreach(_.initContext(runCtx))
