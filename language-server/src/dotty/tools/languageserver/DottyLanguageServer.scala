@@ -220,6 +220,8 @@ class DottyLanguageServer extends LanguageServer
     c.setWorkspaceSymbolProvider(true)
     c.setReferencesProvider(true)
     c.setImplementationProvider(true)
+    c.setCodeLensProvider(new CodeLensOptions(
+      /* resolveProvider = */ false))
     c.setCompletionProvider(new CompletionOptions(
       /* resolveProvider = */ false,
       /* triggerCharacters = */ List(".").asJava))
@@ -561,10 +563,27 @@ class DottyLanguageServer extends LanguageServer
   override def getTextDocumentService: TextDocumentService = this
   override def getWorkspaceService: WorkspaceService = this
 
+  override def codeLens(params: CodeLensParams)/*: CompletableFuture[JList[_ <: CodeLens]]*/ = computeAsync { cancelToken =>
+    val uri = new URI(params.getTextDocument.getUri)
+    println("edits: " + applyEdits)
+    applyEdits.toList.map { case (macroPos, textEdits) =>
+      new CodeLens(
+        range(macroPos).get,
+        new Command("Execute macro commands", "dotty.compiler.executeMacroCommands",
+          List(
+            (for {
+              tastyreflect.interactive.TextEdit(pos, newText) <- textEdits
+              r <- range(pos)
+            }
+            yield new lsp4j.TextEdit(r, newText)).asJava).asJava),
+        /*data = */ null)
+    }.asJava
+  }
+
+
   // Unimplemented features. If you implement one of them, you may need to add a
   // capability in `initialize`
   override def codeAction(params: CodeActionParams) = null
-  override def codeLens(params: CodeLensParams) = null
   override def formatting(params: DocumentFormattingParams) = null
   override def rangeFormatting(params: DocumentRangeFormattingParams) = null
   override def onTypeFormatting(params: DocumentOnTypeFormattingParams) = null
