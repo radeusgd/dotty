@@ -51,9 +51,16 @@ export class CompilerProvider implements Disposable {
         const edit = new vscode.WorkspaceEdit()
         const textEdits = client.protocol2CodeConverter.asTextEdits(macroEdits)
         console.log("textEdits: ", textEdits)
-        const results = macroResults.map(asResult)
+        const results: Result[] = macroResults.map(asResult)
         console.log("results: ", results)
-        this.provider.setResults(results)
+        // this.provider.setResults(results)
+
+        vscode.commands.executeCommand(
+          "editor.action.showReferences",
+          document.uri,
+          editor.selection.active,
+          results.map(r => r.location)
+        )
 
         edit.set(document.uri, textEdits)
         vscode.workspace.applyEdit(edit)
