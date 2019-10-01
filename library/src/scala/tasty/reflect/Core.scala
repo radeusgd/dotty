@@ -116,6 +116,7 @@ trait Core {
 
   type TextEdit = internal.TextEdit
   type WorkspaceEdit = internal.WorkspaceEdit
+  type Result = internal.Result
 
   /** Settings */
   type Settings = internal.Settings

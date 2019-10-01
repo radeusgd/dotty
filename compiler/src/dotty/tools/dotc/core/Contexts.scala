@@ -41,6 +41,8 @@ object Contexts {
   // Global state is good enough for a prototype.
   val applyEdits: mutable.Map[util.SourcePosition, tastyreflect.interactive.WorkspaceEdit] =
     mutable.Map()
+  val resultsMap: mutable.Map[util.SourcePosition, List[tastyreflect.interactive.Result]] =
+    mutable.Map()
 
   private val (compilerCallbackLoc, store1) = Store.empty.newLocation[CompilerCallback]()
   private val (sbtCallbackLoc,      store2) = store1.newLocation[AnalysisCallback]()

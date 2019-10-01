@@ -123,6 +123,10 @@ trait CompilerInterface {
   type WorkspaceEdit = List[TextEdit]
   def applyEdit(edit: WorkspaceEdit): Unit
 
+  type Result <: AnyRef
+  def Result(pos: Position, label: String): Result
+  def setResults(results: List[Result]): Unit
+
   def settings: Settings
 
   //

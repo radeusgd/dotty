@@ -35,6 +35,11 @@ class ReflectionCompilerInterface(val rootContext: core.Contexts.Context) extend
   def applyEdit(edit: WorkspaceEdit): Unit =
     Contexts.applyEdits(rootPosition) = edit
 
+  type Result = interactive.Result
+  def Result(pos: Position, label: String): Result = new interactive.Result(pos, label)
+  def setResults(results: List[Result]): Unit =
+    Contexts.resultsMap(rootPosition) = results
+
   //
   // QUOTE UNPICKLING
   //

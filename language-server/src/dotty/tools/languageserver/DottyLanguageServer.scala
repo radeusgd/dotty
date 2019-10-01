@@ -566,18 +566,40 @@ class DottyLanguageServer extends LanguageServer
   override def codeLens(params: CodeLensParams)/*: CompletableFuture[JList[_ <: CodeLens]]*/ = computeAsync { cancelToken =>
     val uri = new URI(params.getTextDocument.getUri)
     println("edits: " + applyEdits)
-    applyEdits.toList.map { case (macroPos, textEdits) =>
-      new CodeLens(
-        range(macroPos).get,
+    println("results: " + resultsMap)
+    val positions = applyEdits.keys ++ resultsMap.keys
+
+    def edits(pos: SourcePosition): List[lsp4j.TextEdit] =
+      for {
+        edits <- applyEdits.get(pos).toList
+        tastyreflect.interactive.TextEdit(pos, newText) <- edits
+        r <- range(pos)
+      }
+      yield new lsp4j.TextEdit(r, newText)
+
+    // Represented as lsp4j.DiagnosticRelatedInformation to get a sensible
+    // JSON representation for free.
+    def results(pos: SourcePosition): List[lsp4j.DiagnosticRelatedInformation] =
+      for {
+        results <- resultsMap.get(pos).toList
+        tastyreflect.interactive.Result(pos, label) <- results
+        loc <- location(pos)
+      }
+      yield new lsp4j.DiagnosticRelatedInformation(loc, label)
+
+    val lenses =
+      for {
+        pos <- positions.toList
+        r <- range(pos)
+      } yield new CodeLens(
+        range(pos).get,
         new Command("Execute macro commands", "dotty.compiler.executeMacroCommands",
           List(
-            (for {
-              tastyreflect.interactive.TextEdit(pos, newText) <- textEdits
-              r <- range(pos)
-            }
-            yield new lsp4j.TextEdit(r, newText)).asJava).asJava),
+            edits(pos).asJava,
+            results(pos).asJava
+          ).asJava),
         /*data = */ null)
-    }.asJava
+    lenses.asJava
   }
 
 

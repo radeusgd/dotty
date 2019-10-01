@@ -32,4 +32,9 @@ class Reflection(private[scala] val internal: CompilerInterface)
     internal.TextEdit(pos, newText)
 
   def applyEdit(edit: WorkspaceEdit): Unit = internal.applyEdit(edit)
+
+  def Result(pos: Position, label: String): Result =
+    internal.Result(pos, label)
+
+  def setResults(results: List[Result]): Unit = internal.setResults(results)
 }

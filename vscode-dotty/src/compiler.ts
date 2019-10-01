@@ -1,12 +1,18 @@
 import * as vscode from 'vscode'
 import * as path from 'path'
-import { CancellationTokenSource, ProgressLocation, Location, Uri } from 'vscode'
+import * as ls from 'vscode-languageserver-protocol'
+import { CancellationTokenSource, ProgressLocation, Location, Uri, TextEdit, DiagnosticRelatedInformation } from 'vscode'
 import { CompilerTypecheckedResult, CompilerTypecheckedRequest } from './protocol'
 import { BaseLanguageClient } from 'vscode-languageclient'
 import { Disposable } from 'vscode-jsonrpc'
 
 export const compilerTypecheckedKey = "dotty.compiler.typechecked"
 export const compilerExecuteMacroCommandsKey = "dotty.compiler.executeMacroCommands"
+
+interface Result {
+  location: Location
+  label: string
+}
 
 export class CompilerProvider implements Disposable {
   private disposables: Disposable[] = []
@@ -16,6 +22,14 @@ export class CompilerProvider implements Disposable {
   constructor(
     readonly client: BaseLanguageClient,
     readonly documentSelector: vscode.DocumentSelector) {
+
+    // DiagnosticRelatedInformation is used to represent Results, see DottyLanguageServer#codeLens
+    function asResult(information: ls.DiagnosticRelatedInformation): Result {
+      return {
+        location: client.protocol2CodeConverter.asLocation(information.location),
+        label: information.message
+      }
+    }
 
     this.disposables.push(
       vscode.window.registerTreeDataProvider("macroCommandsResult", this.provider),
@@ -32,13 +46,14 @@ export class CompilerProvider implements Disposable {
             vscode.workspace.applyEdit(edit)
           })
       }),
-      vscode.commands.registerTextEditorCommand(compilerExecuteMacroCommandsKey, (editor, _edit, macroEdits) => {
+      vscode.commands.registerTextEditorCommand(compilerExecuteMacroCommandsKey, (editor, _edit, macroEdits, macroResults) => {
         let document = editor.document // FIXME: support edits to other docs
         const edit = new vscode.WorkspaceEdit()
         const textEdits = client.protocol2CodeConverter.asTextEdits(macroEdits)
         console.log("textEdits: ", textEdits)
-        const locs: Location[] = textEdits.map(e => new Location(document.uri, e.range))
-        this.provider.setResults(locs)
+        const results = macroResults.map(asResult)
+        console.log("results: ", results)
+        this.provider.setResults(results)
 
         edit.set(document.uri, textEdits)
         vscode.workspace.applyEdit(edit)
@@ -52,7 +67,7 @@ export class CompilerProvider implements Disposable {
   }
 }
 
-class MacroResultsProvider implements vscode.TreeDataProvider<string | Location> {
+class MacroResultsProvider implements vscode.TreeDataProvider<string | Result> {
   private _onDidChangeTreeData: vscode.EventEmitter<any> = new vscode.EventEmitter<any>();
   readonly onDidChangeTreeData: vscode.Event<any> = this._onDidChangeTreeData.event;
 
@@ -60,38 +75,38 @@ class MacroResultsProvider implements vscode.TreeDataProvider<string | Location>
     this._onDidChangeTreeData.fire();
   }
 
-  private results: Map<string, Location[]> = new Map()
+  private resultsMap: Map<string, Result[]> = new Map()
 
-  public setResults(locs: Location[]) {
-    this.results.clear()
+  public setResults(results: Result[]) {
+    this.resultsMap.clear()
     // No groupBy in JS :(
-    locs.forEach(loc => {
-      const key = loc.uri.toString()
-      var slot = this.results.get(key)
+    results.forEach(result => {
+      const key = result.location.uri.toString()
+      var slot = this.resultsMap.get(key)
       if (slot === undefined) {
         slot = []
-        this.results.set(key, slot)
+        this.resultsMap.set(key, slot)
       }
-      slot.push(loc)
+      slot.push(result)
     })
     this.refresh()
   }
 
-  public getChildren(element?: string | Location): string[] | Location[] {
+  public getChildren(element?: string | Result): string[] | Result[] {
     if (!element)
-      return Array.from(this.results.keys())
+      return Array.from(this.resultsMap.keys())
     if (typeof element == "string")
-      return this.results.get(element) || []
+      return this.resultsMap.get(element) || []
     return []
   }
 
-  public getTreeItem(element: string | Location): vscode.TreeItem {
+  public getTreeItem(element: string | Result): vscode.TreeItem {
     if (typeof element == "string")
       return new vscode.TreeItem(
         Uri.parse(element).path.split("/").slice(-1)[0],
         vscode.TreeItemCollapsibleState.Expanded)
 
-    // TODO: display code instead
-    return new vscode.TreeItem(element.uri.toString())
+    // TODO: command to go to element.location
+    return new vscode.TreeItem(element.label)
   }
 }
