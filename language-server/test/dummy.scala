@@ -1,11 +1,11 @@
 import scala.quoted._
 
 private object Macro {
-  // enum Color {
-  //   case Red, Green, Blue
-  // }
+  enum Color {
+    case Red, Green, Blue
+  }
 
-  inline def hi(expr: => Any) <: Any =
+  inline def expand(expr: => Any) <: Any =
     ${ hiImpl('expr) }
 
   def hiImpl(expr: Expr[Any])(implicit qctx: QuoteContext) = {
@@ -35,7 +35,10 @@ private object Macro {
     }).seal
   }
 
-  def test(xs: Option[Int]) = {
-    hi(xs)
+  def test = {
+    val xs: Option[Int] = ???
+    expand(xs)
+    val cs: Color = Color.Red
+    expand(cs)
   }
 }

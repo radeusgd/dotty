@@ -28,6 +28,14 @@
     "workspaceContains:.dotty-ide.json"
   ],
   "contributes": {
+    "views": {
+      "explorer": [
+        {
+          "id": "macroCommandsResult",
+          "name": "Macro Commands Result"
+        }
+      ]
+    },
     "languages": [
       {
         "id": "scala",

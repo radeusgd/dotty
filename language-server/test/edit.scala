@@ -7,12 +7,12 @@ private object MacroEdit {
   def hiImpl(expr: Expr[Any])(implicit qctx: QuoteContext) = {
     import qctx.tasty._
 
-    applyEdit(List(TextEdit(expr.unseal.pos, "duck")))
+    applyEdit(List(TextEdit(expr.unseal.pos, "hello")))
 
     expr
   }
 
-  def test(xs: Option[Int]) = {
-    hi(xs)
+  def test = {
+    hi(1234)
   }
 }
