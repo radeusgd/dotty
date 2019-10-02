@@ -2149,7 +2149,13 @@ class Typer extends Namer
       assertPositioned(tree)
       if (tree.source != ctx.source && tree.source.exists)
         typed(tree, pt, locked)(ctx.withSource(tree.source))
-      else
+      else {
+        tree match {
+          case tree @ TypedHole(name, isTerm) =>
+            ctx.error(i"Found hole `$name` with expected type: $pt", tree.sourcePos)
+            return tree.withType(pt)
+          case _ =>
+        }
         try adapt(typedUnadapted(tree, pt, locked), pt, locked)
         catch {
           case ex: TypeError =>
@@ -2159,6 +2165,7 @@ class Typer extends Namer
             // - that would in turn hide all other type errors inside tree.
             // TODO: might be even better to store positions inside TypeErrors.
         }
+      }
     }
 
   def typed(tree: untpd.Tree, pt: Type = WildcardType)(implicit ctx: Context): Tree =

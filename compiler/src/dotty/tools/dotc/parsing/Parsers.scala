@@ -2053,8 +2053,16 @@ object Parsers {
         case XMLSTART =>
           xmlLiteral()
         case IDENTIFIER =>
-          if (isSplice) splice(isType = false)
-          else path(thisOK = true)
+          if (in.name.toString != "???" && in.name.startsWith("?")) {
+            val name = in.name
+            atSpan(in.skipToken()) {
+              TypedHole(name, isTerm = true)
+            }
+          }
+          else {
+            if (isSplice) splice(isType = false)
+            else path(thisOK = true)
+          }
         case BACKQUOTED_IDENT | THIS | SUPER =>
           path(thisOK = true)
         case USCORE =>

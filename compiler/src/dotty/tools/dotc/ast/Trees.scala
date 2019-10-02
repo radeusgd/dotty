@@ -476,6 +476,12 @@ object Trees {
     def forwardTo: Tree[T] = expr
   }
 
+  /** ?hole */
+  case class TypedHole[-T >: Untyped] /*private[ast]*/ (name: Name, override val isTerm: Boolean)(implicit @constructorOnly src: SourceFile) extends NameTree[T] {
+    type ThisTree[-T >: Untyped] = TypedHole[T]
+    override def isType: Boolean = !isTerm
+  }
+
   /** name = arg, in a parameter list */
   case class NamedArg[-T >: Untyped] private[ast] (name: Name, arg: Tree[T])(implicit @constructorOnly src: SourceFile)
     extends Tree[T] {
@@ -956,6 +962,7 @@ object Trees {
     type Literal = Trees.Literal[T]
     type New = Trees.New[T]
     type Typed = Trees.Typed[T]
+    type TypedHole = Trees.TypedHole[T]
     type NamedArg = Trees.NamedArg[T]
     type Assign = Trees.Assign[T]
     type Block = Trees.Block[T]
@@ -1341,6 +1348,8 @@ object Trees {
           case Thicket(trees) =>
             val trees1 = transform(trees)
             if (trees1 eq trees) tree else Thicket(trees1)
+          case tree @ TypedHole(_, _) =>
+            tree
           case _ =>
             transformMoreCases(tree)
         }
@@ -1462,6 +1471,8 @@ object Trees {
               this(x, ts)
             case Hole(_, args) =>
               this(x, args)
+            case tree @ TypedHole(_, _) =>
+              x
             case _ =>
               foldMoreCases(x, tree)
           }

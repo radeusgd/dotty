@@ -60,11 +60,11 @@ object Chars {
 
   /** Can character start an alphanumeric Scala identifier? */
   def isIdentifierStart(c: Char): Boolean =
-    (c == '_') || (c == '$') || JCharacter.isUnicodeIdentifierStart(c)
+    (c == '_') || (c == '$') || (c == '?') || JCharacter.isUnicodeIdentifierStart(c)
 
   /** Can character form part of an alphanumeric Scala identifier? */
   def isIdentifierPart(c: Char): Boolean =
-    (c == '$') || JCharacter.isUnicodeIdentifierPart(c)
+    (c == '$') || (c == '?') || JCharacter.isUnicodeIdentifierPart(c)
 
   /** Is character a math or other symbol in Unicode?  */
   def isSpecial(c: Char): Boolean = {
