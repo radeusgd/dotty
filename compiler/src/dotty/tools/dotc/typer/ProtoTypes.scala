@@ -508,6 +508,14 @@ object ProtoTypes {
   def constrained(tl: TypeLambda)(implicit ctx: Context): TypeLambda =
     constrained(tl, EmptyTree)._1
 
+  private[this] val holeVariable: collection.mutable.Map[Name, TypeVar] = new collection.mutable.HashMap()
+  def holeTypeVar(name: Name)(implicit ctx: Context): TypeVar =
+    holeVariable.getOrElseUpdate(name, {
+      val poly = PolyType(List(name.toTypeName))(_ => List(TypeBounds.empty), _ => defn.AnyType)
+        constrained(poly, untpd.EmptyTree, alwaysAddTypeVars = true)
+        ._2.head.tpe.asInstanceOf[TypeVar]
+    })
+
   def newTypeVar(bounds: TypeBounds)(implicit ctx: Context): TypeVar = {
     val poly = PolyType(DepParamName.fresh().toTypeName :: Nil)(
         pt => bounds :: Nil,

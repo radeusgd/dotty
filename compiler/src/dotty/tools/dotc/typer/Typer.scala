@@ -2113,6 +2113,11 @@ class Typer extends Namer
             !ctx.isInlineContext)
           makeContextualFunction(xtree, ifpt)
         else xtree match {
+          case tree @ TypedHole(name, isTerm) =>
+            val tv = holeTypeVar(tree.name)
+            tv <:< pt
+            ctx.error(i"Found hole `$name` with expected type: $pt\nAccumulated constraints: ${ctx.typerState.constraint.entry(tv.origin)}", tree.sourcePos)
+            return tree.withType(tv)
           case xtree: untpd.NameTree => typedNamed(xtree, pt)
           case xtree => typedUnnamed(xtree)
         }
@@ -2150,12 +2155,6 @@ class Typer extends Namer
       if (tree.source != ctx.source && tree.source.exists)
         typed(tree, pt, locked)(ctx.withSource(tree.source))
       else {
-        tree match {
-          case tree @ TypedHole(name, isTerm) =>
-            ctx.error(i"Found hole `$name` with expected type: $pt", tree.sourcePos)
-            return tree.withType(pt)
-          case _ =>
-        }
         try adapt(typedUnadapted(tree, pt, locked), pt, locked)
         catch {
           case ex: TypeError =>

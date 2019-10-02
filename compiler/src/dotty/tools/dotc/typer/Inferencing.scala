@@ -422,7 +422,7 @@ trait Inferencing { this: Typer =>
         val hasUnreportedErrors = state.reporter.hasUnreportedErrors
         def constraint = state.constraint
         for (tvar <- qualifying)
-          if (!tvar.isInstantiated && state.constraint.contains(tvar)) {
+          if (!tvar.isInstantiated && state.constraint.contains(tvar) && !tvar.isHole) {
             // Needs to be checked again, since previous interpolations could already have
             // instantiated `tvar` through unification.
             val v = vs(tvar)

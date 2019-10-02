@@ -3780,6 +3780,8 @@ object Types {
    */
   final class TypeVar(private var _origin: TypeParamRef, creatorState: TyperState) extends CachedProxyType with ValueType {
 
+    def isHole: Boolean = origin.paramName.startsWith("?")
+
     def origin: TypeParamRef = _origin
 
     /** Set origin to new parameter. Called if we merge two conflicting constraints.
