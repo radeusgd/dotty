@@ -107,6 +107,7 @@ class FrontEnd extends Phase {
         firstXmlPos)
 
     unitContexts.foreach(typeCheck(_))
+    typer.ProtoTypes.holeSummary()
     record("total trees after typer", ast.Trees.ntrees)
     unitContexts.map(_.compilationUnit).filterNot(discardAfterTyper)
   }

@@ -154,13 +154,18 @@ object Types {
       * Like in isStableMember, "stability" means idempotence.
       * Rationale: If an expression has a stable type, the expression must be idempotent, so stable types
       * must be singleton types of stable expressions. */
-    final def isStable(implicit ctx: Context): Boolean = stripTypeVar match {
-      case tp: TermRef => tp.symbol.isStableMember && tp.prefix.isStable || tp.info.isStable
-      case _: SingletonType | NoPrefix => true
-      case tp: RefinedOrRecType => tp.parent.isStable
-      case tp: ExprType => tp.resultType.isStable
-      case tp: AnnotatedType => tp.parent.isStable
-      case _ => false
+    final def isStable(implicit ctx: Context): Boolean = this match {
+      case tp: TypeVar if tp.isHole =>
+        false
+      case _ =>
+        stripTypeVar match {
+          case tp: TermRef => tp.symbol.isStableMember && tp.prefix.isStable || tp.info.isStable
+          case _: SingletonType | NoPrefix => true
+          case tp: RefinedOrRecType => tp.parent.isStable
+          case tp: ExprType => tp.resultType.isStable
+          case tp: AnnotatedType => tp.parent.isStable
+          case _ => false
+        }
     }
 
     /** Is this type a (possibly refined or applied or aliased) type reference
@@ -687,11 +692,32 @@ object Types {
           go(tp.cls.typeRef) orElse d
       }
 
-      def goParam(tp: TypeParamRef) = {
+      def goParam(tp: TypeParamRef): Denotation = {
         val next = tp.underlying
         ctx.typerState.constraint.entry(tp) match {
           case bounds: TypeBounds if bounds ne next =>
-            go(bounds.hi)
+            val member = go(bounds.hi)
+            if (member.exists)
+              member
+            else {
+              val loMember = go(bounds.lo)
+              val memberOwner = loMember.symbol.allOverriddenSymbols.toList.headOption.getOrElse(loMember.symbol).owner
+              val ownerTpe = {
+                val args = memberOwner.typeParams.map { _ =>
+                  TypeBounds.empty
+                }
+                memberOwner.typeRef.appliedTo(args)
+              }
+
+              tp <:< ownerTpe
+
+              ctx.typerState.constraint.entry(tp) match {
+                case newBounds: TypeBounds if newBounds ne next =>
+                  go(newBounds.hi)
+                case _ =>
+                NoDenotation
+              }
+            }
           case _ =>
             go(next)
         }
@@ -2116,6 +2142,16 @@ object Types {
     def argForParam(pre: Type)(implicit ctx: Context): Type = {
       val tparam = symbol
       val cls = tparam.owner
+
+      pre match {
+        case tp: TypeVar if tp.isHole =>
+          // FIXME MEGA HACK: Nothing will be wrong depending on the variance,
+          // something like WildcardType would make more sense but seems to
+          // screw up the constraints.
+          return defn.NothingType
+        case _ =>
+      }
+
       val base = pre.baseType(cls)
       base match {
         case AppliedType(_, allArgs) =>
@@ -2325,6 +2361,7 @@ object Types {
   abstract case class TypeRef(override val prefix: Type,
                               private var myDesignator: Designator)
     extends NamedType {
+    // assert(!(prefix.isInstanceOf[TypeVar] && prefix.asInstanceOf[TypeVar].isHole), prefix)
 
     type ThisType = TypeRef
     type ThisName = TypeName

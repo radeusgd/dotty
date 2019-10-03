@@ -515,6 +515,18 @@ object ProtoTypes {
         constrained(poly, untpd.EmptyTree, alwaysAddTypeVars = true)
         ._2.head.tpe.asInstanceOf[TypeVar]
     })
+  def holeSummary()(implicit ctx: Context): Unit = {
+    val summary = StringBuffer()
+    for {
+      (name, tv) <- holeVariable
+    } do {
+      summary.append(
+        i"Type hole $name has constraints: ${ctx.typerState.constraint.entry(tv.origin)}")
+    }
+    val str = summary.toString
+    if (str.nonEmpty)
+      ctx.error(summary.toString)
+  }
 
   def newTypeVar(bounds: TypeBounds)(implicit ctx: Context): TypeVar = {
     val poly = PolyType(DepParamName.fresh().toTypeName :: Nil)(

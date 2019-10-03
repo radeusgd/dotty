@@ -93,10 +93,11 @@ object Inferencing {
    */
   private class IsFullyDefinedAccumulator(force: ForceDegree.Value)(implicit ctx: Context) extends TypeAccumulator[Boolean] {
 
-    private def instantiate(tvar: TypeVar, fromBelow: Boolean): Type = {
-      val inst = tvar.instantiate(fromBelow)
-      typr.println(i"forced instantiation of ${tvar.origin} = $inst")
-      inst
+    private def instantiate(tvar: TypeVar, fromBelow: Boolean): Unit = {
+      if (!tvar.isHole) {
+        val inst = tvar.instantiate(fromBelow)
+        typr.println(i"forced instantiation of ${tvar.origin} = $inst")
+      }
     }
 
     private[this] var toMaximize: Boolean = false

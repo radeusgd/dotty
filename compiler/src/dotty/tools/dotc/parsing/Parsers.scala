@@ -1498,6 +1498,12 @@ object Parsers {
         val start = in.skipToken()
         typeBounds().withSpan(Span(start, in.lastOffset, start))
       }
+      else if (in.name.toString != "???" && in.name.startsWith("?")) {
+        val name = in.name
+        atSpan(in.skipToken()) {
+          TypedHole(name, isTerm = false)
+        }
+      }
       else if (isIdent(nme.*) && ctx.settings.YkindProjector.value) {
         syntaxError("`*` placeholders are not implemented yet")
         typeIdent()

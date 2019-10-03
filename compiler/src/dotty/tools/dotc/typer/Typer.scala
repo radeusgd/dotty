@@ -2116,8 +2116,12 @@ class Typer extends Namer
           case tree @ TypedHole(name, isTerm) =>
             val tv = holeTypeVar(tree.name)
             tv <:< pt
-            ctx.error(i"Found hole `$name` with expected type: $pt\nAccumulated constraints: ${ctx.typerState.constraint.entry(tv.origin)}", tree.sourcePos)
-            return tree.withType(tv)
+            if (isTerm) {
+              ctx.error(i"Found hole `$name` with expected type: $pt", tree.sourcePos)
+              return tree.withType(tv)
+            }
+            else
+              return TypeTree(tv).withSpan(tree.span)
           case xtree: untpd.NameTree => typedNamed(xtree, pt)
           case xtree => typedUnnamed(xtree)
         }

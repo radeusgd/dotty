@@ -118,7 +118,7 @@ trait TypeAssigner {
           range(defn.NothingType, apply(classBound(tp.cls.classInfo)))
         case tp: SkolemType if partsToAvoid(mutable.Set.empty, tp.info).nonEmpty =>
           range(defn.NothingType, apply(tp.info))
-        case tp: TypeVar if ctx.typerState.constraint.contains(tp) =>
+        case tp: TypeVar if ctx.typerState.constraint.contains(tp) && !tp.isHole =>
           val lo = ctx.typeComparer.instanceType(
             tp.origin, fromBelow = variance > 0 || variance == 0 && tp.hasLowerBound)
           val lo1 = apply(lo)
@@ -234,11 +234,19 @@ trait TypeAssigner {
    *
    *  @see QualSkolemType, TypeOps#asSeenFrom
    */
-  def maybeSkolemizePrefix(qualType: Type, name: Name)(implicit ctx: Context): Type =
-    if (name.isTermName && !ctx.isLegalPrefix(qualType))
+  def maybeSkolemizePrefix(qualType: Type, name: Name)(implicit ctx: Context): Type = {
+    val isHole = qualType match {
+      case tp: TypeVar =>
+        tp.isHole
+      case _ =>
+        false
+    }
+    if (isHole || name.isTermName && !ctx.isLegalPrefix(qualType)) {
       QualSkolemType(qualType)
+    }
     else
       qualType
+  }
 
   /** The type of the selection `tree`, where `qual1` is the typed qualifier part. */
   def selectionType(tree: untpd.RefTree, qual1: Tree)(implicit ctx: Context): Type = {
