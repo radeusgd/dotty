@@ -31,7 +31,7 @@ private object Macro {
     // )).seal
 
     Match(expr.unseal.underlyingArgument, tpes.map { tpe =>
-      CaseDef(Pattern.TypeTest(tpe.seal.unseal), None, '{???}.unseal)
+      CaseDef(Pattern.TypeTest(tpe.seal.unseal), None, TypedHole.freshTerm("a"))
     }).seal
   }
 

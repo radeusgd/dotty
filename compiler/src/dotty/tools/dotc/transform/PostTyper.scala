@@ -178,6 +178,13 @@ class PostTyper extends MacroTransform with IdentityDenotTransformer { thisPhase
 
     override def transform(tree: Tree)(implicit ctx: Context): Tree =
       try tree match {
+        // HACK: typed holes shouldn't pass the typer, but interactive macros
+        // can generate them, so just replace them with ??? / Nothing
+        case tree: TypedHole =>
+          (if (tree.isType)
+             TypeTree(defn.NothingType)
+           else
+             ref(defn.Predef_undefined)).withSpan(tree.span)
         case tree: Ident if !tree.isType =>
           tree.tpe match {
             case tpe: ThisType => This(tpe.cls).withSpan(tree.span)

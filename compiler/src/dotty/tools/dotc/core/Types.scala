@@ -699,25 +699,31 @@ object Types {
             val member = go(bounds.hi)
             if (member.exists)
               member
-            else {
+            else if (tp.paramName.startsWith("?")) {
               val loMember = go(bounds.lo)
-              val memberOwner = loMember.symbol.allOverriddenSymbols.toList.headOption.getOrElse(loMember.symbol).owner
-              val ownerTpe = {
-                val args = memberOwner.typeParams.map { _ =>
-                  TypeBounds.empty
+              val memberOwner = loMember.symbol.allOverriddenSymbols.toList.headOption.getOrElse(loMember.symbol).maybeOwner
+              if (memberOwner.exists) {
+                val ownerTpe = {
+                  val args = memberOwner.typeParams.map { _ =>
+                    TypeBounds.empty
+                  }
+                  memberOwner.typeRef.appliedTo(args)
                 }
-                memberOwner.typeRef.appliedTo(args)
+
+                tp <:< ownerTpe
+
+                ctx.typerState.constraint.entry(tp) match {
+                  case newBounds: TypeBounds if newBounds ne next =>
+                    go(newBounds.hi)
+                  case _ =>
+                    NoDenotation
+                }
               }
-
-              tp <:< ownerTpe
-
-              ctx.typerState.constraint.entry(tp) match {
-                case newBounds: TypeBounds if newBounds ne next =>
-                  go(newBounds.hi)
-                case _ =>
+              else
                 NoDenotation
-              }
             }
+            else
+              NoDenotation
           case _ =>
             go(next)
         }

@@ -419,6 +419,16 @@ trait CompilerInterface {
   def Typed_apply(expr: Term, tpt: TypeTree)(given ctx: Context): Typed
   def Typed_copy(original: Tree)(expr: Term, tpt: TypeTree)(given ctx: Context): Typed
 
+  type TypedHole <: Tree
+
+  def matchTypedHole(tree: Tree)(given ctx: Context): Option[TypedHole]
+
+  def TypedHole_name(self: TypedHole)(given ctx: Context): String
+  def TypedHole_isTerm(self: TypedHole)(given ctx: Context): Boolean
+
+  def TypedHole_apply(name: String, isTerm: Boolean)(given ctx: Context): TypedHole
+  def TypedHole_fresh(prefix: String, isTerm: Boolean)(given Context): TypedHole
+
   /** Tree representing an assignment `x = y` in the source code */
   type Assign <: Term
 

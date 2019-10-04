@@ -432,6 +432,22 @@ class ReflectionCompilerInterface(val rootContext: core.Contexts.Context) extend
   def Typed_copy(original: Tree)(expr: Term, tpt: TypeTree)(given Context): Typed =
     tpd.cpy.Typed(original)(expr, tpt)
 
+  type TypedHole = tpd.TypedHole
+
+  def matchTypedHole(x: Term)(given Context): Option[TypedHole] = x match {
+    case x: tpd.TypedHole => Some(x)
+    case _ => None
+  }
+
+  def TypedHole_name(self: TypedHole)(given Context): String = self.name.toString
+  def TypedHole_isTerm(self: TypedHole)(given Context): Boolean = self.isTerm
+
+  def TypedHole_apply(name: String, isTerm: Boolean)(given Context): TypedHole =
+    withDefaultPos(TypedHole(if (isTerm) name.toTermName else name.toTypeName, isTerm).withType(defn.NothingType))
+
+  def TypedHole_fresh(prefix: String, isTerm: Boolean)(given Context): TypedHole =
+    withDefaultPos(tpd.freshTypedHole(if (isTerm) prefix.toTermName else prefix.toTypeName, isTerm).withType(defn.NothingType))
+
   type Assign = tpd.Assign
 
   def matchAssign(x: Term)(given Context): Option[Assign] = x match {

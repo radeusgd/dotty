@@ -44,6 +44,8 @@ object Contexts {
   val resultsMap: mutable.Map[util.SourcePosition, List[tastyreflect.interactive.Result]] =
     mutable.Map()
 
+  val holeCounter: mutable.Map[Name, Int] = mutable.AnyRefMap().withDefaultValue(0)
+
   private val (compilerCallbackLoc, store1) = Store.empty.newLocation[CompilerCallback]()
   private val (sbtCallbackLoc,      store2) = store1.newLocation[AnalysisCallback]()
   private val (printerFnLoc,        store3) = store2.newLocation[Context => Printer](new RefinedPrinter(_))

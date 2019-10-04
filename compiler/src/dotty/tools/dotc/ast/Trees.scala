@@ -1013,6 +1013,13 @@ object Trees {
       case ys => Thicket(ys)
     }
 
+    def freshTypedHole(prefix: Name, isTerm: Boolean)(implicit src: SourceFile): TypedHole = {
+      holeCounter(prefix) += 1
+      val name = (prefix.toString + "_" + holeCounter(prefix).toString)
+      TypedHole(if (isTerm) name.toTermName else name.toTypeName, isTerm)
+    }
+
+
     // ----- Helper classes for copying, transforming, accumulating -----------------
 
     val cpy: TreeCopier

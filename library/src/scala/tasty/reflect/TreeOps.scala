@@ -501,6 +501,26 @@ trait TreeOps extends Core {
     def tpt(given ctx: Context): TypeTree = internal.Typed_tpt(self)
   }
 
+
+  object TypedHole {
+    def apply(name: String, isTerm: Boolean)(given ctx: Context): TypedHole =
+      internal.TypedHole_apply(name, isTerm)
+
+    def freshTerm(name: String)(given ctx: Context): TypedHole & Term =
+      internal.TypedHole_fresh(name, isTerm = true).asInstanceOf
+
+    def freshType(name: String, isTerm: Boolean)(given ctx: Context): TypedHole & Type =
+      internal.TypedHole_fresh(name, isTerm = false).asInstanceOf
+
+    def unapply(tree: Tree)(given ctx: Context): Option[(String, Boolean)] =
+      internal.matchTypedHole(tree).map(x => (x.name, x.isTerm))
+  }
+
+  implicit class TypedHoleAPI(self: TypedHole) {
+    def name(given ctx: Context): String = internal.TypedHole_name(self)
+    def isTerm(given ctx: Context): Boolean = internal.TypedHole_isTerm(self)
+  }
+
   object IsAssign {
     /** Matches any Assign and returns it */
     def unapply(tree: Tree)(given ctx: Context): Option[Assign] = internal.matchAssign(tree)

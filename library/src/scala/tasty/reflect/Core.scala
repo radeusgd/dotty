@@ -187,6 +187,8 @@ trait Core {
         /** Tree representing a type ascription `x: T` in the source code */
         type Typed = internal.Typed
 
+        type TypedHole = internal.TypedHole
+
         /** Tree representing an assignment `x = y` in the source code */
         type Assign = internal.Assign
 
