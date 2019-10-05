@@ -892,9 +892,14 @@ object DottyLanguageServer {
       item.setDocumentation(hoverContent(None, documentation))
     }
 
-    // FIXME: Doesn't work, completion gets lost when this is set.
-    for (r <- range(overwritePos)) {
-      item.setTextEdit(lsp4j.TextEdit(r, completion.label))
+    for {
+      r <- range(overwritePos)
+      endR <- range(overwritePos.endPos)
+    } {
+      // FIXME: doing `setTextEdit(lsp4j.TextEdit(r, completion.label))` instead
+      // of the next two lines doesn't work, bug in vscode-languageclient / vscode ?
+      item.setTextEdit(lsp4j.TextEdit(endR, completion.label))
+      item.setAdditionalTextEdits(List(lsp4j.TextEdit(r, "")).asJava)
     }
 
     item.setDeprecated(completion.symbols.nonEmpty && completion.symbols.forall(_.isDeprecated))
