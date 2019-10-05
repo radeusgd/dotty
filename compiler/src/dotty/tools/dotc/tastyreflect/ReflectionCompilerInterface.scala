@@ -40,6 +40,12 @@ class ReflectionCompilerInterface(val rootContext: core.Contexts.Context) extend
   def setResults(results: List[Result]): Unit =
     Contexts.resultsMap(rootPosition) = results
 
+  type Completion = dotty.tools.dotc.interactive.Completion
+  def Completion(label: String, description: String, symbols: List[Symbol]): Completion =
+    new dotty.tools.dotc.interactive.Completion(label, description, symbols)
+  def setCompletions(completions: List[Completion]): Unit =
+    Contexts.completionsMap(rootPosition) = completions
+
   //
   // QUOTE UNPICKLING
   //

@@ -37,4 +37,10 @@ class Reflection(private[scala] val internal: CompilerInterface)
     internal.Result(pos, label)
 
   def setResults(results: List[Result]): Unit = internal.setResults(results)
+
+  def Completion(label: String, description: String, symbols: List[Symbol]): Completion =
+    internal.Completion(label, description, symbols)
+
+  def setCompletions(completions: List[Completion]): Unit =
+    internal.setCompletions(completions)
 }

@@ -151,7 +151,7 @@ class InteractiveDriver(val settings: List[String]) extends Driver {
       val reporter =
         new StoreReporter(null) with UniqueMessagePositions with HideNonSensicalMessages
 
-      Contexts.applyEdits.clear()
+      Contexts.clearInteractiveMaps()
 
       val run = {
         val freshCtx = myInitCtx.fresh.setReporter(reporter)

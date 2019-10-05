@@ -43,6 +43,14 @@ object Contexts {
     mutable.Map()
   val resultsMap: mutable.Map[util.SourcePosition, List[tastyreflect.interactive.Result]] =
     mutable.Map()
+  val completionsMap: mutable.Map[util.SourcePosition, List[interactive.Completion]] =
+    mutable.Map()
+
+  def clearInteractiveMaps(): Unit = {
+    applyEdits.clear()
+    resultsMap.clear()
+    completionsMap.clear()
+  }
 
   val holeCounter: mutable.Map[Name, Int] = mutable.AnyRefMap().withDefaultValue(0)
 

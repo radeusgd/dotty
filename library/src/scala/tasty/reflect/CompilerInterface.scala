@@ -127,6 +127,12 @@ trait CompilerInterface {
   def Result(pos: Position, label: String): Result
   def setResults(results: List[Result]): Unit
 
+  type Completion <: AnyRef
+  def Completion(label: String, description: String, symbols: List[Symbol]): Completion
+
+  def setCompletions(completions: List[Completion]): Unit
+
+ 
   def settings: Settings
 
   //
