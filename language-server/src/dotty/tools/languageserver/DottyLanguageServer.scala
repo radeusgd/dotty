@@ -312,13 +312,22 @@ class DottyLanguageServer extends LanguageServer
     implicit def ctx: Context = driver.currentCtx
 
     val pos = sourcePosition(driver, uri, params.getPosition)
-    val items = driver.compilationUnits.get(uri) match {
-      case Some(unit) => Completion.completions(pos)(ctx.fresh.setCompilationUnit(unit))._2
-      case None => Nil
+
+    val items = completionsMap.find((k,v) => k.endPos == pos) match {
+      case Some((macroPos, completions)) =>
+        completions.map(completionItem(_, overwritePos = macroPos))
+      case None =>
+        driver.compilationUnits.get(uri) match {
+          case Some(unit) =>
+            Completion.completions(pos)(ctx.fresh.setCompilationUnit(unit))._2
+              .map(completionItem(_, overwritePos = NoSourcePosition))
+          case None =>
+            Nil
+        }
     }
 
     JEither.forRight(new CompletionList(
-      /*isIncomplete = */ false, items.map(completionItem).asJava))
+      /*isIncomplete = */ false, items.asJava))
   }
 
   /** If cursor is on a reference, show its definition and all overriding definitions.
@@ -853,10 +862,10 @@ object DottyLanguageServer {
   }
 
   /** Create an lsp4j.CompletionItem from a completion result */
-  def completionItem(completion: Completion)(implicit ctx: Context): lsp4j.CompletionItem = {
-    def completionItemKind(sym: Symbol)(implicit ctx: Context): lsp4j.CompletionItemKind = {
-      import lsp4j.{CompletionItemKind => CIK}
+  def completionItem(completion: Completion, overwritePos: SourcePosition)(implicit ctx: Context): lsp4j.CompletionItem = {
+    import lsp4j.{CompletionItemKind => CIK}
 
+    def completionItemKind(sym: Symbol)(implicit ctx: Context): CIK = {
       if sym.is(Package) || sym.is(Module)
         CIK.Module // No CompletionItemKind.Package (https://github.com/Microsoft/language-server-protocol/issues/155)
       else if sym.isConstructor
@@ -883,8 +892,19 @@ object DottyLanguageServer {
       item.setDocumentation(hoverContent(None, documentation))
     }
 
-    item.setDeprecated(completion.symbols.forall(_.isDeprecated))
-    completion.symbols.headOption.foreach(s => item.setKind(completionItemKind(s)))
+    // FIXME: Doesn't work, completion gets lost when this is set.
+    for (r <- range(overwritePos)) {
+      item.setTextEdit(lsp4j.TextEdit(r, completion.label))
+    }
+
+    item.setDeprecated(completion.symbols.nonEmpty && completion.symbols.forall(_.isDeprecated))
+    item.setKind(
+      completion.symbols.headOption match {
+        case Some(sym) =>
+          completionItemKind(sym)
+        case _ =>
+          CIK.Text
+      })
     item
   }
 
