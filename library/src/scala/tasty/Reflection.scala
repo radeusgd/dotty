@@ -43,4 +43,7 @@ class Reflection(private[scala] val internal: CompilerInterface)
 
   def setCompletions(completions: List[Completion]): Unit =
     internal.setCompletions(completions)
+
+  def setReferences(references: List[Position]): Unit =
+    internal.setReferences(references)
 }

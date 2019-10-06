@@ -46,6 +46,9 @@ class ReflectionCompilerInterface(val rootContext: core.Contexts.Context) extend
   def setCompletions(completions: List[Completion]): Unit =
     Contexts.completionsMap(rootPosition) = completions
 
+  def setReferences(references: List[Position]): Unit =
+    Contexts.referencesMap(rootPosition) = references
+
   //
   // QUOTE UNPICKLING
   //

@@ -132,7 +132,8 @@ trait CompilerInterface {
 
   def setCompletions(completions: List[Completion]): Unit
 
- 
+  def setReferences(references: List[Position]): Unit
+
   def settings: Settings
 
   //

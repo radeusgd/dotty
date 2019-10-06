@@ -45,11 +45,14 @@ object Contexts {
     mutable.Map()
   val completionsMap: mutable.Map[util.SourcePosition, List[interactive.Completion]] =
     mutable.Map()
+  val referencesMap: mutable.Map[util.SourcePosition, List[util.SourcePosition]] =
+    mutable.Map()
 
   def clearInteractiveMaps(): Unit = {
     applyEdits.clear()
     resultsMap.clear()
     completionsMap.clear()
+    referencesMap.clear()
   }
 
   val holeCounter: mutable.Map[Name, Int] = mutable.AnyRefMap().withDefaultValue(0)

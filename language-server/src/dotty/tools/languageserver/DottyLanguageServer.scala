@@ -359,31 +359,36 @@ class DottyLanguageServer extends LanguageServer
     val uriTrees = driver.openedTrees(uri)
     val pos = sourcePosition(driver, uri, params.getPosition)
 
-    val (definitions, originalSymbols) = {
-      implicit def ctx: Context = driver.currentCtx
-      val path = Interactive.pathTo(driver.openedTrees(uri), pos)
-      val definitions = Interactive.findDefinitions(path, pos, driver)
-      val originalSymbols = Interactive.enclosingSourceSymbols(path, pos)
+    (referencesMap.find((k,v) => k.endPos == pos) match {
+      case Some((_, references)) =>
+        references.flatMap(location)
+      case None =>
+        val (definitions, originalSymbols) = {
+          implicit def ctx: Context = driver.currentCtx
+          val path = Interactive.pathTo(driver.openedTrees(uri), pos)
+          val definitions = Interactive.findDefinitions(path, pos, driver)
+          val originalSymbols = Interactive.enclosingSourceSymbols(path, pos)
 
-      (definitions, originalSymbols)
-    }
-
-    val references = {
-      // Collect the information necessary to look into each project separately: representation of
-      // `originalSymbol` in this project, the context and correct Driver.
-      val perProjectInfo = inProjectsSeeing(driver, definitions, originalSymbols)
-
-      perProjectInfo.flatMap { (remoteDriver, ctx, definitions) =>
-        definitions.flatMap { definition =>
-          val name = definition.name(ctx).sourceModuleName.toString
-          val trees = remoteDriver.sourceTreesContaining(name)(ctx)
-          val matches = Interactive.findTreesMatching(trees, includes, definition)(ctx)
-          matches.map(tree => location(tree.namePos(ctx)))
+          (definitions, originalSymbols)
         }
-      }
-    }.toList
 
-    references.flatten.distinct.asJava
+        val references = {
+          // Collect the information necessary to look into each project separately: representation of
+          // `originalSymbol` in this project, the context and correct Driver.
+          val perProjectInfo = inProjectsSeeing(driver, definitions, originalSymbols)
+
+          perProjectInfo.flatMap { (remoteDriver, ctx, definitions) =>
+            definitions.flatMap { definition =>
+              val name = definition.name(ctx).sourceModuleName.toString
+              val trees = remoteDriver.sourceTreesContaining(name)(ctx)
+              val matches = Interactive.findTreesMatching(trees, includes, definition)(ctx)
+              matches.map(tree => location(tree.namePos(ctx)))
+            }
+          }
+        }.toList
+
+        references.flatten.distinct
+    }).asJava
   }
 
   override def rename(params: RenameParams) = computeAsync { cancelToken =>
