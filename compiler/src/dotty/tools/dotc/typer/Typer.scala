@@ -2117,7 +2117,14 @@ class Typer extends Namer
             val tv = holeTypeVar(tree.name)
             tv <:< pt
             if (isTerm) {
-              ctx.error(i"Found hole `$name` with expected type: $pt", tree.sourcePos)
+              val bindings = {
+                import interactive.Completion._
+                val buffer = CompletionBuffer(mode = Mode.Term, prefix = "", pos = tree.sourcePos)
+                buffer.addScopeCompletions
+                buffer.getCompletions.flatMap(_.symbols).filter(sym => sym.owner.ne(defn.ScalaPredefModule.moduleClass) && sym.owner.ne(defn.AnyClass) && (sym.info.finalResultType frozen_<:< pt))
+              }
+              val bindingsStr = bindings.map(sym => i"$sym: ${sym.info}").mkString("\n")
+              ctx.error(i"Found hole `$name` with expected type: $pt\nRelevant bindings:\n$bindingsStr", tree.sourcePos)
               return tree.withType(tv)
             }
             else

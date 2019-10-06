@@ -134,7 +134,7 @@ object Completion {
     (offset, completionList)
   }
 
-  private class CompletionBuffer(val mode: Mode, val prefix: String, pos: SourcePosition) {
+  class CompletionBuffer(val mode: Mode, val prefix: String, pos: SourcePosition) {
 
     private[this] val completions = new RenameAwareScope
 
@@ -326,11 +326,11 @@ object Completion {
    * The completion mode: defines what kinds of symbols should be included in the completion
    * results.
    */
-  private class Mode(val bits: Int) extends AnyVal {
+  class Mode(val bits: Int) extends AnyVal {
     def is(other: Mode): Boolean = (bits & other.bits) == other.bits
     def |(other: Mode): Mode = new Mode(bits | other.bits)
   }
-  private object Mode {
+  object Mode {
     /** No symbol should be included */
     val None: Mode = new Mode(0)
 
