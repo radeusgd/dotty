@@ -62,7 +62,8 @@ object Contexts {
 
   private val (compilerCallbackLoc, store1) = Store.empty.newLocation[CompilerCallback]()
   private val (sbtCallbackLoc,      store2) = store1.newLocation[AnalysisCallback]()
-  private val (printerFnLoc,        store3) = store2.newLocation[Context => Printer](new RefinedPrinter(_))
+  // private val (printerFnLoc,        store3) = store2.newLocation[Context => Printer](new RefinedPrinter(_))
+  private val (printerFnLoc,        store3) = store2.newLocation[Context => Printer](new ReplPrinter(_))
   private val (settingsStateLoc,    store4) = store3.newLocation[SettingsState]()
   private val (freshNamesLoc,       store5) = store4.newLocation[FreshNameCreator](new FreshNameCreator.Default)
   private val (compilationUnitLoc,  store6) = store5.newLocation[CompilationUnit]()
