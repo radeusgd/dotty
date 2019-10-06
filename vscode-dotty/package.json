@@ -93,6 +93,11 @@
     },
     "commands": [
       {
+        "command": "dotty.compiler.webview",
+        "title": "Run webview from macro",
+        "category": "Scala"
+      },
+      {
         "command": "dotty.compiler.typechecked",
         "title": "Print typechecked expression",
         "category": "Scala"

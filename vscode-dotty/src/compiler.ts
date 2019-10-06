@@ -1,13 +1,14 @@
 import * as vscode from 'vscode'
 import * as path from 'path'
 import * as ls from 'vscode-languageserver-protocol'
-import { CancellationTokenSource, ProgressLocation, Location, Uri, TextEdit, DiagnosticRelatedInformation } from 'vscode'
+import { CancellationTokenSource, ProgressLocation, Location, Uri, TextEdit, DiagnosticRelatedInformation, WebviewPanel } from 'vscode'
 import { CompilerTypecheckedResult, CompilerTypecheckedRequest } from './protocol'
 import { BaseLanguageClient } from 'vscode-languageclient'
 import { Disposable } from 'vscode-jsonrpc'
 
 export const compilerTypecheckedKey = "dotty.compiler.typechecked"
 export const compilerExecuteMacroCommandsKey = "dotty.compiler.executeMacroCommands"
+export const compilerWebviewKey = "dotty.compiler.webview"
 
 interface Result {
   location: Location
@@ -18,6 +19,8 @@ export class CompilerProvider implements Disposable {
   private disposables: Disposable[] = []
 
   private provider = new MacroResultsProvider()
+
+  private webviewPanel: WebviewPanel | undefined = undefined
 
   constructor(
     readonly client: BaseLanguageClient,
@@ -33,6 +36,31 @@ export class CompilerProvider implements Disposable {
 
     this.disposables.push(
       vscode.window.registerTreeDataProvider("macroCommandsResult", this.provider),
+      vscode.commands.registerTextEditorCommand(compilerWebviewKey, (editor, _edit) => {
+        if (!this.webviewPanel || !this.webviewPanel.visible) {
+          this.webviewPanel = vscode.window.createWebviewPanel(
+            "dottyCompilerWebview",
+            "Macro web view",
+            {
+              preserveFocus: true,
+              viewColumn: vscode.ViewColumn.Beside
+            },
+            {}
+          )
+          this.webviewPanel.onDidDispose(() => this.webviewPanel = undefined)
+        }
+
+        this.webviewPanel.webview.html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+xx
+</body>
+</html>`
+      }),
       vscode.commands.registerTextEditorCommand(compilerTypecheckedKey, (editor, _edit) => {
         let document = editor.document
        // check using documentSelector ...
