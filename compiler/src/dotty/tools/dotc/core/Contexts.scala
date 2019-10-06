@@ -47,12 +47,15 @@ object Contexts {
     mutable.Map()
   val referencesMap: mutable.Map[util.SourcePosition, List[util.SourcePosition]] =
     mutable.Map()
+  val webviewsMap: mutable.Map[util.SourcePosition, tastyreflect.interactive.Webview] =
+    mutable.Map()
 
   def clearInteractiveMaps(): Unit = {
     applyEdits.clear()
     resultsMap.clear()
     completionsMap.clear()
     referencesMap.clear()
+    webviewsMap.clear()
   }
 
   val holeCounter: mutable.Map[Name, Int] = mutable.AnyRefMap().withDefaultValue(0)

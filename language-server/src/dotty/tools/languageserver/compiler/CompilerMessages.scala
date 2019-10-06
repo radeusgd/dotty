@@ -10,3 +10,8 @@ import org.eclipse.lsp4j._
 case class TypecheckedResult(replacement: TextEdit) {
   def this() = this(null)
 }
+
+// Would make sense to also include the range of the macro in there.
+case class PublishWebviewParams(uri: String, title: String, body: String) {
+  def this() = this(null, null, null)
+}

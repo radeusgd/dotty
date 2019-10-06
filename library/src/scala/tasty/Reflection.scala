@@ -46,4 +46,9 @@ class Reflection(private[scala] val internal: CompilerInterface)
 
   def setReferences(references: List[Position]): Unit =
     internal.setReferences(references)
+
+  def Webview(title: String, body: String): Webview =
+    internal.Webview(title, body)
+  def setWebview(webview: Webview): Unit =
+    internal.setWebview(webview)
 }

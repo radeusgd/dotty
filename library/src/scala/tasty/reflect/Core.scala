@@ -118,6 +118,7 @@ trait Core {
   type WorkspaceEdit = internal.WorkspaceEdit
   type Result = internal.Result
   type Completion = internal.Completion
+  type Webview = internal.Webview
 
   /** Settings */
   type Settings = internal.Settings

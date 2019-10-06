@@ -134,6 +134,10 @@ trait CompilerInterface {
 
   def setReferences(references: List[Position]): Unit
 
+  type Webview <: AnyRef
+  def Webview(title: String, body: String): Webview
+  def setWebview(webview: Webview): Unit
+
   def settings: Settings
 
   //

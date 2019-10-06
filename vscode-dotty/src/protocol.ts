@@ -76,3 +76,14 @@ export interface CompilerTypecheckedResult {
 export namespace CompilerTypecheckedRequest {
   export const type = new RequestType<TextDocumentPositionParams, CompilerTypecheckedResult, void, void>("compiler/typechecked")
 }
+
+export interface PublishWebviewParams {
+  uri: String
+  title: String
+  body: String
+}
+
+/** The `compiler/publishWebview` notification */
+export namespace CompilerPublishWebviewNotification {
+	export const type = new NotificationType<PublishWebviewParams, void>("compiler/publishWebview")
+}

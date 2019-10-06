@@ -285,6 +285,14 @@ class DottyLanguageServer extends LanguageServer
       client.publishDiagnostics(new PublishDiagnosticsParams(
         document.getUri,
         diags.flatMap(diagnostic).asJava))
+
+      webviewsMap.foreach { (_, webview) =>
+        client.publishWebview(new PublishWebviewParams(
+          document.getUri,
+          webview.title,
+          webview.body
+        ))
+      }
     }
   }
 

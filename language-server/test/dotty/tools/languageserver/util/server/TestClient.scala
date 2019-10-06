@@ -1,5 +1,6 @@
 package dotty.tools.languageserver.util.server
 
+import dotty.tools.languageserver.compiler.PublishWebviewParams
 import dotty.tools.languageserver.worksheet.{WorksheetRunOutput}
 import dotty.tools.languageserver.DottyClient
 
@@ -53,4 +54,7 @@ class TestClient extends DottyClient {
     worksheetOutput += output
   }
 
+  override def publishWebview(webview: PublishWebviewParams) = {
+    // TODO
+  }
 }

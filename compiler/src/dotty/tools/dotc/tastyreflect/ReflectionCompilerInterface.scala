@@ -49,6 +49,12 @@ class ReflectionCompilerInterface(val rootContext: core.Contexts.Context) extend
   def setReferences(references: List[Position]): Unit =
     Contexts.referencesMap(rootPosition) = references
 
+  type Webview = interactive.Webview
+  def Webview(title: String, body: String): Webview =
+    new interactive.Webview(title, body)
+  def setWebview(webview: Webview): Unit =
+    Contexts.webviewsMap(rootPosition) = webview
+
   //
   // QUOTE UNPICKLING
   //
