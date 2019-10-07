@@ -89,7 +89,7 @@ class PlainPrinter(_ctx: Context) extends Printer {
     || (sym.name == nme.PACKAGE)               // package
   )
 
-  def nameString(name: Name): String = name.toString
+  def nameString(name: Name): String = name.stripModuleClassSuffix.toString
 
   def toText(name: Name): Text = Str(nameString(name))
 

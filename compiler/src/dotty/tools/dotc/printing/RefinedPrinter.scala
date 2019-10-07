@@ -414,7 +414,7 @@ class RefinedPrinter(_ctx: Context) extends PlainPrinter(_ctx) {
         changePrec(InfixPrec) {
           val exprText = toText(expr)
           val line = exprText.lastLine
-          val colon = if (!line.isEmpty && isOperatorPart(line.last)) " :" else ":"
+          val colon = if (!line.isEmpty && isOperatorPart(line.last)) " :" else ": "
           exprText ~ colon ~ toText(tpt) }
       case TypedHole(name, _) =>
         s"?${nameString(name)}"
