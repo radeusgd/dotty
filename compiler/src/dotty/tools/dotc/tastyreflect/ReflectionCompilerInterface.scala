@@ -284,6 +284,36 @@ class ReflectionCompilerInterface(val rootContext: core.Contexts.Context) extend
   }
 
   def Term_pos(self: Term)(given Context): Position = self.sourcePos
+  def Tree_namePos(self: Tree)(given ctx: Context): Position = self match {
+    case tree: tpd.NameTree =>
+      import NameOps._
+      // FIXME: Merge with NameTree#namePos ?
+      val treeSpan = tree.span
+      if (treeSpan.isZeroExtent || tree.name.toTermName == nme.ERROR)
+        util.NoSourcePosition
+      else {
+        // Constructors are named `<init>` in the trees, but `this` in the source.
+        val nameLength = tree.name match {
+          case nme.CONSTRUCTOR => nme.this_.toString.length
+          case other => other.stripModuleClassSuffix.show.toString.length
+        }
+        val position = {
+          // FIXME: This is incorrect in some cases, like with backquoted identifiers,
+          //        see https://github.com/lampepfl/dotty/pull/1634#issuecomment-257079436
+          val (start, end) =
+            if (!treeSpan.isSynthetic)
+              (treeSpan.point, treeSpan.point + nameLength)
+            else
+              // If we don't have a point, we need to find it
+              (treeSpan.end - nameLength, treeSpan.end)
+          Spans.Span(start, end, start)
+        }
+        ctx.source.atSpan(position)
+      }
+    case _ =>
+      Term_pos(self)
+  }
+
   def Term_tpe(self: Term)(given Context): Type = self.tpe
   def Term_underlyingArgument(self: Term)(given Context): Term = self.underlyingArgument
   def Term_underlying(self: Term)(given Context): Term = self.underlying
@@ -1465,8 +1495,10 @@ class ReflectionCompilerInterface(val rootContext: core.Contexts.Context) extend
   type Position = util.SourcePosition
 
   def Position_start(self: Position): Int = self.start
+  def Position_startPos(self: Position): Position = self.startPos
 
   def Position_end(self: Position): Int = self.end
+  def Position_endPos(self: Position): Position = self.endPos
 
   def Position_exists(self: Position): Boolean = self.exists
 

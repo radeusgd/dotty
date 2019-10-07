@@ -314,6 +314,7 @@ trait CompilerInterface {
   def matchTerm(tree: Tree)(given ctx: Context): Option[Term]
 
   def Term_pos(self: Term)(given ctx: Context): Position
+  def Tree_namePos(self: Tree)(given ctx: Context): Position
   def Term_tpe(self: Term)(given ctx: Context): Type
   def Term_underlyingArgument(self: Term)(given ctx: Context): Term
   def Term_underlying(self: Term)(given ctx: Context): Term
@@ -1154,9 +1155,11 @@ trait CompilerInterface {
 
   /** The start offset in the source file */
   def Position_start(self: Position): Int
+  def Position_startPos(self: Position): Position
 
   /** The end offset in the source file */
   def Position_end(self: Position): Int
+  def Position_endPos(self: Position): Position
 
   /** Does this position exist */
   def Position_exists(self: Position): Boolean

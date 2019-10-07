@@ -6,9 +6,11 @@ trait PositionOps extends Core {
 
     /** The start offset in the source file */
     def start: Int = internal.Position_start(pos)
+    def startPos: Position = internal.Position_startPos(pos)
 
     /** The end offset in the source file */
     def end: Int = internal.Position_end(pos)
+    def endPos: Position = internal.Position_endPos(pos)
 
     /** Does this position exist */
     def exists: Boolean = internal.Position_exists(pos)

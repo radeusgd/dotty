@@ -8,6 +8,7 @@ trait TreeOps extends Core {
   implicit class TreeAPI(self: Tree) {
     /** Position in the source code */
     def pos(given ctx: Context): Position = internal.Tree_pos(self)
+    def namePos(given ctx: Context): Position = internal.Tree_namePos(self)
 
     def symbol(given ctx: Context): Symbol = internal.Tree_symbol(self)
   }
