@@ -94,6 +94,8 @@ trait TreeUtils
         case TypeBoundsTree(lo, hi) => foldTree(foldTree(x, lo), hi)
         case CaseDef(pat, guard, body) => foldTree(foldTrees(foldPattern(x, pat), guard), body)
         case TypeCaseDef(pat, body) => foldTree(foldTree(x, pat), body)
+        case _ =>
+          x
       }
     }
 
@@ -206,6 +208,8 @@ trait TreeUtils
           Repeated.copy(tree)(transformTerms(elems), transformTypeTree(elemtpt))
         case Inlined(call, bindings, expansion) =>
           Inlined.copy(tree)(call, transformSubTrees(bindings), transformTerm(expansion)/*()call.symbol.localContext)*/)
+        case tree =>
+          tree
       }
     }
 
