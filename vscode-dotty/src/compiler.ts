@@ -61,9 +61,30 @@ ${webview.body}
               preserveFocus: true,
               viewColumn: vscode.ViewColumn.Beside
             },
-            {}
+            {
+              enableScripts: true
+            }
           )
           this.webviewPanel.onDidDispose(() => this.webviewPanel = undefined, this, this.disposables)
+
+          this.webviewPanel.webview.onDidReceiveMessage(
+            message => {
+              switch (message.command) {
+              case "applyEdit":
+                console.log(message)
+                let document = editor.document
+                const edit = new vscode.WorkspaceEdit()
+                const textEdit = new vscode.TextEdit(new vscode.Range(
+                  new vscode.Position(parseInt(message.startLine), parseInt(message.startColumn)),
+                  new vscode.Position(parseInt(message.endLine), parseInt(message.endColumn))
+                ), message.value)
+                edit.set(document.uri, [textEdit])
+                vscode.workspace.applyEdit(edit)
+                return;
+              }
+            },
+            this,
+            this.disposables)
         }
       }),
       vscode.commands.registerTextEditorCommand(compilerTypecheckedKey, (editor, _edit) => {
