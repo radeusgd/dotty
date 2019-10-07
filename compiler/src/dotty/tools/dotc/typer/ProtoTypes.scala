@@ -509,13 +509,15 @@ object ProtoTypes {
     constrained(tl, EmptyTree)._1
 
   private[this] val holeVariable: collection.mutable.Map[Name, TypeVar] = new collection.mutable.HashMap()
+  def clearHoles(): Unit =
+    holeVariable.clear()
   def holeTypeVar(name: Name)(implicit ctx: Context): TypeVar =
     holeVariable.getOrElseUpdate(name, {
       val poly = PolyType(List(name.toTypeName))(_ => List(TypeBounds.empty), _ => defn.AnyType)
         constrained(poly, untpd.EmptyTree, alwaysAddTypeVars = true)
         ._2.head.tpe.asInstanceOf[TypeVar]
     })
-  def holeSummary()(implicit ctx: Context): Unit = {
+  def holeSummary(pos: util.SourcePosition)(implicit ctx: Context): Unit = {
     val summary = StringBuffer()
     for {
       (name, tv) <- holeVariable
@@ -525,7 +527,7 @@ object ProtoTypes {
     }
     val str = summary.toString
     if (str.nonEmpty)
-      ctx.error(summary.toString)
+      ctx.error(summary.toString, pos)
   }
 
   def newTypeVar(bounds: TypeBounds)(implicit ctx: Context): TypeVar = {

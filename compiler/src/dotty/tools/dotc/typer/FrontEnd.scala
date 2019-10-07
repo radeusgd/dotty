@@ -72,7 +72,13 @@ class FrontEnd extends Phase {
 
   def typeCheck(implicit ctx: Context): Unit = monitor("typechecking") {
     val unit = ctx.compilationUnit
+
+    typer.ProtoTypes.clearHoles()
+
     unit.tpdTree = ctx.typer.typedExpr(unit.untpdTree)
+
+    typer.ProtoTypes.holeSummary(unit.tpdTree.sourcePos.endPos)
+
     typr.println("typed: " + unit.source)
     record("retained untyped trees", unit.untpdTree.treeSize)
     record("retained typed trees after typer", unit.tpdTree.treeSize)
@@ -107,7 +113,6 @@ class FrontEnd extends Phase {
         firstXmlPos)
 
     unitContexts.foreach(typeCheck(_))
-    typer.ProtoTypes.holeSummary()
     record("total trees after typer", ast.Trees.ntrees)
     unitContexts.map(_.compilationUnit).filterNot(discardAfterTyper)
   }
