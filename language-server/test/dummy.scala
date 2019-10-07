@@ -33,7 +33,6 @@ private object Macro {
     Match(expr.unseal.underlyingArgument, tpes.map { tpe =>
       CaseDef(Pattern.TypeTest(tpe.seal.unseal), None, TypedHole.freshTerm("a"))
     }).seal
-    Literal(Constant(allTrees.toString)).seal
   }
 
   def test = {

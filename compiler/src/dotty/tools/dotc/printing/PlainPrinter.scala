@@ -103,7 +103,7 @@ class PlainPrinter(_ctx: Context) extends Printer {
     (refinementNameString(rt) ~ toTextRHS(rt.refinedInfo)).close
 
   protected def argText(arg: Type): Text = homogenizeArg(arg) match {
-    case arg: TypeBounds => "?" ~ toText(arg)
+    case arg: TypeBounds => "_" ~ toText(arg)
     case arg => toText(arg)
   }
 

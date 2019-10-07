@@ -268,8 +268,8 @@ class RefinedPrinter(_ctx: Context) extends PlainPrinter(_ctx) {
   protected def blockToText[T >: Untyped](block: Block[T]): Text =
     blockText(block.stats :+ block.expr)
 
-  protected def blockText[T >: Untyped](trees: List[Tree[T]]): Text =
-    ("{" ~ toText(trees, "\n") ~ "}").close
+  protected def blockText[T >: Untyped](trees: List[Tree[T]], prefix: Text = ""): Text =
+    (prefix ~ "{" ~ toText(trees, "\n") ~ "}").close
 
   protected def typeApplyText[T >: Untyped](tree: TypeApply[T]): Text = {
     val isQuote = !printDebug && tree.fun.hasType && tree.fun.symbol == defn.InternalQuoted_typeQuote
@@ -443,7 +443,7 @@ class RefinedPrinter(_ctx: Context) extends PlainPrinter(_ctx) {
               if (sel.isEmpty) keywordStr("implicit")
               else keywordStr("inline ") ~ toText(sel)
             else toText(sel)
-          selTxt ~ keywordStr(" match ") ~ blockText(cases)
+          blockText(cases, selTxt ~ " match ")
         }
       case CaseDef(pat, guard, body) =>
         keywordStr("case ") ~ inPattern(toText(pat)) ~ optText(guard)(keywordStr(" if ") ~ _) ~ " => " ~ caseBlockText(body)
