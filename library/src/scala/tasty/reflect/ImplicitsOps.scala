@@ -5,6 +5,9 @@ trait ImplicitsOps extends Core {
   def searchImplicit(tpe: Type)(given ctx: Context): ImplicitSearchResult =
     internal.searchImplicit(tpe)
 
+  def allMatchingImplicits(tpe: Type)(given ctx: Context): Set[_ <: TermRef] =
+    internal.allMatchingImplicits(tpe)
+
   object IsImplicitSearchSuccess {
     def unapply(isr: ImplicitSearchResult)(given ctx: Context): Option[ImplicitSearchSuccess] =
       internal.matchImplicitSearchSuccess(isr)

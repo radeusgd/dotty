@@ -2118,6 +2118,7 @@ class Typer extends Namer
             tv <:< pt
             if (isTerm) {
               val bindings = {
+                // dup with scopeSymbols
                 import interactive.Completion._
                 val buffer = CompletionBuffer(mode = Mode.Term, prefix = "", pos = tree.sourcePos)
                 buffer.addScopeCompletions

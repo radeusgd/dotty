@@ -55,6 +55,16 @@ class ReflectionCompilerInterface(val rootContext: core.Contexts.Context) extend
   def setWebview(webview: Webview): Unit =
     Contexts.webviewsMap(rootPosition) = webview
 
+  def scopeSymbols(given Context): List[Symbol] = {
+    import dotty.tools.dotc.interactive.Completion._
+    val buffer = CompletionBuffer(mode = Mode.Term, prefix = "", pos = SourcePosition(ctx.source, Spans.NoSpan))
+    buffer.addScopeCompletions
+    buffer.getCompletions.flatMap(_.symbols)
+  }
+
+
+
+
   //
   // QUOTE UNPICKLING
   //
@@ -1842,6 +1852,9 @@ class ReflectionCompilerInterface(val rootContext: core.Contexts.Context) extend
 
   def searchImplicit(tpe: Type)(given ctx: Context): ImplicitSearchResult =
     ctx.typer.inferImplicitArg(tpe, rootPosition.span)
+
+  def allMatchingImplicits(tpe: Type)(given ctx: Context): Set[_ <: TermRef] =
+    ctx.typer.allMatchingImplicits(tpe, rootPosition.span)
 
   type ImplicitSearchSuccess = Tree
   def matchImplicitSearchSuccess(isr: ImplicitSearchResult)(given Context): Option[ImplicitSearchSuccess] = isr.tpe match {

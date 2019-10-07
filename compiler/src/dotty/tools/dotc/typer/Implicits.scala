@@ -1116,6 +1116,9 @@ trait Implicits { self: Typer =>
         else trySpecialCases(specialHandlers)
     }
 
+  def allMatchingImplicits(formal: Type, span: Span)(implicit ctx: Context): Set[TermRef] =
+    new ImplicitSearch(formal, EmptyTree, span).allImplicits
+
   /** Search an implicit argument and report error if not found */
   def implicitArgTree(formal: Type, span: Span)(implicit ctx: Context): Tree = {
     val arg = inferImplicitArg(formal, span)

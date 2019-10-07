@@ -138,6 +138,8 @@ trait CompilerInterface {
   def Webview(title: String, body: String): Webview
   def setWebview(webview: Webview): Unit
 
+  def scopeSymbols(given Context): List[Symbol]
+
   def settings: Settings
 
   //
@@ -1519,6 +1521,8 @@ trait CompilerInterface {
    *  @param ctx current context
    */
   def searchImplicit(tpe: Type)(given ctx: Context): ImplicitSearchResult
+
+  def allMatchingImplicits(tpe: Type)(given ctx: Context): Set[_ <: TermRef]
 
   /** Inline fn if it is an explicit closure possibly nested inside the expression of a block.
    *  Otherwise apply the arguments to the closure.
