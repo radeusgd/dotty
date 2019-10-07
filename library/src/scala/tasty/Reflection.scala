@@ -51,4 +51,7 @@ class Reflection(private[scala] val internal: CompilerInterface)
     internal.Webview(title, body)
   def setWebview(webview: Webview): Unit =
     internal.setWebview(webview)
+
+  def allTrees(given Context): List[Tree] =
+    internal.allTrees
 }

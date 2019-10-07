@@ -140,6 +140,8 @@ trait CompilerInterface {
 
   def scopeSymbols(given Context): List[Symbol]
 
+  def allTrees(given Context): List[Tree]
+
   def settings: Settings
 
   //

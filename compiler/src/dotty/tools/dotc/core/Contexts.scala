@@ -58,6 +58,9 @@ object Contexts {
     webviewsMap.clear()
   }
 
+  // OK this one is really terrible, but it's 3 AM.
+  var allTrees: Context => List[ast.tpd.Tree] = _
+
   val holeCounter: mutable.Map[Name, Int] = mutable.AnyRefMap().withDefaultValue(0)
 
   private val (compilerCallbackLoc, store1) = Store.empty.newLocation[CompilerCallback]()

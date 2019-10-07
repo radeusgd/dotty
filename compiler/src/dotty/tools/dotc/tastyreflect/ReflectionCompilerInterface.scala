@@ -63,7 +63,11 @@ class ReflectionCompilerInterface(val rootContext: core.Contexts.Context) extend
   }
 
 
-
+  def allTrees(given ctx: Context): List[Tree] =
+    if (Contexts.allTrees != null)
+      Contexts.allTrees(ctx)
+    else
+      Nil
 
   //
   // QUOTE UNPICKLING
