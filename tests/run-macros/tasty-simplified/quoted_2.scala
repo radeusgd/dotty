@@ -7,11 +7,11 @@ object Test {
     type Id[T] = T
     case class Wrap[T](t: T)
 
-    class Dummy
+    final class Dummy
     type Apply[T[_]] = T[Dummy]
     type Unapply[F[_[_]], T] = T match {
-      case Wrap[Apply[a]] => F[a]
       case Wrap[Dummy] => F[Id]
+      case Wrap[Apply[a]] => F[a]
       case Wrap[c] => F[Const[c]]
     }
 
