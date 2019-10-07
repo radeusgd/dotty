@@ -60,6 +60,7 @@ object Contexts {
 
   // OK this one is really terrible, but it's 3 AM.
   var allTrees: Context => List[ast.tpd.Tree] = _
+  var projectTrees: Context => List[ast.tpd.Tree] = _
 
   val holeCounter: mutable.Map[Name, Int] = mutable.AnyRefMap().withDefaultValue(0)
 

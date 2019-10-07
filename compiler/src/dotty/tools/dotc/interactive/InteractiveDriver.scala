@@ -157,6 +157,7 @@ class InteractiveDriver(val settings: List[String]) extends Driver {
         val freshCtx = myInitCtx.fresh.setReporter(reporter)
         MacroClassLoader.init(freshCtx)
         Contexts.allTrees = (ctx: Context) => this.allTrees(ctx).map(_.tree)
+        Contexts.projectTrees = (ctx: Context) => this.sourceTrees(ctx).map(_.tree)
         compiler.newRun(freshCtx)
       }
       myCtx = run.runContext

@@ -69,6 +69,12 @@ class ReflectionCompilerInterface(val rootContext: core.Contexts.Context) extend
     else
       Nil
 
+  def projectTrees(given ctx: Context): List[Tree] =
+    if (Contexts.projectTrees != null)
+      Contexts.projectTrees(ctx)
+    else
+      Nil
+
   //
   // QUOTE UNPICKLING
   //

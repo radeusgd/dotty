@@ -54,4 +54,7 @@ class Reflection(private[scala] val internal: CompilerInterface)
 
   def allTrees(given Context): List[Tree] =
     internal.allTrees
+
+  def projectTrees(given Context): List[Tree] =
+    internal.projectTrees
 }
