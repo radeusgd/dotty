@@ -83,17 +83,10 @@ ${webview.body}
         let document = editor.document // FIXME: support edits to other docs
         const edit = new vscode.WorkspaceEdit()
         const textEdits = client.protocol2CodeConverter.asTextEdits(macroEdits)
-        console.log("textEdits: ", textEdits)
-        const results: Result[] = macroResults.map(asResult)
-        console.log("results: ", results)
-        // this.provider.setResults(results)
-
-        vscode.commands.executeCommand(
-          "editor.action.showReferences",
-          document.uri,
-          editor.selection.active,
-          results.map(r => r.location)
-        )
+        // console.log("textEdits: ", textEdits)
+        // const results: Result[] = macroResults.map(asResult)
+        // console.log("results: ", results)
+        // // this.provider.setResults(results)
 
         edit.set(document.uri, textEdits)
         vscode.workspace.applyEdit(edit)
