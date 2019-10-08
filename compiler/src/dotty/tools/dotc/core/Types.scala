@@ -3927,7 +3927,7 @@ object Types {
         myReduced =
           trace(i"reduce match type $this $hashCode", typr, show = true) {
             try
-              typeComparer.matchCases(scrutinee, cases)(trackingCtx)
+              typeComparer.matchCases(scrutinee.simplified, cases)(trackingCtx)
             catch {
               case ex: Throwable =>
                 handleRecursive("reduce type ", i"$scrutinee match ...", ex)
