@@ -2166,7 +2166,6 @@ class TypeComparer(initctx: Context) extends ConstraintHandling[AbsentContext] w
       case _ => false
     }
 
-
   /** Are `tp1` and `tp2` provablyDisjoint types?
    *
    *  `true` implies that we found a proof; uncertainty defaults to `false`.
@@ -2274,6 +2273,10 @@ class TypeComparer(initctx: Context) extends ConstraintHandling[AbsentContext] w
         provablyDisjoint(tp1.tp2, tp2) || provablyDisjoint(tp1.tp1, tp2)
       case (_, tp2: AndType) =>
         provablyDisjoint(tp1, tp2.tp2) || provablyDisjoint(tp1, tp2.tp1)
+      case (tp1: NamedType, _) if gadtBounds(tp1.symbol) != null =>
+        provablyDisjoint(gadtBounds(tp1.symbol).hi, tp2) || provablyDisjoint(tp1.superType, tp2)
+      case (_, tp2: NamedType) if gadtBounds(tp2.symbol) != null =>
+        provablyDisjoint(tp1, gadtBounds(tp2.symbol).hi) || provablyDisjoint(tp1, tp2.superType)
       case (tp1: TypeProxy, tp2: TypeProxy) =>
         provablyDisjoint(tp1.superType, tp2) || provablyDisjoint(tp1, tp2.superType)
       case (tp1: TypeProxy, _) =>
