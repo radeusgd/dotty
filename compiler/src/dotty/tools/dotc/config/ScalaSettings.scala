@@ -97,6 +97,8 @@ class ScalaSettings extends Settings.SettingGroup {
   }
 
   /** -Y "Private" settings */
+  val YlogToFile: Setting[String] = PathSetting("-YlogToFile", "Log stuff to file", null)
+
   val YoverrideVars: Setting[Boolean] = BooleanSetting("-Yoverride-vars", "Allow vars to be overridden.")
   val Yhelp: Setting[Boolean] = BooleanSetting("-Y", "Print a synopsis of private options.")
   val Ycheck: Setting[List[String]] = PhasesSetting("-Ycheck", "Check the tree at the end of")

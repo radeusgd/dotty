@@ -18,7 +18,11 @@ class ConsoleReporter(
   import MessageContainer._
 
   /** Prints the message. */
-  def printMessage(msg: String): Unit = { writer.print(msg + "\n"); writer.flush() }
+  def printMessage(msg: String)(implicit ctx: Context): Unit = {
+    val commented = msg.split("\n").map(l => s"// $l").mkString("\n")
+    dotty.Debug.writeToFile(commented)
+    writer.print(msg + "\n"); writer.flush()
+  }
 
   /** Prints the message with the given position indication. */
   def doReport(m: MessageContainer)(implicit ctx: Context): Unit = {
