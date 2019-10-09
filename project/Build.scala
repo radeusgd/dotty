@@ -822,6 +822,7 @@ object Build {
 
       libraryDependencies ++= Seq(
         "org.eclipse.lsp4j" % "org.eclipse.lsp4j" % "0.6.0",
+        ("com.lihaoyi" %% "upickle" % "0.8.0").withDottyCompat(scalaVersion.value),
         Dependencies.`jackson-databind`
       ),
       // Work around https://github.com/eclipse/lsp4j/issues/295
