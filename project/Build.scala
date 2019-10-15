@@ -94,7 +94,7 @@ object Build {
     else if (isNightly)
       baseVersion + "-bin-" + VersionUtil.commitDate + "-" + VersionUtil.gitHash + "-NIGHTLY"
     else
-      baseVersion + "-bin-SNAPSHOT"
+      baseVersion + "-IDE1"
   }
   val dottyNonBootstrappedVersion = dottyVersion + "-nonbootstrapped"
 
