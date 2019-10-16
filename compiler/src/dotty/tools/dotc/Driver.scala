@@ -178,36 +178,11 @@ class Driver {
     doCompile(newCompiler(ctx), fileNames)(ctx)
   }
 
-  def jarNameToPrefix(name: String): String =
-    if name.startsWith("dotty-compiler") then "compiler/src"
-    else if name.startsWith("dotty-library") then "library/src"
-    else name
-
-  def classFileToPackageSrc(cf: String): String =
-    import java.io.File
-    val jarPath :: srcPath :: Nil = cf.split('!').toList
-    val jarName    = File(jarPath.replace("jar:file", "")).getName
-    val fileFolder = File(srcPath).getParent
-    val prefix = jarNameToPrefix(jarName)
-    s"$prefix$fileFolder"
-
   def main(args: Array[String]): Unit = {
     // Preload scala.util.control.NonFatal. Otherwise, when trying to catch a StackOverflowError,
     // we may try to load it but fail with another StackOverflowError and lose the original exception,
     // see <https://groups.google.com/forum/#!topic/scala-user/kte6nak-zPM>.
     val _ = NonFatal
-    try sys.exit(if (process(args).hasErrors) 1 else 0)
-    catch
-      case thr =>
-        val trace = thr.getStackTrace.map { t =>
-          val cn = t.getClassName.replace('.', '/') + ".class"
-          val classFile = this.getClass.getClassLoader.getResource(cn).toString
-
-          val scalaFile = s"${classFileToPackageSrc(classFile)}/${t.getFileName}"
-          val classNameShort = t.getClassName.reverse.takeWhile(_ != '.').reverse
-
-          s"\u001b[44;1m$classNameShort.${t.getMethodName}\u001b[0m $scalaFile:${t.getLineNumber}"
-        }.mkString("\n    ")
-        println(s"\u001b[48;5;88m${thr.getMessage}\u001b[0m\n    $trace")
+    dotty.entropy.SaneExceptions(sys.exit(if (process(args).hasErrors) 1 else 0))
   }
 }

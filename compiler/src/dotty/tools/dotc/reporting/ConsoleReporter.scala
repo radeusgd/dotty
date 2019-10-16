@@ -20,7 +20,7 @@ class ConsoleReporter(
   /** Prints the message. */
   def printMessage(msg: String)(implicit ctx: Context): Unit = {
     val commented = msg.split("\n").map(l => s"// $l").mkString("\n")
-    dotty.Debug.writeToFile(commented)
+    dotty.entropy.IssueLogger.writeToFile(commented)
     writer.print(msg + "\n"); writer.flush()
   }
 

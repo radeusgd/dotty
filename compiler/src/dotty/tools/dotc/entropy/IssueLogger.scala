@@ -1,10 +1,10 @@
-package dotty
+package dotty.entropy
 
 import java.io.{ File, PrintWriter, FileWriter }
 import scala.collection.mutable.{ Map => MutMap }
 import dotty.tools.dotc.core.Contexts.Context
 
-object Debug
+object IssueLogger
   val writtenFiles: MutMap[String, File] = MutMap.empty
   var lastEncounteredName = ""
 
