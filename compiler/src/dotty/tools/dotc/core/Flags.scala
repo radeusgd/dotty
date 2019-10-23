@@ -439,7 +439,7 @@ object Flags {
   val FromStartFlags: FlagSet = commonFlags(
     Module, Package, Deferred, Method, Case,
     HigherKinded, Param, ParamAccessor,
-    Scala2ExistentialCommon, Mutable, Opaque, Touched, JavaStatic,
+    Scala2ExistentialCommon, Mutable, Touched, JavaStatic,
     OuterOrCovariant, LabelOrContravariant, CaseAccessor,
     Extension, NonMember, Implicit, Given, Permanent, Synthetic,
     SuperAccessorOrScala2x, Inline)
@@ -450,7 +450,7 @@ object Flags {
    *  is completed)
    */
   val AfterLoadFlags: FlagSet = commonFlags(
-    FromStartFlags, AccessFlags, Final, AccessorOrSealed, LazyOrTrait, SelfName, JavaDefined)
+    FromStartFlags, Opaque, AccessFlags, Final, AccessorOrSealed, LazyOrTrait, SelfName, JavaDefined)
 
 
   /** A value that's unstable unless complemented with a Stable flag */
