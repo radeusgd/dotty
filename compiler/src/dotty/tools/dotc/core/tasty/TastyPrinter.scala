@@ -45,6 +45,10 @@ class TastyPrinter(bytes: Array[Byte])(implicit ctx: Context) {
       case Some(s) => sb.append(s)
       case _ =>
     }
+    unpickle(new SourceSectionUnpickler) match {
+      case Some(s) => sb.append(s)
+      case _ =>
+    }
     sb.result
   }
 
@@ -155,6 +159,20 @@ class TastyPrinter(bytes: Array[Byte])(implicit ctx: Context) {
         sb.append(treeColor("%10d".format(addr.index)))
         sb.append(s": ${cmt.raw} (expanded = ${cmt.isExpanded})\n")
       }
+      sb.append("\n")
+      sb.result
+    }
+  }
+
+  class SourceSectionUnpickler extends SectionUnpickler[String]("Source") {
+
+    private val sb: StringBuilder = new StringBuilder
+
+    def unpickle(reader: TastyReader, tastyName: NameTable): String = {
+      sb.append(s" ${reader.endAddr.index - reader.currentAddr.index}")
+      val source = new SourceUnpickler(reader).source
+      sb.append(" source:\n")
+      sb.append(source)
       sb.result
     }
   }

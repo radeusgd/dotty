@@ -6,9 +6,9 @@ import dotty.tools.dotc.core.tasty.TreeUnpickler.UnpickleMode
 
 object QuoteUnpickler {
   class QuotedTreeSectionUnpickler(posUnpickler: Option[PositionUnpickler], splices: Seq[Any])
-    extends DottyUnpickler.TreeSectionUnpickler(posUnpickler, None) {
+    extends DottyUnpickler.TreeSectionUnpickler(posUnpickler, None, None) {
     override def unpickle(reader: TastyReader, nameAtRef: NameTable): TreeUnpickler =
-      new TreeUnpickler(reader, nameAtRef, posUnpickler, None, splices)
+      new TreeUnpickler(reader, nameAtRef, posUnpickler, None, None, splices)
   }
 }
 
@@ -20,6 +20,6 @@ class QuoteUnpickler(bytes: Array[Byte], splices: Seq[Any], mode: UnpickleMode) 
   import DottyUnpickler._
   import QuoteUnpickler._
 
-  protected override def treeSectionUnpickler(posUnpicklerOpt: Option[PositionUnpickler], commentUnpicklerOpt: Option[CommentUnpickler]): TreeSectionUnpickler =
+  protected override def treeSectionUnpickler(posUnpicklerOpt: Option[PositionUnpickler], commentUnpicklerOpt: Option[CommentUnpickler], sourceUnpicklerOpt: Option[SourceUnpickler]): TreeSectionUnpickler =
     new QuotedTreeSectionUnpickler(posUnpicklerOpt, splices)
 }

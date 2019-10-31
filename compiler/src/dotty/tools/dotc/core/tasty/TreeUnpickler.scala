@@ -42,12 +42,14 @@ import scala.annotation.internal.sharable
  *  @param reader              the reader from which to unpickle
  *  @param posUnpicklerOpt     the unpickler for positions, if it exists
  *  @param commentUnpicklerOpt the unpickler for comments, if it exists
+ *  @param sourceUnpicklerOpt  the unpickler for the source, if it exists
  *  @param splices
  */
 class TreeUnpickler(reader: TastyReader,
                     nameAtRef: NameRef => TermName,
                     posUnpicklerOpt: Option[PositionUnpickler],
                     commentUnpicklerOpt: Option[CommentUnpickler],
+                    sourceUnpicklerOpt: Option[SourceUnpickler],
                     splices: Seq[Any]) {
   import TastyFormat._
   import TreeUnpickler._

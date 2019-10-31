@@ -70,6 +70,8 @@ class Pickler extends Phase {
       if (!ctx.settings.YdropComments.value)
         new CommentPickler(pickler, treePkl.buf.addrOfTree).pickleComment(tree)
 
+      new SourcePickler(pickler).pickleSource()
+
       // other pickle sections go here.
       val pickled = pickler.assembleParts()
       unit.pickled += (cls -> pickled)
@@ -78,7 +80,7 @@ class Pickler extends Phase {
         pickled.iterator.grouped(10).toList.zipWithIndex.map {
           case (row, i) => s"${i}0: ${row.mkString(" ")}"
         }
-        
+
       // println(i"rawBytes = \n$rawBytes%\n%") // DEBUG
       if (pickling ne noPrinter) {
         println(i"**** pickled info of $cls")
