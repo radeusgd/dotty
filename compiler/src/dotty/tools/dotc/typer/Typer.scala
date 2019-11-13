@@ -736,14 +736,15 @@ class Typer extends Namer
    */
   def tryWithClassTag(tree: Typed, pt: Type)(implicit ctx: Context): Tree = tree.tpt.tpe.dealias match {
     case tref: TypeRef if !tref.symbol.isClass && !ctx.isAfterTyper && !(tref =:= pt) =>
-      require(ctx.mode.is(Mode.Pattern))
-      inferImplicit(defn.ClassTagClass.typeRef.appliedTo(tref),
-                    EmptyTree, tree.tpt.span)(ctx.retractMode(Mode.Pattern)) match {
-        case SearchSuccess(clsTag, _, _) =>
-          typed(untpd.Apply(untpd.TypedSplice(clsTag), untpd.TypedSplice(tree.expr)), pt)
-        case _ =>
-          tree
+      def withTag(tpe: Type): Option[Tree] = {
+        inferImplicit(tpe, EmptyTree, tree.tpt.span)(ctx.retractMode(Mode.Pattern)) match
+          case SearchSuccess(typeTest, _, _) =>
+            Some(typed(untpd.Apply(untpd.TypedSplice(typeTest), untpd.TypedSplice(tree.expr)), pt))
+          case _ =>
+            None
       }
+      withTag(defn.TypeTestClass.typeRef.appliedTo(pt, tref)).orElse(
+        withTag(defn.ClassTagClass.typeRef.appliedTo(tref))).getOrElse(tree)
     case _ => tree
   }
 
@@ -1580,8 +1581,8 @@ class Typer extends Namer
     val body1 = typed(tree.body, pt)
     body1 match {
       case UnApply(fn, Nil, arg :: Nil)
-      if fn.symbol.exists && fn.symbol.owner == defn.ClassTagClass && !body1.tpe.isError =>
-        // A typed pattern `x @ (e: T)` with an implicit `ctag: ClassTag[T]`
+      if fn.symbol.exists && (fn.symbol.owner == defn.ClassTagClass || fn.symbol.owner.derivesFrom(defn.TypeTestClass)) && !body1.tpe.isError =>
+        // A typed pattern `x @ (e: T)` with an implicit `ctag: ClassTag[T]` or `ctag: TypeTest[T]`
         // was rewritten to `x @ ctag(e)` by `tryWithClassTag`.
         // Rewrite further to `ctag(x @ e)`
         tpd.cpy.UnApply(body1)(fn, Nil,

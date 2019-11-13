@@ -718,6 +718,36 @@ trait Implicits { self: Typer =>
         EmptyTree
     }
 
+  lazy val synthesizedTypeTest: SpecialHandler =
+    (formal, span) => implicit ctx => formal.argInfos match {
+      case arg1 :: arg2 :: Nil if !defn.isBottomClass(arg2.typeSymbol) =>
+        val tp1 = fullyDefinedType(arg1, "TypeTest argument", span)
+        val tp2 = fullyDefinedType(arg2, "TypeTest argument", span)
+        val sym2 = tp2.typeSymbol
+        if tp1 <:< tp2 then
+          ref(defn.TypeTestModule_identity).appliedToType(tp2).withSpan(span)
+        else if sym2 == defn.AnyValClass || sym2 == defn.AnyRefAlias || sym2 == defn.ObjectClass then
+          EmptyTree
+        else
+          // Generate SAM: (s: <tp1>) => if s.isInstanceOf[s.type & <tp2>] then Some(s.asInstanceOf[s.type & <tp2>]) else None
+          def body(args: List[Tree]): Tree = {
+            val arg :: Nil = args
+            val t = arg.tpe & tp2
+            If(
+              arg.select(defn.Any_isInstanceOf).appliedToType(t),
+              ref(defn.SomeClass.companionModule.termRef).select(nme.apply)
+                .appliedToType(t)
+                .appliedTo(arg.select(nme.asInstanceOf_).appliedToType(t)),
+              ref(defn.NoneModule))
+          }
+          val tpe = MethodType(List(nme.s))(_ => List(tp1), mth => defn.OptionClass.typeRef.appliedTo(mth.newParamRef(0) & tp2))
+          val meth = ctx.newSymbol(ctx.owner, nme.ANON_FUN, Synthetic | Method, tpe, coord = span)
+          val typeTestType = defn.TypeTestClass.typeRef.appliedTo(List(tp1, tp2))
+          Closure(meth, tss => body(tss.head).changeOwner(ctx.owner, meth), targetType = typeTestType).withSpan(span)
+      case _ =>
+        EmptyTree
+    }
+
   /** Synthesize the tree for `'[T]` for an implicit `scala.quoted.Type[T]`.
    *  `T` is deeply dealiased to avoid references to local type aliases.
    */
@@ -1094,6 +1124,7 @@ trait Implicits { self: Typer =>
     if (mySpecialHandlers == null)
       mySpecialHandlers = List(
         defn.ClassTagClass        -> synthesizedClassTag,
+        defn.TypeTestClass        -> synthesizedTypeTest,
         defn.QuotedTypeClass      -> synthesizedTypeTag,
         defn.EqlClass             -> synthesizedEql,
         defn.TupledFunctionClass  -> synthesizedTupleFunction,
