@@ -344,6 +344,7 @@ object Splicer {
               if (ctx.settings.XprintSuspension.value)
                 ctx.echo(i"suspension triggered by a dependency on $sym", pos)
               ctx.compilationUnit.suspend() // this throws a SuspendException
+            case ex: StackOverflowError => throw ex
             case targetException =>
               val sw = new StringWriter()
               sw.write("Exception occurred while executing macro expansion.\n")

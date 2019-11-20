@@ -1,7 +1,7 @@
 
 import scala.quoted._
 import scala.quoted.matching._
-
+import collection.mutable
 import scala.tasty.Reflection
 import scala.quoted.matching._
 
@@ -9,19 +9,80 @@ object Macros {
 
   inline def virtualize[Ret, Exp[_]](a: => Ret)(given sym: Symantics[Ret, Exp]) : Ret = ${  virtualizeImpl[Ret, Exp]('{a}, '{sym}) }
 
+  class Key[+V]
+
+  private val Frontier = new Key[Boolean]
+
   private def virtualizeImpl[Ret: Type, Exp[_]: Type](a: Expr[Ret], sym: Expr[Symantics[Ret, Exp]])(given qctx: QuoteContext): Expr[Ret] = {
     import qctx.tasty.{_, given}
 
-    // Env Utilities
-    type Env = Map[Sym[_], Expr[Var[_]]]
+    type Env = mutable.Map[Sym[_], Expr[Var[_]]]
 
-    // def liftNumeric[T: quoted.Type](e: Expr[T]) given (num: scala.math.Numeric[T]): Expr[Nothing] = {
-    //   import num._
+    class Context { thiscontext =>
 
-    //   e match {
-    //     case '{ ($x: T) + ($y: T) } => '{ ??? }
-    //   }
-    // }
+      var outer: Context = null
+      val env: Env = mutable.Map.empty
+      var moreProperties: Map[Key[Any], Any] = Map.empty
+
+      def init(outer: Context, origin: Context): this.type = {
+        thiscontext.outer = outer
+        thiscontext.moreProperties = origin.moreProperties
+        this
+      }
+
+      def update(sym: Sym[_], varExpr: Expr[Var[_]]) = {
+        env += (sym -> varExpr)
+        this
+      }
+
+      def get(sym: Sym[_]): Option[Expr[Var[_]]] = {
+        for (ctx <- outersIterator) {
+          if(ctx.env.get(sym).isDefined)
+            return ctx.env.get(sym)
+        }
+        None
+      }
+
+      def contains(sym:Sym[_]) = env.contains(sym)
+
+      def outersIterator: Iterator[Context] = new Iterator[Context] {
+        var current = thiscontext
+        def hasNext = current != NoContext
+        def next = { val c = current; current = current.outer; c }
+      }
+
+      def property[T](key: Key[T]): Option[T] = moreProperties.get(key).asInstanceOf[Option[T]]
+
+      private def setMoreProperties(moreProperties: Map[Key[Any], Any]): this.type = { this.moreProperties = moreProperties; this }
+
+      def setProperty[T](key: Key[T], value: T): this.type =
+        setMoreProperties(moreProperties.updated(key, value))
+
+      def dropProperty(key: Key[?]): this.type =
+        setMoreProperties(moreProperties - key)
+
+      final def withProperty[T](key: Key[T], value: Option[T]): Context =
+        if (property(key) == value) this
+        else value match {
+          case Some(v) => fresh.setProperty(key, v)
+          case None => fresh.dropProperty(key)
+        }
+
+      def fresh: Context = freshOver(this)
+
+      def freshOver(outer: Context): Context = new Context().init(outer, this)
+    }
+
+    object Context {
+      def create = {
+        val ctx = new Context()
+        ctx.outer = NoContext
+        ctx
+      }
+
+    }
+
+    object NoContext extends Context {}
 
     object Unseal {
       def unapply[T](e: Expr[T])(given qctx: QuoteContext) = {
@@ -30,91 +91,84 @@ object Macros {
       }
     }
 
-    def lift[T: quoted.Type](e: Expr[T], last: Boolean)(env: Env): Expr[Exp[T]] = {
-
-      e match {
+    def lift[T: quoted.Type](e: Expr[T], last: Boolean)(ctx: Context): Expr[Exp[T]] = {
+      println("transforming --> " + e.show)
+      val transformed = e match {
         case '{ var $y_bind: $t = $z; $k:T } => '{
-            // TODO: symbol table insert
-            $sym.ValDef[$t, T](${lift(z, false)(env)}, (y: Var[$t]) => ${lift(k, last)(env + (y_bind -> 'y))})
-        }.cast[Exp[T]]
+            $sym.ValDef[$t, T](${lift(z, false)(ctx)}, (y: Var[$t]) => ${lift(k, last)(ctx.update(y_bind, 'y))})
+          }.cast[Exp[T]]
 
         case '{ (${ Unseal(Assign(lhs, rhs)) }): $t } =>
-          val ret = env(new Sym(lhs.symbol.name, lhs.symbol))
+          val ret = ctx.get(new Sym(lhs.symbol.name, lhs.symbol)).get
 
           type TT
           implicit val ttype: quoted.Type[TT] = rhs.tpe.widen.seal.asInstanceOf[quoted.Type[TT]]
-          // given quoted.Type[TT] = rhs.tpe.widen.seal.asInstanceOf[quoted.Type[TT]] (crashed)
 
           '{
             $sym.Assign[TT](
               ${ret.cast[Var[TT]]},
-              ${lift(rhs.seal.cast[TT], false)(env)})
+              ${lift(rhs.seal.cast[TT], false)(ctx)})
           }.cast[Exp[T]]
 
         case '{ (if ($cond) $thenp else $elsep): $t } => '{
-          $sym.If[$t](${lift(cond, false)(env)}, ${lift(thenp, false)(env)}, ${lift(elsep, false)(env)})
+          $sym.If[$t](${lift(cond, false)(ctx)}, ${lift(thenp, false)(ctx)}, ${lift(elsep, false)(ctx)})
         }.cast[Exp[T]]
 
         case '{ (while($cond) $body) } => '{
-          $sym.While(${lift(cond, false)(env)}, ${lift(body, false)(env)})
-        }.cast[Exp[T]]
+            $sym.While(${lift(cond, false)(ctx)}, ${lift(body, false)(ctx)})
+          }.cast[Exp[T]]
 
         case '{ ($stmt1: $t); $stmt2 } =>
           type TT = $t
           '{
-            $sym.Block(${lift[TT](stmt1, true)(env)}, ${lift(stmt2, true)(env)})
+            $sym.Block(${lift[TT](stmt1, true)(ctx)}, ${lift(stmt2, true)(ctx)})
           }.cast[Exp[T]]
 
-        case e if last => '{
-          $sym.Return(${lift(e, false)(env).cast[Exp[Ret]]} )
-        }.cast[Exp[T]]
+        // case e if last => '{
+        //     $sym.Return(  ${lift(e, false)(ctx).cast[Exp[T]]}.asInstanceOf[Exp[Ret]]  )
+        //   }.cast[Exp[T]]
 
         case '{( $x: Int) + ($y: Int) } => '{
-          $sym.Plus(${lift(x, false)(env)}, ${lift(y, false)(env)})
-        }.cast[Exp[T]]
+            $sym.Plus(${lift(x, false)(ctx)}, ${lift(y, false)(ctx)})
+          }.cast[Exp[T]]
 
         case '{( $x: Int) > ($y: Int) } => '{
-          $sym.Gt(${lift(x, false)(env)}, ${lift(y, false)(env)})
-        }.cast[Exp[T]]
+            $sym.Gt(${lift(x, false)(ctx)}, ${lift(y, false)(ctx)})
+          }.cast[Exp[T]]
 
         case '{( $x: Int) < ($y: Int) } => '{
-          $sym.Lt(${lift(x, false)(env)}, ${lift(y, false)(env)})
-        }.cast[Exp[T]]
+            $sym.Lt(${lift(x, false)(ctx)}, ${lift(y, false)(ctx)})
+          }.cast[Exp[T]]
 
         case '{( $x: Int) * ($y: Int) } => '{
-          $sym.Mul(${lift(x, false)(env)}, ${lift(y, false)(env)})
-        }.cast[Exp[T]]
+            $sym.Mul(${lift(x, false)(ctx)}, ${lift(y, false)(ctx)})
+          }.cast[Exp[T]]
 
-        // scala.Predef.println(x)
-        // ->
-        // () => scala.Predef.println(x.value)
-        case '{ (${ Unseal(Apply(f, args)) }): $t } =>
-          println(e.show)
-          println(f.showExtractors)
-          args.foreach(a => println(a.show))
-          println(t.show)
+        case '{ (${ Unseal(Apply(f, arg :: Nil)) }): $t } =>
+          type S
 
-          // val argss = args.map(arg => lift(arg.seal, false)(env))
-          // val call = Apply(f, argss).seal.cast[T]
+          implicit val sEv: quoted.Type[S] = arg.tpe.widen.seal.asInstanceOf[quoted.Type[S]]
 
-          // '{ () => ${call} }.cast[Exp[Unit => T]]
+          // f.tpe.widen match {
+          //   case MethodType(_, paramType :: Nil, _) => paramType.seal.asInstanceOf[quoted.Type[S]]
+          // }
 
-          val ret = '{ () => println(${lift(args.head.seal, false)(env)}) }
-          // println(ret.show)
-          ret.cast[Exp[T]]
+          val liftedFunc = f.etaExpand.seal.cast[S => T]
+
+          '{
+            $sym.App($sym.Inject($liftedFunc), ${lift(arg.seal.cast[S], false)(ctx)})
+          }
 
         case Const(value: Int) => '{
-          $sym.Constant[Int](${value.toExpr})
-        }.cast[Exp[T]]
+            $sym.Inject[Int](${value.toExpr})
+          }.cast[Exp[T]]
 
-        case Sym(b) if env.contains(b) =>
-          // TODO: symbol table lookup
-          // println("Symbol table")
-          // env.foreach(v => println(v._1.name + " --> " + v._2.show))
-          // println(e.show)
-          val ret = '{ () => ${ env(b).cast[Var[T]] }.value }
-          // println("# " + ret.show)
-          ret.cast[Exp[T]]
+        case Sym(b) if ctx.get(b).isDefined =>
+          val varAccess = ctx.get(b).get.unseal.tpe.widen
+
+          '{
+            $sym.DeRef[T](${ctx.get(b).get}.asInstanceOf[Var[T]])
+          }.cast[Exp[T]]
 
         case _ =>
           println(e.show)
@@ -122,10 +176,15 @@ object Macros {
           summon[QuoteContext].error("Lifting error: " + e.show, e)
           '{ ??? }.cast[Exp[T]]
       }
+
+      println("transformed --> " + transformed.show)
+      println
+
+      transformed
     }
 
     val ret = '{
-      ($sym).Method(${lift(a, true)(Map.empty)})
+      ($sym).Method(${lift(a, true)(Context.create)})
     }
 
     println(ret.show)
@@ -149,13 +208,13 @@ trait Symantics[Ret, Exp[_]] {
 
   def If[T](exp: Exp[Boolean], thenp: Exp[T], elsep: Exp[T]): Exp[T]
 
-  // def App[A, B](f: Exp[A => B], arg: Exp[A]): Exp[B]
+  def App[A, B](f: Exp[A => B], arg: Exp[A]): Exp[B]
 
   def While(exp: Exp[Boolean], body: Exp[Unit]): Exp[Unit]
 
   def Block[T1, T2] (one: Exp[T1], two: Exp[T2]): Exp[T2]
 
-  def Constant[T](value: T): Exp[T]
+  def Inject[T](value: T): Exp[T]
 
   def Gt(lhs: Exp[Int], rhs: Exp[Int]): Exp[Boolean]
 
@@ -166,5 +225,7 @@ trait Symantics[Ret, Exp[_]] {
   def Mul(arg1: Exp[Int], arg2: Exp[Int]): Exp[Int]
 
   def Assign[T](lhs:  Var[T], rhs: Exp[T]): Exp[Unit]
+
+  def DeRef[T](x: Var[T]): Exp[T]
 }
 

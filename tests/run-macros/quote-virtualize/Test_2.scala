@@ -13,7 +13,7 @@ object Test {
       def Method(body: Eval[T]): T = {
         body.apply()
 
-        result.value
+        // result.value
       }
 
       def Return(exp: Eval[T]): Eval[T] = () => {
@@ -24,10 +24,6 @@ object Test {
       def ValDef[T, R](exp: Eval[T], body: Var[T] => Eval[R]): Eval[R] = () => {
         body.apply(Var(exp())).apply()
       }
-
-      // def App[A, B](f: Eval[A => B], arg: Eval[A]): Eval[B] = () => {
-      //   .apply(arg())
-      // }
 
       def If[T](exp: Eval[Boolean], thenp: Eval[T], elsep: Eval[T]): Eval[T] = () =>
         if (exp()) thenp()
@@ -44,8 +40,16 @@ object Test {
         }
       }
 
-      def Constant[T](value: T): Eval[T] = () => {
+      def Inject[T](value: T): Eval[T] = () => {
         value
+      }
+
+      def App[A, B](f: Eval[A => B], arg: Eval[A]): Eval[B] = () => {
+        f.apply.apply(arg.apply)
+      }
+
+      def Abs[A, B](f: A => B): Eval[A => B] = {
+        Inject(f)
       }
 
       def Gt(lhs: Eval[Int], rhs: Eval[Int]): Eval[Boolean] = () => {
@@ -67,6 +71,10 @@ object Test {
       def Assign[T](lhs:  Var[T], rhs: Eval[T]): Eval[Unit] = () => {
         val ret = rhs()
         lhs.update(ret)
+      }
+
+      def DeRef[T](x: Var[T]): Eval[T] = () => {
+        x.value
       }
     }
 
@@ -120,51 +128,22 @@ object Test {
     println(test03)
     println()
 
-    // val test013 = virtualize {
-    //   var x: Int = 1
-    //   println(x)
-    //   x
-    // }
-    // ->
-    val test013 = {
-      val sym = summon[Symantics[Int, Eval]]
-
-      sym.Method(
-        sym.ValDef(() => 1,
-          (x: Var[Int]) => {
-            sym.Block(
-              () => println(x.value),
-              sym.Return(() => x.value)
-            )}
-        )
-      )
+    val test013 = virtualize {
+      var x: Int = 1
+      println(x)
+      x
     }
 
     test013
     println()
 
-    // val test3 = virtualize {
-    //   var x: Int = 0
-    //   while (x < 5) {
-    //     println(x)
-    //     x = x + 1
-    //   }
-    //   x
-    // }
-    // ->
-    val test3 = {
-      val sym = summon[Symantics[Int, Eval]]
-
-      sym.Method(
-        sym.ValDef(() => 0,
-          (x: Var[Int]) => {
-            sym.Block(
-              sym.While((sym.Lt(()=> x.value, () => 5)),
-                sym.Block(
-                  () => println(x.value),
-                  () => { x.update(sym.Plus(() => x.value, () => 1)())})),
-              sym.Return(() => 42))
-      }))
+    val test3 = virtualize {
+      var x: Int = 0
+      while (x < 5) {
+        println(x)
+        x = x + 1
+      }
+      x
     }
 
     test3
