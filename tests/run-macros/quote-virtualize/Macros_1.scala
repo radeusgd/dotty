@@ -7,13 +7,13 @@ import scala.quoted.matching._
 
 object Macros {
 
-  inline def virtualize[Ret, Exp[_]](a: => Ret)(given sym: Symantics[Ret, Exp]) : Ret = ${  virtualizeImpl[Ret, Exp]('{a}, '{sym}) }
+  inline def virtualize[R, M[_]](a: => R)(given sym: Symantics[R, M]) : R = ${  virtualizeImpl[R, M]('{a}, '{sym}) }
 
   class Key[+V]
 
   private val Frontier = new Key[Boolean]
 
-  private def virtualizeImpl[Ret: Type, Exp[_]: Type](a: Expr[Ret], sym: Expr[Symantics[Ret, Exp]])(given qctx: QuoteContext): Expr[Ret] = {
+  private def virtualizeImpl[R: Type, M[_]: Type](a: Expr[R], sym: Expr[Symantics[R, M]])(given qctx: QuoteContext): Expr[R] = {
     import qctx.tasty.{_, given}
 
     type Env = mutable.Map[Sym[_], Expr[Var[_]]]
@@ -91,12 +91,12 @@ object Macros {
       }
     }
 
-    def lift[T: quoted.Type](e: Expr[T], last: Boolean)(ctx: Context): Expr[Exp[T]] = {
+    def rewrite[T: quoted.Type](e: Expr[T], last: Boolean)(ctx: Context): Expr[M[T]] = {
       println("transforming --> " + e.show)
       val transformed = e match {
         case '{ var $y_bind: $t = $z; $k:T } => '{
-            $sym.ValDef[$t, T](${lift(z, false)(ctx)}, (y: Var[$t]) => ${lift(k, last)(ctx.update(y_bind, 'y))})
-          }.cast[Exp[T]]
+            $sym.Bind[$t, T](${rewrite(z, false)(ctx)}, (y: Var[$t]) => ${rewrite(k, last)(ctx.update(y_bind, 'y))})
+          }.cast[M[T]]
 
         case '{ (${ Unseal(Assign(lhs, rhs)) }): $t } =>
           val ret = ctx.get(new Sym(lhs.symbol.name, lhs.symbol)).get
@@ -107,74 +107,70 @@ object Macros {
           '{
             $sym.Assign[TT](
               ${ret.cast[Var[TT]]},
-              ${lift(rhs.seal.cast[TT], false)(ctx)})
-          }.cast[Exp[T]]
+              ${rewrite(rhs.seal.cast[TT], false)(ctx)})
+          }.cast[M[T]]
 
         case '{ (if ($cond) $thenp else $elsep): $t } => '{
-          $sym.If[$t](${lift(cond, false)(ctx)}, ${lift(thenp, false)(ctx)}, ${lift(elsep, false)(ctx)})
-        }.cast[Exp[T]]
+          $sym.If[$t](${rewrite(cond, false)(ctx)}, ${rewrite(thenp, false)(ctx)}, ${rewrite(elsep, false)(ctx)})
+          }.cast[M[T]]
 
         case '{ (while($cond) $body) } => '{
-            $sym.While(${lift(cond, false)(ctx)}, ${lift(body, false)(ctx)})
-          }.cast[Exp[T]]
+            $sym.While(${rewrite(cond, false)(ctx)}, ${rewrite(body, false)(ctx)})
+          }.cast[M[T]]
 
         case '{ ($stmt1: $t); $stmt2 } =>
           type TT = $t
           '{
-            $sym.Block(${lift[TT](stmt1, true)(ctx)}, ${lift(stmt2, true)(ctx)})
-          }.cast[Exp[T]]
+            $sym.Combine(${rewrite[TT](stmt1, true)(ctx)}, ${rewrite(stmt2, true)(ctx)})
+          }.cast[M[T]]
 
         // case e if last => '{
         //     $sym.Return(  ${lift(e, false)(ctx).cast[Exp[T]]}.asInstanceOf[Exp[Ret]]  )
         //   }.cast[Exp[T]]
 
         case '{( $x: Int) + ($y: Int) } => '{
-            $sym.Plus(${lift(x, false)(ctx)}, ${lift(y, false)(ctx)})
-          }.cast[Exp[T]]
+            $sym.Plus(${rewrite(x, false)(ctx)}, ${rewrite(y, false)(ctx)})
+          }.cast[M[T]]
 
         case '{( $x: Int) > ($y: Int) } => '{
-            $sym.Gt(${lift(x, false)(ctx)}, ${lift(y, false)(ctx)})
-          }.cast[Exp[T]]
+            $sym.Gt(${rewrite(x, false)(ctx)}, ${rewrite(y, false)(ctx)})
+          }.cast[M[T]]
 
         case '{( $x: Int) < ($y: Int) } => '{
-            $sym.Lt(${lift(x, false)(ctx)}, ${lift(y, false)(ctx)})
-          }.cast[Exp[T]]
+            $sym.Lt(${rewrite(x, false)(ctx)}, ${rewrite(y, false)(ctx)})
+          }.cast[M[T]]
 
         case '{( $x: Int) * ($y: Int) } => '{
-            $sym.Mul(${lift(x, false)(ctx)}, ${lift(y, false)(ctx)})
-          }.cast[Exp[T]]
+            $sym.Mul(${rewrite(x, false)(ctx)}, ${rewrite(y, false)(ctx)})
+          }.cast[M[T]]
 
         case '{ (${ Unseal(Apply(f, arg :: Nil)) }): $t } =>
           type S
 
           implicit val sEv: quoted.Type[S] = arg.tpe.widen.seal.asInstanceOf[quoted.Type[S]]
 
-          // f.tpe.widen match {
-          //   case MethodType(_, paramType :: Nil, _) => paramType.seal.asInstanceOf[quoted.Type[S]]
-          // }
-
           val liftedFunc = f.etaExpand.seal.cast[S => T]
 
           '{
-            $sym.App($sym.Inject($liftedFunc), ${lift(arg.seal.cast[S], false)(ctx)})
+            $sym.App($sym.Inject($liftedFunc), ${rewrite(arg.seal.cast[S], false)(ctx)})
           }
 
         case Const(value: Int) => '{
             $sym.Inject[Int](${value.toExpr})
-          }.cast[Exp[T]]
+          }.cast[M[T]]
 
         case Sym(b) if ctx.get(b).isDefined =>
           val varAccess = ctx.get(b).get.unseal.tpe.widen
 
           '{
             $sym.DeRef[T](${ctx.get(b).get}.asInstanceOf[Var[T]])
-          }.cast[Exp[T]]
+          }.cast[M[T]]
 
         case _ =>
           println(e.show)
 
           summon[QuoteContext].error("Lifting error: " + e.show, e)
-          '{ ??? }.cast[Exp[T]]
+          '{ ??? }.cast[M[T]]
       }
 
       println("transformed --> " + transformed.show)
@@ -184,7 +180,7 @@ object Macros {
     }
 
     val ret = '{
-      ($sym).Method(${lift(a, true)(Context.create)})
+      ($sym).Method(${rewrite(a, true)(Context.create)})
     }
 
     println(ret.show)
@@ -199,33 +195,33 @@ case class Var[T](var value: T){
   def update(newVal: T) = value = newVal
 }
 
-trait Symantics[Ret, Exp[_]] {
-  def Method(body: Exp[Ret]): Ret
+trait Symantics[R, M[_]] {
+  def Method(body: M[R]): R
 
-  def Return(exp: Exp[Ret]): Exp[Ret]
+  def Return(exp: M[R]): M[R]
 
-  def ValDef[T, R](exp: Exp[T], body: Var[T] => Exp[R]): Exp[R]
+  def Bind[T, R](exp: M[T], body: Var[T] => M[R]): M[R]
 
-  def If[T](exp: Exp[Boolean], thenp: Exp[T], elsep: Exp[T]): Exp[T]
+  def If[T](exp: M[Boolean], thenp: M[T], elsep: M[T]): M[T]
 
-  def App[A, B](f: Exp[A => B], arg: Exp[A]): Exp[B]
+  def App[A, B](f: M[A => B], arg: M[A]): M[B]
 
-  def While(exp: Exp[Boolean], body: Exp[Unit]): Exp[Unit]
+  def While(exp: M[Boolean], body: M[Unit]): M[Unit]
 
-  def Block[T1, T2] (one: Exp[T1], two: Exp[T2]): Exp[T2]
+  def Combine[T1, T2] (one: M[T1], two: M[T2]): M[T2]
 
-  def Inject[T](value: T): Exp[T]
+  def Inject[T](value: T): M[T]
 
-  def Gt(lhs: Exp[Int], rhs: Exp[Int]): Exp[Boolean]
+  def Gt(lhs: M[Int], rhs: M[Int]): M[Boolean]
 
-  def Lt(lhs: Exp[Int], rhs: Exp[Int]): Exp[Boolean]
+  def Lt(lhs: M[Int], rhs: M[Int]): M[Boolean]
 
-  def Plus(arg1: Exp[Int], arg2: Exp[Int]): Exp[Int]
+  def Plus(arg1: M[Int], arg2: M[Int]): M[Int]
 
-  def Mul(arg1: Exp[Int], arg2: Exp[Int]): Exp[Int]
+  def Mul(arg1: M[Int], arg2: M[Int]): M[Int]
 
-  def Assign[T](lhs:  Var[T], rhs: Exp[T]): Exp[Unit]
+  def Assign[T](lhs:  Var[T], rhs: M[T]): M[Unit]
 
-  def DeRef[T](x: Var[T]): Exp[T]
+  def DeRef[T](x: Var[T]): M[T]
 }
 

@@ -21,7 +21,7 @@ object Test {
         result.value
       }
 
-      def ValDef[T, R](exp: Eval[T], body: Var[T] => Eval[R]): Eval[R] = () => {
+      def Bind[T, R](exp: Eval[T], body: Var[T] => Eval[R]): Eval[R] = () => {
         body.apply(Var(exp())).apply()
       }
 
@@ -29,7 +29,7 @@ object Test {
         if (exp()) thenp()
         else elsep()
 
-      def Block[T1, T2](s1: Eval[T1], s2: Eval[T2]): Eval[T2] = () => {
+      def Combine[T1, T2](s1: Eval[T1], s2: Eval[T2]): Eval[T2] = () => {
         s1()
         s2()
       }
@@ -149,11 +149,28 @@ object Test {
     test3
     println()
 
-    // TODO
-    /*
-        val test03: (given Symantics[Int, Eval]) => Int => Int = virtualize { (in: Int) => ...
-        or
-        val test03: (given Symantics[Int, Eval]) => Int => Int = (in: Int) => virtualize {
-    */
+    // val y = 11
+    val test4 = virtualize {
+      var x: Int = 1
+      x = 11 + x
+      x
+    }
+
+    println(test4)
+    println()
+
+    // val y = 11
+    // val test4: Int => Int = virtualize { (in: Int) =>{
+    //   var x: Int = 1
+    //   x = in + x
+    //   x
+    // }
+
+    // val y = 11
+    // val test4: Int => Int = (in: Int) => virtualize {
+    //   var x: Int = 1
+    //   x = in + x
+    //   x
+    // }
   }
 }

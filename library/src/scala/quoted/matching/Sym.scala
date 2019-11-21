@@ -25,7 +25,7 @@ object Sym {
       case ref: Ident =>
         val sym = ref.symbol
         Some(new Sym[T](sym.name, sym))
-      case Typed(IsIdent(ref), _) =>
+      case Typed(ref, _) =>
         val sym = ref.symbol
         Some(new Sym[T](sym.name, sym))
       case _ => None
