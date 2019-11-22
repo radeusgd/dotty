@@ -1739,6 +1739,12 @@ class Typer extends Namer
     if (sym.isInlineMethod)
       PrepareInlineable.registerInlineInfo(sym, _ => rhs1)
 
+    if (sym.isInlineMethod)
+      rhs1 match
+        case _: Typed =>
+        case _ => sym.setFlag(Synthetic) // FIXME Tag whitebox macros (do it in desugar)
+
+
     if (sym.isConstructor && !sym.isPrimaryConstructor) {
       val ename = sym.erasedName
       if (ename != sym.name)
