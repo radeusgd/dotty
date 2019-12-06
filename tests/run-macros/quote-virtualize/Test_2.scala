@@ -78,10 +78,7 @@ object Test {
       }
     }
 
-    type Cont = [T, Err <: Throwable] =>> (T, Err) => Unit
-
     given Symantics[Int, Eval] = new EvalSemantics[Int]
-    // given Symantics[Future[Int], Cont] = new EvalSemantics[Int]
 
     val test00 = virtualize {
       1
@@ -149,14 +146,82 @@ object Test {
     test3
     println()
 
+    import scala.concurrent.{Promise}
+    import scala.concurrent.ExecutionContext.Implicits.global
+
+    type Async = [T] =>> ((T => Unit) => Unit)
+
+    class AsyncSemantics[T] extends Symantics[Promise[T], Async] {
+      val futureRes: Promise[T] = Promise[T]()
+      val res: Var[T] = Var(0.asInstanceOf[T])
+
+      def Method(body: Async[T]): Promise[T] = {
+
+        body.apply((r: T) => {
+          futureRes.future.onComplete {
+            case Success(value) => res.value = value.asInstanceOf[T]
+            case Failure(e) => ???
+          }
+        })
+
+        futureRes
+      }
+
+      def Return(exp: Async[T]): Async[T] = ???
+
+      def Bind[T, R](exp: Async[T], body: Var[T] => Async[R]): Async[R] = (cont: (R => Unit)) => {
+        exp.get((f: Future[T]) => {
+          f.andThen
+        })
+      }
+
+      def If[T](exp: Async[Boolean], thenp: Async[T], elsep: Async[T]): Async[T] = ???
+
+      def Combine[T1, T2](s1: Async[T1], s2: Async[T2]): Async[T2] = ???
+
+      def While(exp: Async[Boolean], body: Async[Unit]): Async[Unit] = ???
+
+      def Inject[T](value: T): Async[T] = ???
+
+      def App[A, B](f: Async[A => B], arg: Async[A]): Async[B] = ???
+
+      def Abs[A, B](f: A => B): Async[A => B] = {
+        Inject(f)
+      }
+
+      def Gt(lhs: Async[Int], rhs: Async[Int]): Async[Boolean] = ???
+
+      def Lt(lhs: Async[Int], rhs: Async[Int]): Async[Boolean] = ???
+
+      def Plus(arg1: Async[Int], arg2: Async[Int]): Async[Int] = ???
+
+      def Mul(arg1: Async[Int], arg2: Async[Int]): Async[Int] = ???
+
+      def Assign[T](lhs:  Var[T], rhs: Async[T]): Async[Unit] = ???
+
+      def DeRef[T](x: Var[T]): Async[T] = ???
+    }
+
+    given Symantics[Future[Int], Async] = new AsyncSemantics[Int]
+
+    val test4: Future[Int] = virtualize {
+      var x: Int = Async.await(Future(1))
+      var y: Int = Async.await(Future(10))
+      x + y
+    }
+
+    test4
+    println()
+
+    // TODOs
     // val y = 11
-    val test4 = virtualize {
+    val testXX = virtualize {
       var x: Int = 1
       x = 11 + x
       x
     }
 
-    println(test4)
+    println(testXX)
     println()
 
     // val y = 11
