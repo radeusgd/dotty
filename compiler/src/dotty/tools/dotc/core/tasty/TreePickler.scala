@@ -558,9 +558,15 @@ class TreePickler(pickler: TastyPickler) {
             refinements.foreach(preRegister)
             withLength { pickleTree(parent); refinements.foreach(pickleTree) }
           }
-        case AppliedTypeTree(tycon, args) =>
-          writeByte(APPLIEDtpt)
-          withLength { pickleTree(tycon); args.foreach(pickleTree) }
+        case tree @ AppliedTypeTree(tycon, args) =>
+          if (tycon.symbol == defn.andType || tycon.symbol == defn.orType) {
+            writeByte(if (tycon.symbol == defn.orType) ORtpt else ANDtpt)
+            withLength { pickleTree(args.head); pickleTree(args.last) } // assumes only 2 args (allowing to manipulate the spans)
+          }
+          else {
+            writeByte(APPLIEDtpt)
+            withLength { pickleTree(tycon); args.foreach(pickleTree) }
+          }
         case MatchTypeTree(bound, selector, cases) =>
           writeByte(MATCHtpt)
           withLength {

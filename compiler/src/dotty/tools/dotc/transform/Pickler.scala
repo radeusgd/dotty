@@ -118,10 +118,10 @@ class Pickler extends Phase {
 
   private def testSame(unpickled: String, previous: String, cls: ClassSymbol)(implicit ctx: Context) =
     if (previous != unpickled) {
-      output("before-pickling.txt", previous)
-      output("after-pickling.txt", unpickled)
+      output(s"before-pickling-${ctx.hashCode}.txt", previous)
+      output(s"after-pickling-${ctx.hashCode}.txt", unpickled)
       ctx.error(s"""pickling difference for $cls in ${cls.source}, for details:
                    |
-                   |  diff before-pickling.txt after-pickling.txt""".stripMargin)
+                   |  diff before-pickling-${ctx.hashCode}.txt after-pickling-${ctx.hashCode}.txt""".stripMargin)
     }
 }

@@ -1046,6 +1046,15 @@ class TreeUnpickler(reader: TastyReader,
         else qualType.findMember(name, pre, excluded = Private).atSignature(sig)
       }
 
+      def appliedTypeTree(end: Addr, cont: List[Tree] => (Tree, Type)) = {
+        // If we do directly a tpd.AppliedType tree we might get a
+        // wrong number of arguments in some scenarios reading F-bounded
+        // types. This came up in #137 of collection strawman.
+        val args = until(end)(readTpt())
+        val rest = cont(args)
+        untpd.AppliedTypeTree(rest._1, args).withType(rest._2)
+      }
+
       def readSimpleTerm(): Tree = tag match {
         case SHAREDterm =>
           forkAt(readAddr()).readTerm()
@@ -1175,16 +1184,12 @@ class TreeUnpickler(reader: TastyReader,
               val refinements = readStats(refineCls, end)(localContext(refineCls))
               RefinedTypeTree(parent, refinements, refineCls)
             case APPLIEDtpt =>
-              // If we do directly a tpd.AppliedType tree we might get a
-              // wrong number of arguments in some scenarios reading F-bounded
-              // types. This came up in #137 of collection strawman.
               val tycon = readTpt()
-              val args = until(end)(readTpt())
-              val ownType =
-                if (tycon.symbol == defn.andType) AndType(args(0).tpe, args(1).tpe)
-                else if (tycon.symbol == defn.orType) OrType(args(0).tpe, args(1).tpe)
-                else tycon.tpe.safeAppliedTo(args.tpes)
-              untpd.AppliedTypeTree(tycon, args).withType(ownType)
+              appliedTypeTree(end, args => (tycon, tycon.tpe.safeAppliedTo(args.tpes)))
+            case ANDtpt =>
+              appliedTypeTree(end, args => (ref(defn.andType),args.tpes.reduce(AndType(_,_))))
+            case ORtpt =>
+              appliedTypeTree(end, args => (ref(defn.orType),args.tpes.reduce(OrType(_,_))))
             case ANNOTATEDtpt =>
               Annotated(readTpt(), readTerm())
             case LAMBDAtpt =>

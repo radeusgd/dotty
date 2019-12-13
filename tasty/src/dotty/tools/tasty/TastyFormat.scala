@@ -105,6 +105,8 @@ Standard-Section: "ASTs" TopLevelStat*
                   SINGLETONtpt          ref_Term                                   -- ref.type
                   REFINEDtpt     Length underlying_Term refinement_Stat*           -- underlying {refinements}
                   APPLIEDtpt     Length tycon_Term arg_Term*                       -- tycon [args]
+                  ANDtpt         Length arg_Type*                                  -- args(0) & args(1) ...
+                  ORtpt          Length arg_Type*                                  -- args(0) | args(1) ...
                   LAMBDAtpt      Length TypeParam* body_Term                       -- [TypeParams] => body
                   TYPEBOUNDStpt  Length low_Term high_Term?                        -- >: low <: high
                   ANNOTATEDtpt   Length underlying_Term fullAnnotation_Term        -- underlying @ annotation
@@ -252,7 +254,7 @@ object TastyFormat {
 
   final val header: Array[Int] = Array(0x5C, 0xA1, 0xAB, 0x1F)
   val MajorVersion: Int = 18
-  val MinorVersion: Int = 0
+  val MinorVersion: Int = 1
 
   /** Tags used to serialize names, should update [[nameTagToString]] if a new constant is added */
   class NameTags {
@@ -456,6 +458,8 @@ object TastyFormat {
   final val ANNOTATION = 173
   final val TERMREFin = 174
   final val TYPEREFin = 175
+  final val ANDtpt = 176
+  final val ORtpt = 177
 
   final val METHODtype = 180
   final val ERASEDMETHODtype = 181
@@ -541,6 +545,8 @@ object TastyFormat {
        | SINGLETONtpt
        | REFINEDtpt
        | APPLIEDtpt
+       | ANDtpt
+       | ORtpt
        | LAMBDAtpt
        | TYPEBOUNDStpt
        | ANNOTATEDtpt
@@ -668,6 +674,8 @@ object TastyFormat {
     case REFINEDtpt => "REFINEDtpt"
     case APPLIEDtype => "APPLIEDtype"
     case APPLIEDtpt => "APPLIEDtpt"
+    case ANDtpt => "ANDtpt"
+    case ORtpt => "ORtpt"
     case TYPEBOUNDS => "TYPEBOUNDS"
     case TYPEBOUNDStpt => "TYPEBOUNDStpt"
     case TYPEALIAS => "TYPEALIAS"
