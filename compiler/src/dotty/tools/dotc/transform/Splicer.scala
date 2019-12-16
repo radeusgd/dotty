@@ -8,7 +8,7 @@ import dotty.tools.dotc.ast.tpd
 import dotty.tools.dotc.ast.Trees._
 import dotty.tools.dotc.core.Contexts._
 import dotty.tools.dotc.core.Decorators._
-import dotty.tools.dotc.core.Flags._
+import dotty.tools.dotc.core.Flags.{Method => MethodFlag, _}
 import dotty.tools.dotc.core.NameKinds.FlatName
 import dotty.tools.dotc.core.Names.{Name, TermName}
 import dotty.tools.dotc.core.StdNames._
@@ -98,10 +98,10 @@ object Splicer {
         case Literal(Constant(value)) =>
           // OK
 
-        case Call(fn, args)
-            if (fn.symbol.isConstructor && fn.symbol.owner.owner.is(Package)) ||
-               fn.symbol.is(Module) || fn.symbol.isStatic ||
-               (fn.qualifier.symbol.is(Module) && fn.qualifier.symbol.isStatic) =>
+        case Call(qual, sym, args, _)
+            if (sym.isConstructor && qual.owner.is(Package)) ||
+               sym.is(Module) || sym.isStatic ||
+               (sym.is(MethodFlag) && qual.is(Module) && qual.isStatic) =>
           args.foreach(_.foreach(checkIfValidArgument))
 
         case NamedArg(_, arg) =>
@@ -135,12 +135,12 @@ object Splicer {
         case Typed(expr, _) =>
           checkIfValidStaticCall(expr)
 
-        case Call(fn, args)
-            if (fn.symbol.isConstructor && fn.symbol.owner.owner.is(Package)) ||
-               fn.symbol.is(Module) || fn.symbol.isStatic ||
-               (fn.qualifier.symbol.is(Module) && fn.qualifier.symbol.isStatic) =>
-          if (fn.symbol.flags.is(Inline))
-            ctx.error("Macro cannot be implemented with an `inline` method", fn.sourcePos)
+        case Call(qual, sym, args, pos)
+            if (sym.isConstructor && qual.owner.is(Package)) ||
+               sym.is(Module) || sym.isStatic ||
+               (sym.is(MethodFlag) && qual.is(Module) && qual.isStatic) =>
+          if (sym.flags.is(Inline))
+            ctx.error("Macro cannot be implemented with an `inline` method", pos)
           args.flatten.foreach(checkIfValidArgument)
 
         case _ =>
@@ -189,24 +189,24 @@ object Splicer {
         interpretLiteral(value)
 
       // TODO disallow interpreted method calls as arguments
-      case Call(fn, args) =>
-        if (fn.symbol.isConstructor && fn.symbol.owner.owner.is(Package))
-          interpretNew(fn.symbol, args.flatten.map(interpretTree))
-        else if (fn.symbol.is(Module))
-          interpretModuleAccess(fn.symbol)
-        else if (fn.symbol.isStatic) {
-          val staticMethodCall = interpretedStaticMethodCall(fn.symbol.owner, fn.symbol)
+      case Call(qual, sym, args, _) =>
+        if (sym.isConstructor && qual.owner.is(Package))
+          interpretNew(sym, args.flatten.map(interpretTree))
+        else if (sym.is(Module))
+          interpretModuleAccess(sym)
+        else if (sym.isStatic) {
+          val staticMethodCall = interpretedStaticMethodCall(qual.moduleClass, sym)
           staticMethodCall(args.flatten.map(interpretTree))
         }
-        else if (fn.qualifier.symbol.is(Module) && fn.qualifier.symbol.isStatic)
-          if (fn.name == nme.asInstanceOfPM)
-            interpretModuleAccess(fn.qualifier.symbol)
+        else if (sym.is(MethodFlag) && qual.is(Module) && qual.isStatic)
+          if (sym.name == nme.asInstanceOfPM)
+            interpretModuleAccess(qual)
           else {
-            val staticMethodCall = interpretedStaticMethodCall(fn.qualifier.symbol.moduleClass, fn.symbol)
+            val staticMethodCall = interpretedStaticMethodCall(qual.moduleClass, sym)
             staticMethodCall(args.flatten.map(interpretTree))
           }
-        else if (env.contains(fn.symbol))
-          env(fn.symbol)
+        else if (env.contains(sym))
+          env(sym)
         else if (tree.symbol.is(InlineProxy))
           interpretTree(tree.symbol.defTree.asInstanceOf[ValOrDefDef].rhs)
         else
@@ -428,17 +428,23 @@ object Splicer {
     }
   }
 
-
-
   /** Exception that stops interpretation if some issue is found */
   private class StopInterpretation(val msg: String, val pos: SourcePosition) extends Exception
 
   object Call {
     /** Matches an expression that is either a field access or an application
-     *  It retruns a TermRef containing field accessed or a method reference and the arguments passed to it.
+     *  It retruns the symbol of qualifier, the symbol of method reference and the arguments passed to it.
      */
-    def unapply(arg: Tree)(implicit ctx: Context): Option[(RefTree, List[List[Tree]])] =
-      Call0.unapply(arg).map((fn, args) => (fn, args.reverse))
+    def unapply(arg: Tree)(implicit ctx: Context): Option[(Symbol, Symbol, List[List[Tree]], SourcePosition)] =
+      Call0.unapply(arg).map { (fn, args) =>
+        val qualSym = fn.tpe match
+          case tpe @ TermRef(qual, _) =>
+            qual match
+              case qual: TermRef => qual.symbol
+              case _ => tpe.symbol.owner
+          case _ => NoSymbol
+        (qualSym, fn.tpe.termSymbol, args.reverse, fn.sourcePos)
+      }
 
     private object Call0 {
       def unapply(arg: Tree)(implicit ctx: Context): Option[(RefTree, List[List[Tree]])] = arg match {
