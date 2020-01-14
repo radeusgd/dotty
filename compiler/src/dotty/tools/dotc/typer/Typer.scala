@@ -3056,6 +3056,7 @@ class Typer extends Namer
                 case _ => EmptyTree
               }
             catch {
+              case ex: CyclicReference => throw ex
               case ex: TypeError => errorTree(tree, ex, tree.sourcePos)
             }
           val nestedCtx = ctx.fresh.setNewTyperState()
