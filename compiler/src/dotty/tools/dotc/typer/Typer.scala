@@ -3048,6 +3048,7 @@ class Typer extends Namer
       // try an extension method in scope
       pt match {
         case SelectionProto(name, mbrType, _, _) =>
+          val origCtx = ctx
           def tryExtension(implicit ctx: Context): Tree =
             try
               findRef(name, WildcardType, ExtensionMethod, tree.posd) match {
@@ -3055,10 +3056,16 @@ class Typer extends Namer
                   extMethodApply(untpd.ref(ref).withSpan(tree.span), tree, mbrType)
                 case _ => EmptyTree
               }
-            catch {
-              case ex: CyclicReference => throw ex
-              case ex: TypeError => errorTree(tree, ex, tree.sourcePos)
-            }
+            catch
+              case ex: CyclicReference =>
+                if ex.denot.is(Extension) && ex.denot.name == name then
+                  origCtx.warning(
+                    em"""An extension method was tried but could not be fully constructed
+                        |since there was a cyclic reference involving ${ex.denot.symbol.showLocated}""",
+                    tree.sourcePos)
+                EmptyTree
+              case ex: TypeError =>
+                EmptyTree
           val nestedCtx = ctx.fresh.setNewTyperState()
           val app = tryExtension(nestedCtx)
           if (!app.isEmpty && !nestedCtx.reporter.hasErrors) {
