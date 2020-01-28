@@ -17,7 +17,7 @@ class Foo {
   }) }
 
   inline def j(that: Foo): Unit = ${ Foo.impl[Any]('{
-     given QuoteContext = ???
+    given QuoteContext = ???
     'that // error
   }) }
 

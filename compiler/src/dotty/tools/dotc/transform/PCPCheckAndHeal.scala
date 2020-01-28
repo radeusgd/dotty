@@ -134,7 +134,7 @@ class PCPCheckAndHeal(@constructorOnly ictx: Context) extends TreeMapWithStages(
           }
         case tp: ThisType =>
           assert(checkSymLevel(tp.cls, tp, pos).isEmpty)
-          mapOver(tp)
+          tp
         case tp: AnnotatedType =>
           derivedAnnotatedType(tp, apply(tp.parent), tp.annot)
         case _ =>
@@ -168,11 +168,90 @@ class PCPCheckAndHeal(@constructorOnly ictx: Context) extends TreeMapWithStages(
         case _ => false
 
     /* Is a reference to an `<init>` method on a class with a static path */
-    def isStaticNew(tp1: Type): Boolean = tp1 match
-      case tp1: TermRef => tp1.symbol.isConstructor && isStaticPathOK(tp1.prefix)
+    // def isStaticNew(tp1: Type): Boolean = tp1 match
+    //   case tp1: TermRef => tp1.symbol.isConstructor && isStaticPathOK(tp1.prefix)
+    //   case _ => false
+
+    def isStaticMember(tp1: Type): Boolean =  tp1 match
+      case tp1: TermRef => isStaticPathOK(tp1.prefix)
       case _ => false
 
-    if (!sym.exists || levelOK(sym) || isStaticPathOK(tp) || isStaticNew(tp))
+
+    // def stripNestedClasses(tp: Type): Type = tp match
+    //   case TypeRef(prefix: ThisType, _) =>
+
+
+    def isTypeMember(tp1: Type): Boolean =  tp1 match
+      case TypeRef(prefix: ThisType, _) =>
+        isStaticPathOK(prefix) || isConsistentLocalRef(prefix)
+      // case TypeRef(ThisType(TypeRef(ThisType(prefix), _), _) => isStaticPathOK(tp1) || isConsistentLocalRef(tp1)
+      case TypeRef(prefix: TermRef, _) => isConsistentLocalRef(prefix)
+      case TypeRef(_: TermParamRef, _) => true
+      case _ => false // isStaticPathOK(tp1) || isConsistentLocalRef(tp1)
+
+    def isConsistentLocalRef(tp1: Type): Boolean = tp1 match
+      case tp1 @ TermRef(NoPrefix, _) => levelOf(tp1.symbol).getOrElse(0) == level
+      case tp1 @ TypeRef(NoPrefix, _) => levelOf(tp1.symbol).getOrElse(0) == level
+      case ThisType(t @ TypeRef(NoPrefix, _)) => levelOf(t.symbol).getOrElse(0) == level
+      case _ => false
+
+    // def isConsistentLocalPath(tp: Type): Boolean = tp match
+    //   case NoPrefix => true
+    //   case tp1 @ TermRef(prefix, _) => levelOf(tp1.symbol).getOrElse(0) >= level && isConsistentLocalPath(prefix)
+    //   case tp1 @ TypeRef(prefix, _) => levelOf(tp1.symbol).getOrElse(0) >= level && isConsistentLocalPath(prefix)
+    //   case ThisType(t @ TypeRef(prefix, _)) => levelOf(t.symbol).getOrElse(0) >= level && isConsistentLocalPath(prefix)
+    //   case _ => false
+
+    // def isConsistentTypeRef(tp: Type): Boolean = tp match
+    //   case tp @ TypeRef(prefix, _) => isConsistentLocalPath(prefix)
+    //   case tp @ ThisType(tp) => isConsistentLocalPath(prefix)
+    //   case _ => false
+
+    // FIXME: tests/neg-macros/quote-this.scala
+    def isStaticClass(tp1: Type): Boolean =  tp1 match
+      case ThisType(tp2: TypeRef) =>
+        (level == -1 && tp2.symbol.isClass) || // reference to `this` in inline method // TODO remove when #8100 is fixed
+        (level == levelOf(tp2.symbol).getOrElse(0) && isStaticPathOK(tp2.prefix))
+      case _ => false
+
+
+    def isParamOK(): Boolean =
+      sym.isParamOrAccessor && {
+        if sym.isType then level <= levelOf(sym).getOrElse(0) || (level == -1 && sym.owner.is(Macro))
+        else level == levelOf(sym).getOrElse(0)
+      }
+
+    def isConsistent(tp: Type): Boolean = {
+      tp.termSymbol.isAnonymousFunction ||
+      isParamOK() ||
+      isConsistentLocalRef(tp) ||
+      isStaticPathOK(tp) ||
+      isStaticMember(tp) ||
+      isTypeMember(tp) ||
+      isStaticClass(tp)
+    }
+
+    if (!sym.exists || levelOK(sym) || isConsistent(tp))
+      // assert(!(!ctx.reporter.hasErrors && sym.exists && levelOK(sym) && !isConsistent(tp)))
+      if !ctx.reporter.hasErrors && sym.exists && levelOK(sym) && !isConsistent(tp) then
+        println("-----------------")
+        println(ctx.compilationUnit.source)
+        println(sym)
+        println(sym.flagsString)
+        println(sym.ownersIterator.toList)
+        println(sym.isParamOrAccessor)
+        println()
+        println(tp.show)
+        println(tp)
+        println()
+        println(levelOf(sym))
+        println(level)
+        println()
+        println()
+        println()
+        println()
+        println()
+
       None
     else if (!sym.isStaticOwner && !isClassRef)
       tp match
@@ -194,14 +273,9 @@ class PCPCheckAndHeal(@constructorOnly ictx: Context) extends TreeMapWithStages(
    */
   private def levelOK(sym: Symbol)(implicit ctx: Context): Boolean = levelOf(sym) match {
     case Some(l) =>
-      l == level ||
-        level == -1 && (
-            // here we assume that Splicer.checkValidMacroBody was true before going to level -1,
-            // this implies that all arguments are quoted.
-            sym.isClass // reference to this in inline methods
-          )
+      l == level
     case None =>
-      sym.is(Package) || sym.owner.isStaticOwner || levelOK(sym.owner)
+      sym.is(Package) || levelOK(sym.owner)
   }
 
   /** Try to heal reference to type `T` used in a higher level than its definition.
