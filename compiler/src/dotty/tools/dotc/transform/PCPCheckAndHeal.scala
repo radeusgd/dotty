@@ -89,9 +89,6 @@ class PCPCheckAndHeal(@constructorOnly ictx: Context) extends TreeMapWithStages(
     tree match {
       case Quoted(_) | Spliced(_)  =>
         tree
-      case _: This =>
-        assert(checkSymLevel(tree.symbol, tree.tpe, tree.sourcePos).isEmpty)
-        tree
       case Ident(name) =>
         if (name == nme.WILDCARD)
           untpd.Ident(name).withType(checkType(tree.sourcePos).apply(tree.tpe)).withSpan(tree.span)
@@ -100,7 +97,7 @@ class PCPCheckAndHeal(@constructorOnly ictx: Context) extends TreeMapWithStages(
             case Some(tpRef) => tpRef
             case _ => tree
           }
-      case _: TypeTree | _: AppliedTypeTree | _: Apply | _: TypeApply | _: UnApply | Select(_, OuterSelectName(_, _)) =>
+      case _: TypeTree | _: AppliedTypeTree | _: Apply | _: TypeApply | _: UnApply | _: This | Select(_, OuterSelectName(_, _)) =>
         tree.withType(checkTp(tree.tpe))
       case _: ValOrDefDef | _: Bind =>
         tree.symbol.info = checkTp(tree.symbol.info)
