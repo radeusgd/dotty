@@ -49,7 +49,10 @@ class PCPCheckAndHeal(@constructorOnly ictx: Context) extends TreeMapWithStages(
           case annot => transform(annot.tree)(given annotCtx)
         }
         checkLevel(super.transform(tree))
-      case _ => checkLevel(super.transform(tree))
+      case TypeApply(fun, args) =>
+        cpy.TypeApply(tree)(transform(fun), args.map(checkLevel))
+      case _ =>
+        checkLevel(super.transform(tree))
     }
 
   /** Transform quoted trees while maintaining phase correctness */
@@ -71,7 +74,7 @@ class PCPCheckAndHeal(@constructorOnly ictx: Context) extends TreeMapWithStages(
       case Apply(fun: TypeApply, _) if splice.isTerm =>
         // Type of the splice itsel must also be healed
         // internal.Quoted.expr[F[T]](... T ...)  -->  internal.Quoted.expr[F[$t]](... T ...)
-        val tp = checkType(splice.sourcePos).apply(splice.tpe.widenTermRefExpr)
+        val tp = checkType(splice.sourcePos, checkingType = false).apply(splice.tpe.widenTermRefExpr)
         cpy.Apply(splice)(cpy.TypeApply(fun)(fun.fun, tpd.TypeTree(tp) :: Nil), body1 :: Nil)
       case splice: Select => cpy.Select(splice)(body1, splice.name)
     }
@@ -85,28 +88,28 @@ class PCPCheckAndHeal(@constructorOnly ictx: Context) extends TreeMapWithStages(
    *  `${implicitly[quoted.Type[T]]}`.
    */
   protected def checkLevel(tree: Tree)(implicit ctx: Context): Tree = {
-    def checkTp(tp: Type): Type = checkType(tree.sourcePos).apply(tp)
+    def checkTp(tp: Type, checkingType: Boolean): Type = checkType(tree.sourcePos, checkingType).apply(tp)
     tree match {
       case Quoted(_) | Spliced(_)  =>
         tree
       case _: This =>
-        assert(checkSymLevel(tree.symbol, tree.tpe, tree.sourcePos).isEmpty)
+        assert(checkSymLevel(tree.symbol, tree.tpe, tree.sourcePos, tree.isType).isEmpty)
         tree
       case Ident(name) =>
         if (name == nme.WILDCARD)
-          untpd.Ident(name).withType(checkType(tree.sourcePos).apply(tree.tpe)).withSpan(tree.span)
+          untpd.Ident(name).withType(checkType(tree.sourcePos, tree.isType).apply(tree.tpe)).withSpan(tree.span)
         else
-          checkSymLevel(tree.symbol, tree.tpe, tree.sourcePos) match {
+          checkSymLevel(tree.symbol, tree.tpe, tree.sourcePos, tree.isType) match {
             case Some(tpRef) => tpRef
             case _ => tree
           }
-      case _: TypeTree | _: AppliedTypeTree | _: Apply | _: TypeApply | _: UnApply | Select(_, OuterSelectName(_, _)) =>
-        tree.withType(checkTp(tree.tpe))
+      case _: TypeTree | _: AppliedTypeTree | _: Apply | _: UnApply | Select(_, OuterSelectName(_, _)) =>
+        tree.withType(checkTp(tree.tpe, tree.isType))
       case _: ValOrDefDef | _: Bind =>
-        tree.symbol.info = checkTp(tree.symbol.info)
+        tree.symbol.info = checkTp(tree.symbol.info, checkingType = true)
         tree
       case _: Template =>
-        checkTp(tree.symbol.owner.asClass.givenSelfType)
+        checkTp(tree.symbol.owner.asClass.givenSelfType, checkingType = true)
         tree
       case _ =>
         tree
@@ -114,7 +117,7 @@ class PCPCheckAndHeal(@constructorOnly ictx: Context) extends TreeMapWithStages(
   }
 
   /** Check and heal all named types and this-types in a given type for phase consistency. */
-  private def checkType(pos: SourcePosition)(implicit ctx: Context): TypeMap = new TypeMap {
+  private def checkType(pos: SourcePosition, checkingType: Boolean)(implicit ctx: Context): TypeMap = new TypeMap {
     def apply(tp: Type): Type = reporting.trace(i"check type level $tp at $level") {
       tp match {
         case tp: TypeRef if tp.symbol.isSplice =>
@@ -126,15 +129,15 @@ class PCPCheckAndHeal(@constructorOnly ictx: Context) extends TreeMapWithStages(
           // Replace it with a properly encoded type splice. This is the normal for expected for type splices.
           tp.prefix.select(tpnme.splice)
         case tp: NamedType =>
-          checkSymLevel(tp.symbol, tp, pos) match {
+          checkSymLevel(tp.symbol, tp, pos, checkingType) match {
             case Some(tpRef) => tpRef.tpe
             case _ =>
               if (tp.symbol.is(Param)) tp
               else mapOver(tp)
           }
         case tp: ThisType =>
-          assert(checkSymLevel(tp.cls, tp, pos).isEmpty)
-          mapOver(tp)
+          assert(checkSymLevel(tp.cls, tp, pos, checkingType).isEmpty)
+          mapOver(tp) // TODO is mapOver necessary?
         case tp: AnnotatedType =>
           derivedAnnotatedType(tp, apply(tp.parent), tp.annot)
         case _ =>
@@ -149,7 +152,7 @@ class PCPCheckAndHeal(@constructorOnly ictx: Context) extends TreeMapWithStages(
    *  @return `None` if the phase is correct or cannot be healed
    *          `Some(tree)` with the `tree` of the healed type tree for `${implicitly[quoted.Type[T]]}`
    */
-  private def checkSymLevel(sym: Symbol, tp: Type, pos: SourcePosition)(implicit ctx: Context): Option[Tree] = {
+  private def checkSymLevel(sym: Symbol, tp: Type, pos: SourcePosition, checkingType: Boolean)(implicit ctx: Context): Option[Tree] = {
     /** Is a reference to a class but not `this.type` */
     def isClassRef = sym.isClass && !tp.isInstanceOf[ThisType]
 
@@ -172,7 +175,7 @@ class PCPCheckAndHeal(@constructorOnly ictx: Context) extends TreeMapWithStages(
       case tp1: TermRef => tp1.symbol.isConstructor && isStaticPathOK(tp1.prefix)
       case _ => false
 
-    if (!sym.exists || levelOK(sym) || isStaticPathOK(tp) || isStaticNew(tp))
+    if (!sym.exists || levelOK(sym, checkingType) || isStaticPathOK(tp) || isStaticNew(tp))
       None
     else if (!sym.isStaticOwner && !isClassRef)
       tp match
@@ -192,16 +195,16 @@ class PCPCheckAndHeal(@constructorOnly ictx: Context) extends TreeMapWithStages(
    *  is one higher than the current level, because on execution such values
    *  are constant expression trees and we can pull out the constant from the tree.
    */
-  private def levelOK(sym: Symbol)(implicit ctx: Context): Boolean = levelOf(sym) match {
-    case Some(l) =>
-      l == level ||
+  private def levelOK(sym: Symbol, checkingType: Boolean)(implicit ctx: Context): Boolean = levelOf(sym) match {
+    case Some(defLevel) =>
+      (if checkingType then level <= defLevel else level == defLevel) ||
         level == -1 && (
             // here we assume that Splicer.checkValidMacroBody was true before going to level -1,
             // this implies that all arguments are quoted.
             sym.isClass // reference to this in inline methods
           )
     case None =>
-      sym.is(Package) || sym.owner.isStaticOwner || levelOK(sym.owner)
+      sym.is(Package) || sym.owner.isStaticOwner || levelOK(sym.owner, checkingType)
   }
 
   /** Try to heal reference to type `T` used in a higher level than its definition.
