@@ -65,8 +65,8 @@ object Staged {
 
     object StagedProductInstances {
       implicit def apply[F[_], T]
-        (using m: Mirror.ProductOf[T])
-        (using
+        (given m: Mirror.ProductOf[T])
+        (given
           t: Type[T],
           s: SummonInstances[F, m.MirroredElemTypes]
         ): StagedProductInstances[F, T] = new StagedProductInstances[F, T] {
@@ -76,8 +76,7 @@ object Staged {
 
           def accessorsE(value: E[T])(implicit q: QuoteContext): List[E[Any]] = {
             import q.tasty.{_, given}
-            import q.tasty.QuotedTypeAPI.unseal
-            unseal(t).symbol match {
+            t.unseal.symbol match {
               case sym if sym.isClassDef =>
                 sym.caseFields.map { field =>
                   Select.unique(value.unseal, field.name).seal
@@ -89,7 +88,6 @@ object Staged {
 
           def constructorE(fields: List[E[Any]])(implicit q: QuoteContext): E[T] = {
             import q.tasty.{_, given}
-            import q.tasty.QuotedTypeAPI.unseal
             def companion(tpe: Type): TermRef = tpe match {
               case t @ TermRef(_, _)     => t
               case TypeRef(name, prefix) => TermRef(name, prefix)
@@ -114,8 +112,8 @@ object Staged {
 
     object StagedCoproductInstances {
       implicit def apply[F[_], T]
-        (using m: Mirror.SumOf[T])
-        (using
+        (given m: Mirror.SumOf[T])
+        (given
           t: Type[T],
           s: SummonInstances[F, m.MirroredElemTypes],
           x: SummonInstances[Type, m.MirroredElemTypes],
@@ -191,8 +189,8 @@ object Staged {
 
     object StagedProductInstances {
       implicit def apply[F[_[_]], T[_]]
-        (using m: ProductGeneric[T])
-        (using
+        (given m: ProductGeneric[T])
+        (given
           t: Type[T],
           s: SummonInstances[F, m.MirroredElemTypes]
         ): StagedProductInstances[F, T] = new StagedProductInstances[F, T] {
@@ -200,7 +198,7 @@ object Staged {
 
           def accessorsE[A](value: E[T[A]])(implicit q: QuoteContext): List[E[Any]] = {
             import q.tasty.{_, given}
-            QuotedTypeAPI.unseal(t).symbol match {
+            t.unseal.symbol match {
               case sym if sym.isClassDef =>
                 sym.caseFields.map { field =>
                   Select.unique(value.unseal, field.name).seal
@@ -234,7 +232,7 @@ object Staged {
                 // Do we need to call .low for covariant cases? I don't think we do...
                 bounds.map(_.hi)
             }
-            val t0 = QuotedTypeAPI.unseal(t).tpe
+            val t0 = t.unseal.tpe
             Select.overloaded(Ident(companion(t0)), "apply", defaultTargs(t0), fields.map(_.unseal))
               .seal.asInstanceOf[E[T[A]]]
           }
@@ -254,8 +252,8 @@ object Staged {
 
     object StagedCoproductInstances {
       implicit def apply[F[_[_]], T[_]]
-        (using m: CoproductGeneric[T])
-        (using
+        (given m: CoproductGeneric[T])
+        (given
           t: Type[T],
           s: SummonInstances[F, m.MirroredElemTypes],
           x: SummonInstances[Type, m.MirroredElemTypes],
@@ -270,8 +268,6 @@ object Staged {
           def castsE[A](value: E[T[A]])(implicit q: QuoteContext): List[E[Any]] =
             x.instances.map { case tpe: Type[_] =>
               import q.tasty.{_, given}
-              import q.tasty.QuotedTypeAPI.unseal
-              import q.tasty.QuotedTypeAPI.unseal
               tpe.unseal.tpe match {
                 case TypeLambda(_, bound :: Nil, _) =>
                   '{ ${ value.asInstanceOf[E[T[Any]]] }.asInstanceOf[quoted.Type[Any]] }
