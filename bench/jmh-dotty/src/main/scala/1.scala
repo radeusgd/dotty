@@ -6,545 +6,545 @@ import scala.quoted.{Expr => E, _}
 import scala.annotation.tailrec
 import scala.compiletime._
 
-object Shapeless3 {
-  type Id[t] = t
-  type Const[c] = [t] =>> c
-  case class Wrap[T](t: T)
-
-  type ~>[A[_], B[_]] = [t] => A[t] => B[t]
-
-  inline def summon[T] = implicit match {
-    case t: T => t
-  }
-
-  inline def summonAsArray[T <: Tuple]: Array[Any] =
-    summonAsArray0[T](0, new Array[Any](constValue[Tuple.Size[T]]))
-
-  inline def summonAsArray0[T](i: Int, arr: Array[Any]): Array[Any] = inline erasedValue[T] match {
-    case _: Unit => arr
-    case _: (a *: b) =>
-      arr(i) = summon[a]
-      summonAsArray0[b](i+1, arr)
-  }
-
-  sealed trait CompleteOr[T]
-  case class Complete[T](t: T) extends CompleteOr[T]
-  case class Continue[T](t: T) extends CompleteOr[T]
-
-  object Complete {
-    inline def apply[T](c: Boolean)(t: T)(f: T): CompleteOr[T] =
-      if(c) Complete(t)
-      else Continue(f)
-  }
-
-  abstract class ErasedInstances[FT] {
-    def erasedMap(x: Any)(f: (Any, Any) => Any): Any
-  }
-
-  abstract class ErasedProductInstances[FT] extends ErasedInstances[FT] {
-    def erasedConstruct(f: Any => Any): Any
-    def erasedUnfold(a: Any)(f: (Any, Any) => (Any, Option[Any])): (Any, Option[Any])
-    def erasedMap(x0: Any)(f: (Any, Any) => Any): Any
-    def erasedMap2(x0: Any, y0: Any)(f: (Any, Any, Any) => Any): Any
-    def erasedFoldLeft(x0: Any)(a: Any)(f: (Any, Any, Any) => CompleteOr[Any]): Any
-    def erasedFoldLeft2(x0: Any, y0: Any)(a: Any)(f: (Any, Any, Any, Any) => CompleteOr[Any]): Any
-  }
-
-  final class ErasedProductInstances0[FT](val mirror: Mirror.Product) extends ErasedProductInstances[FT] {
-    def erasedConstruct(f: Any => Any): Any = mirror.fromProduct(None)
-    def erasedUnfold(a: Any)(f: (Any, Any) => (Any, Option[Any])): (Any, Option[Any]) = (a, Some(mirror.fromProduct(None)))
-    def erasedMap(x0: Any)(f: (Any, Any) => Any): Any = x0
-    def erasedMap2(x0: Any, y0: Any)(f: (Any, Any, Any) => Any): Any = x0
-    def erasedFoldLeft(x0: Any)(a: Any)(f: (Any, Any, Any) => CompleteOr[Any]): Any = a
-    def erasedFoldLeft2(x0: Any, y0: Any)(a: Any)(f: (Any, Any, Any, Any) => CompleteOr[Any]): Any = a
-  }
-
-  final class ErasedProductInstances1[FT](val mirror: Mirror.Product, mkI: => Any) extends ErasedProductInstances[FT] {
-    lazy val i = mkI
-
-    inline def toProduct(x: Any): Product = x.asInstanceOf[Product]
-
-    def erasedConstruct(f: Any => Any): Any =
-      mirror.fromProduct(Tuple1(f(i)))
-
-    def erasedUnfold(a: Any)(f: (Any, Any) => (Any, Option[Any])): (Any, Option[Any]) = {
-      val (acc0, e0) = f(a, i)
-      e0 match {
-        case Some(_) => (acc0, Some(mirror.fromProduct(e0)))
-        case None => (acc0, None)
-      }
-    }
-
-    def erasedMap(x0: Any)(f: (Any, Any) => Any): Any =
-      mirror.fromProduct(Tuple1(f(i, toProduct(x0).productElement(0))))
-
-    def erasedMap2(x0: Any, y0: Any)(f: (Any, Any, Any) => Any): Any =
-      mirror.fromProduct(Tuple1(f(i, toProduct(x0).productElement(0), toProduct(y0).productElement(0))))
-
-    def erasedFoldLeft(x0: Any)(a: Any)(f: (Any, Any, Any) => CompleteOr[Any]): Any = {
-      f(a, i, toProduct(x0).productElement(0)) match {
-        case Complete(r) => r
-        case Continue(acc) => acc
-      }
-    }
-
-    def erasedFoldLeft2(x0: Any, y0: Any)(a: Any)(f: (Any, Any, Any, Any) => CompleteOr[Any]): Any = {
-      f(a, i, toProduct(x0).productElement(0), toProduct(y0).productElement(0)) match {
-        case Complete(r) => r
-        case Continue(acc) => acc
-      }
-    }
-  }
-
-  final class ErasedProductInstancesN[FT](val mirror: Mirror.Product, mkIs: => Array[Any]) extends ErasedProductInstances[FT] {
-    import ErasedProductInstances.ArrayProduct
-
-    lazy val is = mkIs
-
-    inline def toProduct(x: Any): Product = x.asInstanceOf[Product]
-
-    def erasedConstruct(f: Any => Any): Any = {
-      val n = is.length
-      val arr = new Array[Any](n)
-      var i = 0
-      while(i < n) {
-        arr(i) = f(is(i))
-        i = i+1
-      }
-      mirror.fromProduct(ArrayProduct(arr))
-    }
-
-    def erasedUnfold(a: Any)(f: (Any, Any) => (Any, Option[Any])): (Any, Option[Any]) = {
-      val n = is.length
-      val arr = new Array[Any](n)
-      var acc = a
-      var i = 0
-      while(i < n) {
-        val (acc0, e0) = f(acc, is(i))
-        e0 match {
-          case Some(e) =>
-            acc = acc0
-            arr(i) = e
-          case None =>
-            return (acc0, None)
-        }
-        i = i+1
-      }
-      (acc, Some(mirror.fromProduct(ArrayProduct(arr))))
-    }
-
-    def erasedMap(x0: Any)(f: (Any, Any) => Any): Any = {
-      val x = toProduct(x0)
-      val n = is.length
-      val arr = new Array[Any](n)
-      var i = 0
-      while(i < n) {
-        arr(i) = f(is(i), x.productElement(i))
-        i = i+1
-      }
-      mirror.fromProduct(ArrayProduct(arr))
-    }
-
-    def erasedMap2(x0: Any, y0: Any)(f: (Any, Any, Any) => Any): Any = {
-      val x = toProduct(x0)
-      val y = toProduct(y0)
-      val n = is.length
-      val arr = new Array[Any](n)
-      var i = 0
-      while(i < n) {
-        arr(i) = f(is(i), x.productElement(i), y.productElement(i))
-        i = i+1
-      }
-      mirror.fromProduct(ArrayProduct(arr))
-    }
-
-    def erasedFoldLeft(x0: Any)(i: Any)(f: (Any, Any, Any) => CompleteOr[Any]): Any = {
-      val x = toProduct(x0)
-      val n = x.productArity
-      @tailrec
-      def loop(i: Int, acc: Any): Any =
-        if(i >= n) acc
-        else
-          f(acc, is(i), x.productElement(i)) match {
-            case Complete(r) => r
-            case Continue(acc) =>
-              loop(i+1, acc)
-          }
-
-      loop(0, i)
-    }
-
-    def erasedFoldLeft2(x0: Any, y0: Any)(i: Any)(f: (Any, Any, Any, Any) => CompleteOr[Any]): Any = {
-      val x = toProduct(x0)
-      val y = toProduct(y0)
-      val n = x.productArity
-      @tailrec
-      def loop(i: Int, acc: Any): Any =
-        if(i >= n) acc
-        else
-          f(acc, is(i), x.productElement(i), y.productElement(i)) match {
-            case Complete(r) => r
-            case Continue(acc) =>
-              loop(i+1, acc)
-          }
-
-      loop(0, i)
-    }
-  }
-
-  object ErasedProductInstances {
-    class ArrayProduct(val elems: Array[Any]) extends Product {
-      def canEqual(that: Any): Boolean = true
-      def productElement(n: Int) = elems(n)
-      def productArity = elems.length
-      override def productIterator: Iterator[Any] = elems.iterator
-    }
-
-    inline def summonOne[T] = inline erasedValue[T] match {
-      case _: Tuple1[a] => summon[a]
-    }
-
-    inline def apply[FT, E <: Tuple](mirror: Mirror.Product) : ErasedProductInstances[FT] =
-      inline erasedValue[Tuple.Size[E]] match {
-        case 0 => new ErasedProductInstances0[FT](mirror)
-        case 1 => new ErasedProductInstances1[FT](mirror, summonOne[E])
-        case _ => new ErasedProductInstancesN[FT](mirror, summonAsArray[E])
-      }
-  }
-
-  final class ErasedCoproductInstances[FT](mirror: Mirror.Sum, mkIs: => Array[Any]) extends ErasedInstances[FT] {
-    lazy val is = mkIs
-
-    def ordinal(x: Any): Any = is(mirror.ordinal(x.asInstanceOf))
-
-    def erasedMap(x: Any)(f: (Any, Any) => Any): Any = {
-      val i = ordinal(x)
-      f(i, x)
-    }
-
-    def erasedProject(p: Int)(i: Any)(f: (Any, Any) => (Any, Option[Any])): (Any, Option[Any]) =
-      f(i, is(p))
-
-    def erasedFold(x: Any)(f: (Any, Any) => Any): Any = {
-      val i = ordinal(x)
-      f(i, x)
-    }
-
-    def erasedFold2(x: Any, y: Any)(a: => Any)(f: (Any, Any, Any) => Any): Any = {
-      val i = mirror.ordinal(x.asInstanceOf)
-      val j = mirror.ordinal(y.asInstanceOf)
-      if(i == j) f(is(i), x, y)
-      else a
-    }
-  }
-
-  object ErasedCoproductInstances {
-    inline def apply[FT, E <: Tuple](mirror: Mirror.Sum) : ErasedCoproductInstances[FT] =
-      new ErasedCoproductInstances[FT](mirror, summonAsArray[E])
-  }
-
-  object K0 {
-    type Generic[O] = Mirror { type MirroredType = O ; type MirroredElemTypes }
-    type ProductGeneric[O] = Mirror.Product { type MirroredType = O ; type MirroredElemTypes }
-    type CoproductGeneric[O] = Mirror.Sum { type MirroredType = O ; type MirroredElemTypes }
-
-    def Generic[O] given (gen: Generic[O]): Generic[O] { type MirroredElemTypes = gen.MirroredElemTypes ; type MirroredLabel = gen.MirroredLabel ; type MirroredElemLabels = gen.MirroredElemLabels } = gen
-    def ProductGeneric[O] given (gen: ProductGeneric[O]): ProductGeneric[O] { type MirroredElemTypes = gen.MirroredElemTypes ; type MirroredLabel = gen.MirroredLabel ; type MirroredElemLabels = gen.MirroredElemLabels } = gen
-    def CoproductGeneric[O] given (gen: CoproductGeneric[O]): CoproductGeneric[O] { type MirroredElemTypes = gen.MirroredElemTypes ; type MirroredLabel = gen.MirroredLabel ; type MirroredElemLabels = gen.MirroredElemLabels } = gen
-
-    type Instances[F[_], T] = ErasedInstances[F[T]]
-    type ProductInstances[F[_], T] = ErasedProductInstances[F[T]]
-    type CoproductInstances[F[_], T] = ErasedCoproductInstances[F[T]]
-
-    def Instances[F[_], T] given (inst: Instances[F, T]): inst.type = inst
-    def ProductInstances[F[_], T] given (inst: ProductInstances[F, T]): inst.type = inst
-    def CoproductInstances[F[_], T] given (inst: CoproductInstances[F, T]): inst.type = inst
-
-    type ToUnion[T] = T match {
-      case Unit => Nothing
-      case a *: b => a | ToUnion[b]
-    }
-
-    type IndexOf[E, X] = IndexOf0[E, X, 0]
-
-    type IndexOf0[E, X, I <: Int] <: Int = X match {
-      case Unit => -1
-      case x *: xs => x match {
-        case E => I
-        case _ => IndexOf0[E, xs, S[I]]
-      }
-    }
-
-    type LiftP[F[_], T] <: Tuple = T match {
-      case Unit => Unit
-      case a *: b => F[a] *: LiftP[F, b]
-    }
-
-    inline def summonFirst[F[_], T, U]: F[U] = summonFirst0[LiftP[F, T]].asInstanceOf[F[U]]
-
-    inline def summonFirst0[T] <: Any = inline erasedValue[T] match {
-      case _: (a *: b) => implicit match {
-        case aa: `a` => aa
-        case _ => summonFirst0[b]
-      }
-    }
-
-    given Ops {
-      inline def (gen: ProductGeneric[Obj]) toRepr [Obj] (o: Obj): gen.MirroredElemTypes = Tuple.fromProduct(o.asInstanceOf).asInstanceOf[gen.MirroredElemTypes]
-      inline def (gen: ProductGeneric[Obj]) fromRepr [Obj] (r: gen.MirroredElemTypes): Obj = gen.fromProduct(r.asInstanceOf).asInstanceOf[Obj]
-
-      inline def (gen: CoproductGeneric[Obj]) toRepr [Obj] (o: Obj): ToUnion[gen.MirroredElemTypes] = o.asInstanceOf
-      inline def (gen: CoproductGeneric[Obj]) fromRepr [Obj] (r: ToUnion[gen.MirroredElemTypes]): Obj = r.asInstanceOf
-
-      inline def (inst: Instances[F, T]) map [F[_], T] (x: T)(f: [t] => (F[t], t) => t): T =
-        inst.erasedMap(x)(f.asInstanceOf).asInstanceOf
-
-      inline def (inst: ProductInstances[F, T]) construct [F[_], T] (f: [t] => F[t] => t): T =
-        inst.erasedConstruct(f.asInstanceOf).asInstanceOf
-      inline def (inst: ProductInstances[F, T]) unfold [F[_], T, Acc] (i: Acc)(f: [t] => (Acc, F[t]) => (Acc, Option[t])): (Acc, Option[T]) =
-        inst.erasedUnfold(i)(f.asInstanceOf).asInstanceOf
-      inline def (inst: ProductInstances[F, T]) map2 [F[_], T] (x: T, y: T)(f: [t] => (F[t], t, t) => t): T =
-        inst.erasedMap2(x, y)(f.asInstanceOf).asInstanceOf
-      inline def (inst: ProductInstances[F, T]) foldLeft [F[_], T, Acc] (x: T)(i: Acc)(f: [t] => (Acc, F[t], t) => CompleteOr[Acc]): Acc =
-        inst.erasedFoldLeft(x)(i)(f.asInstanceOf).asInstanceOf
-      inline def (inst: ProductInstances[F, T]) foldLeft2 [F[_], T, Acc] (x: T, y: T)(i: Acc)(f: [t] => (Acc, F[t], t, t) => CompleteOr[Acc]): Acc =
-        inst.erasedFoldLeft2(x, y)(i)(f.asInstanceOf).asInstanceOf
-
-      inline def (inst: CoproductInstances[F, T]) project [F[_], T, Acc] (p: Int)(i: Acc)(f: [t] => (Acc, F[t]) => (Acc, Option[t])): (Acc, Option[T]) =
-        inst.erasedProject(p)(i)(f.asInstanceOf).asInstanceOf
-      inline def (inst: CoproductInstances[F, T]) fold [F[_], T, R] (x: T)(f: [t] => (F[t], t) => R): R =
-        inst.erasedFold(x)(f.asInstanceOf).asInstanceOf
-      inline def (inst: CoproductInstances[F, T]) fold2 [F[_], T, R] (x: T, y: T)(a: => R)(f: [t] => (F[t], t, t) => R): R =
-        inst.erasedFold2(x, y)(a.asInstanceOf)(f.asInstanceOf).asInstanceOf
-    }
-
-    type ProductGenericR[O, R] = Mirror.Product { type MirroredType = O ; type MirroredElemTypes = R }
-    type CoproductGenericR[O, R] = Mirror.Sum { type MirroredType = O ; type MirroredElemTypes = R }
-
-    inline given mkInstances[F[_], T] as ErasedInstances[F[T]] given (gen: Generic[T]) =
-      inline gen match {
-        case p: ProductGeneric[T]   => mkProductInstances[F, T] given p
-        case c: CoproductGeneric[T] => mkCoproductInstances[F, T] given c
-      }
-
-    inline given mkProductInstances[F[_], T] as ErasedProductInstances[F[T]] given (gen: ProductGeneric[T]) =
-      ErasedProductInstances[F[T], LiftP[F, gen.MirroredElemTypes]](gen)
-
-    inline given mkCoproductInstances[F[_], T] as ErasedCoproductInstances[F[T]] given (gen: CoproductGeneric[T]) =
-      ErasedCoproductInstances[F[T], LiftP[F, gen.MirroredElemTypes]](gen)
-  }
-
-  object K1 {
-    type Generic[O[_]] = Mirror { type MirroredType = O ; type MirroredElemTypes[_] }
-    type ProductGeneric[O[_]] = Mirror.Product { type MirroredType = O ; type MirroredElemTypes[_] }
-    type CoproductGeneric[O[_]] = Mirror.Sum { type MirroredType = O ; type MirroredElemTypes[_] }
-
-    def Generic[O[_]] given (gen: Generic[O]): gen.type = gen
-    def ProductGeneric[O[_]] given (gen: ProductGeneric[O]): gen.type = gen
-    def CoproductGeneric[O[_]] given (gen: CoproductGeneric[O]): gen.type = gen
-
-    type Instances[F[_[_]], T[_]] = ErasedInstances[F[T]]
-    type ProductInstances[F[_[_]], T[_]] = ErasedProductInstances[F[T]]
-    type CoproductInstances[F[_[_]], T[_]] = ErasedCoproductInstances[F[T]]
-
-    def Instances[F[_[_]], T[_]] given (inst: Instances[F, T]): inst.type = inst
-    def ProductInstances[F[_[_]], T[_]] given (inst: ProductInstances[F, T]): inst.type = inst
-    def CoproductInstances[F[_[_]], T[_]] given (inst: CoproductInstances[F, T]): inst.type = inst
-
-    class Dummy
-    type Apply[T[_]] = T[Dummy]
-    type Unapply[F[_[_]], T] = T match {
-      case Wrap[Apply[a]] => F[a]
-      case Wrap[Dummy] => F[Id]
-      case Wrap[c] => F[Const[c]]
-    }
-
-    type LiftP[F[_[_]], T[_]] = LiftP0[F, Apply[T]]
-
-    type LiftP0[F[_[_]], T] <: Tuple = T match {
-      case Unit => Unit
-      case (a *:  b) => Unapply[F, Wrap[a]] *: LiftP0[F, b]
-    }
-
-    inline def summonFirst[F[_[_]], T[_], U[_]]: F[U] = summonFirst0[LiftP[F, T]].asInstanceOf[F[U]]
-
-    inline def summonFirst0[T] <: Any = inline erasedValue[T] match {
-      case _: (a *: b) => implicit match {
-        case aa: `a` => aa
-        case _ => summonFirst0[b]
-      }
-    }
-
-    given Ops {
-      inline def (gen: ProductGeneric[Obj]) toRepr [Obj[_], A] (o: Obj[A]): gen.MirroredElemTypes[A] = Tuple.fromProduct(o.asInstanceOf).asInstanceOf[gen.MirroredElemTypes[A]]
-      inline def (gen: ProductGeneric[Obj]) fromRepr [Obj[_], A] (r: gen.MirroredElemTypes[A]): Obj[A] = gen.fromProduct(r.asInstanceOf).asInstanceOf[Obj[A]]
-
-      inline def (gen: CoproductGeneric[Obj]) toRepr [Obj[_], A] (o: Obj[A]): K0.ToUnion[gen.MirroredElemTypes[A]] = o.asInstanceOf
-      inline def (gen: CoproductGeneric[Obj]) fromRepr [Obj[_], A] (r: K0.ToUnion[gen.MirroredElemTypes[A]]): Obj[A] = r.asInstanceOf
-
-      inline def (inst: Instances[F, T]) map[F[_[_]], T[_], A, R](x: T[A])(f: [t[_]] => (F[t], t[A]) => t[R]): T[R] =
-        inst.erasedMap(x)(f.asInstanceOf).asInstanceOf
-
-      inline def (inst: ProductInstances[F, T]) construct [F[_[_]], T[_], R] (f: [t[_]] => F[t] => t[R]): T[R] =
-        inst.erasedConstruct(f.asInstanceOf).asInstanceOf
-      inline def (inst: ProductInstances[F, T]) map2 [F[_[_]], T[_], A, B, R] (x: T[A], y: T[B])(f: [t[_]] => (F[t], t[A], t[B]) => t[R]): T[R] =
-        inst.erasedMap2(x, y)(f.asInstanceOf).asInstanceOf
-      inline def (inst: ProductInstances[F, T]) foldLeft [F[_[_]], T[_], A, Acc] (x: T[A])(i: Acc)(f: [t[_]] => (Acc, F[t], t[A]) => CompleteOr[Acc]): Acc =
-        inst.erasedFoldLeft(x)(i)(f.asInstanceOf).asInstanceOf
-      inline def (inst: ProductInstances[F, T]) foldLeft2 [F[_[_]], T[_], A, B, Acc] (x: T[A], y: T[B])(i: Acc)(f: [t[_]] => (Acc, F[t], t[A], t[B]) => CompleteOr[Acc]): Acc =
-        inst.erasedFoldLeft2(x, y)(i)(f.asInstanceOf).asInstanceOf
-
-      inline def (inst: CoproductInstances[F, T]) fold [F[_[_]], T[_], A, R] (x: T[A])(f: [t[_]] => (F[t], t[A]) => R): R =
-        inst.erasedFold(x)(f.asInstanceOf).asInstanceOf
-      inline def (inst: CoproductInstances[F, T]) fold2 [F[_[_]], T[_], A, B, R] (x: T[A], y: T[B])(a: => R)(f: [t[_]] => (F[t], t[A], t[B]) => R): R =
-        inst.erasedFold2(x, y)(a.asInstanceOf)(f.asInstanceOf).asInstanceOf
-    }
-
-    inline given mkInstances[F[_[_]], T[_]] as ErasedInstances[F[T]] given (gen: Generic[T]) =
-      inline gen match {
-        case p: ProductGeneric[T] => mkProductInstances[F, T] given p
-        case c: CoproductGeneric[T] => mkCoproductInstances[F, T] given c
-      }
-
-    inline given mkProductInstances[F[_[_]], T[_]] as ErasedProductInstances[F[T]] given (gen: ProductGeneric[T]) =
-      ErasedProductInstances[F[T], LiftP[F, gen.MirroredElemTypes]](gen)
-
-    inline given mkCoproductInstances[F[_[_]], T[_]] as ErasedCoproductInstances[F[T]] given (gen: CoproductGeneric[T]) =
-      ErasedCoproductInstances[F[T], LiftP[F, gen.MirroredElemTypes]](gen)
-
-    type LiftProductGeneric[O, E] = ProductGeneric[Const[O]] { type MirroredElemTypes = Const[E] }
-
-    given mkK1_0[O] as LiftProductGeneric[O, k0.MirroredElemTypes] given (k0: K0.ProductGeneric[O]) = k0.asInstanceOf
-  }
-
-  trait Eq[A] {
-    def eqv(x: A, y: A): Boolean
-  }
-
-  object Eq {
-    inline def apply[A] given (ea: Eq[A]): Eq[A] = ea
-
-    given as Eq[Unit] {
-      def eqv(x: Unit, y: Unit): Boolean = true
-    }
-    given as Eq[Boolean] {
-      def eqv(x: Boolean, y: Boolean): Boolean = x == y
-    }
-    given as Eq[Int] {
-      def eqv(x: Int, y: Int): Boolean = x == y
-    }
-    given as Eq[String] {
-      def eqv(x: String, y: String): Boolean = x == y
-    }
-
-    import K0.Ops._
-
-    given eqGen[A] as Eq[A] given (inst: K0.ProductInstances[Eq, A]) {
-      def eqv(x: A, y: A): Boolean = inst.foldLeft2(x, y)(true: Boolean)(
-        [t] => (acc: Boolean, eqt: Eq[t], t0: t, t1: t) => Complete(!eqt.eqv(t0, t1))(false)(true)
-      )
-    }
-
-    given eqGenC[A] as Eq[A] given (inst: => K0.CoproductInstances[Eq, A]) {
-      def eqv(x: A, y: A): Boolean = inst.fold2(x, y)(false)(
-        [t] => (eqt: Eq[t], t0: t, t1: t) => eqt.eqv(t0, t1)
-      )
-    }
-
-    inline def derived[A] given (gen: K0.Generic[A]): Eq[A] = inline gen match {
-      case p: K0.ProductGeneric[A]   => eqGen  given (K0.mkProductInstances given p)
-      case c: K0.CoproductGeneric[A] => eqGenC given (K0.mkCoproductInstances given c)
-    }
-  }
-
-  trait Functor[F[_]] {
-    def map[A, B](fa: F[A])(f: A => B): F[B]
-  }
-
-  object Functor {
-    inline def apply[F[_]] given (ff: Functor[F]): Functor[F] = ff
-
-    given as Functor[Id] {
-      def map[A, B](a: A)(f: A => B): B = f(a)
-    }
-
-    given [F[_], G[_]] as Functor[[t] =>> F[G[t]]] given (ff: Functor[F], fg: Functor[G]) {
-      def map[A, B](fga: F[G[A]])(f: A => B): F[G[B]] = ff.map(fga)(ga => fg.map(ga)(f))
-    }
-
-    import K1.Ops._
-
-    given functorGen[F[_]] as Functor[F] given (inst: => K1.Instances[Functor, F]) {
-      def map[A, B](fa: F[A])(f: A => B): F[B] = inst.map(fa)([t[_]] => (ft: Functor[t], ta: t[A]) => ft.map(ta)(f))
-    }
-
-    given [T] as Functor[Const[T]] {
-      def map[A, B](t: T)(f: A => B): T = t
-    }
-
-    inline def derived[F[_]] given (gen: K1.Generic[F]): Functor[F] =
-      functorGen given (K1.mkInstances given gen)
-  }
-}
-
-object Inlined {
-  trait Eq[T] {
-    def eqv(x: T, y: T): Boolean
-  }
-
-  object Eq {
-    import scala.compiletime.erasedValue
-    import compiletime._
-    import scala.deriving._
-
-    inline def tryEql[TT](x: TT, y: TT): Boolean = delegate match {
-      case eq: Eq[TT] => eq.eqv(x, y)
-    }
-
-    inline def eqlElemv[Elems <: Tuple](n: Int)(x: Any, y: Any): Boolean =
-      inline erasedValue[Elems] match {
-        case _: (elem *: elems1) =>
-          tryEql[elem](productElement[elem](x, n), productElement[elem](y, n)) &&
-          eqlElemv[elems1](n + 1)(x, y)
-        case _: Unit =>
-          true
-      }
-
-    inline def eqlProducv[T](m: Mirror.ProductOf[T])(x: Any, y: Any): Boolean =
-      eqlElemv[m.MirroredElemTypes](0)(x, y)
-
-    inline def eqlCasev[Alts](n: Int)(x: Any, y: Any, ord: Int): Boolean =
-      inline erasedValue[Alts] match {
-        case _: (alt *: alts1) =>
-          if (ord == n)
-            delegate match {
-              case m: Mirror.ProductOf[`alt`] => eqlElemv[m.MirroredElemTypes](0)(x, y)
-            }
-          else eqlCasev[alts1](n + 1)(x, y, ord)
-        case _: Unit =>
-          false
-      }
-
-    inline def derived[T](implicit ev: Mirror.Of[T]): Eq[T] = new Eq[T] {
-      def eqv(x: T, y: T): Boolean =
-        inline ev match {
-          case m: Mirror.SumOf[T] =>
-            val ord = m.ordinal(x)
-            ord == m.ordinal(y) && eqlCasev[m.MirroredElemTypes](0)(x, y, ord)
-          case m: Mirror.ProductOf[T] =>
-            eqlElemv[m.MirroredElemTypes](0)(x, y)
-        }
-    }
-
-    implicit object IntEq extends Eq[Int] {
-      def eqv(x: Int, y: Int) = x == y
-    }
-
-    implicit object BooleanEq extends Eq[Boolean] {
-      def eqv(x: Boolean, y: Boolean) = x == y
-    }
-  }
-}
+// object Shapeless3 {
+//   type Id[t] = t
+//   type Const[c] = [t] =>> c
+//   case class Wrap[T](t: T)
+
+//   type ~>[A[_], B[_]] = [t] => A[t] => B[t]
+
+//   inline def summon[T] = implicit match {
+//     case t: T => t
+//   }
+
+//   inline def summonAsArray[T <: Tuple]: Array[Any] =
+//     summonAsArray0[T](0, new Array[Any](constValue[Tuple.Size[T]]))
+
+//   inline def summonAsArray0[T](i: Int, arr: Array[Any]): Array[Any] = inline erasedValue[T] match {
+//     case _: Unit => arr
+//     case _: (a *: b) =>
+//       arr(i) = summon[a]
+//       summonAsArray0[b](i+1, arr)
+//   }
+
+//   sealed trait CompleteOr[T]
+//   case class Complete[T](t: T) extends CompleteOr[T]
+//   case class Continue[T](t: T) extends CompleteOr[T]
+
+//   object Complete {
+//     inline def apply[T](c: Boolean)(t: T)(f: T): CompleteOr[T] =
+//       if(c) Complete(t)
+//       else Continue(f)
+//   }
+
+//   abstract class ErasedInstances[FT] {
+//     def erasedMap(x: Any)(f: (Any, Any) => Any): Any
+//   }
+
+//   abstract class ErasedProductInstances[FT] extends ErasedInstances[FT] {
+//     def erasedConstruct(f: Any => Any): Any
+//     def erasedUnfold(a: Any)(f: (Any, Any) => (Any, Option[Any])): (Any, Option[Any])
+//     def erasedMap(x0: Any)(f: (Any, Any) => Any): Any
+//     def erasedMap2(x0: Any, y0: Any)(f: (Any, Any, Any) => Any): Any
+//     def erasedFoldLeft(x0: Any)(a: Any)(f: (Any, Any, Any) => CompleteOr[Any]): Any
+//     def erasedFoldLeft2(x0: Any, y0: Any)(a: Any)(f: (Any, Any, Any, Any) => CompleteOr[Any]): Any
+//   }
+
+//   final class ErasedProductInstances0[FT](val mirror: Mirror.Product) extends ErasedProductInstances[FT] {
+//     def erasedConstruct(f: Any => Any): Any = mirror.fromProduct(None)
+//     def erasedUnfold(a: Any)(f: (Any, Any) => (Any, Option[Any])): (Any, Option[Any]) = (a, Some(mirror.fromProduct(None)))
+//     def erasedMap(x0: Any)(f: (Any, Any) => Any): Any = x0
+//     def erasedMap2(x0: Any, y0: Any)(f: (Any, Any, Any) => Any): Any = x0
+//     def erasedFoldLeft(x0: Any)(a: Any)(f: (Any, Any, Any) => CompleteOr[Any]): Any = a
+//     def erasedFoldLeft2(x0: Any, y0: Any)(a: Any)(f: (Any, Any, Any, Any) => CompleteOr[Any]): Any = a
+//   }
+
+//   final class ErasedProductInstances1[FT](val mirror: Mirror.Product, mkI: => Any) extends ErasedProductInstances[FT] {
+//     lazy val i = mkI
+
+//     inline def toProduct(x: Any): Product = x.asInstanceOf[Product]
+
+//     def erasedConstruct(f: Any => Any): Any =
+//       mirror.fromProduct(Tuple1(f(i)))
+
+//     def erasedUnfold(a: Any)(f: (Any, Any) => (Any, Option[Any])): (Any, Option[Any]) = {
+//       val (acc0, e0) = f(a, i)
+//       e0 match {
+//         case Some(_) => (acc0, Some(mirror.fromProduct(e0)))
+//         case None => (acc0, None)
+//       }
+//     }
+
+//     def erasedMap(x0: Any)(f: (Any, Any) => Any): Any =
+//       mirror.fromProduct(Tuple1(f(i, toProduct(x0).productElement(0))))
+
+//     def erasedMap2(x0: Any, y0: Any)(f: (Any, Any, Any) => Any): Any =
+//       mirror.fromProduct(Tuple1(f(i, toProduct(x0).productElement(0), toProduct(y0).productElement(0))))
+
+//     def erasedFoldLeft(x0: Any)(a: Any)(f: (Any, Any, Any) => CompleteOr[Any]): Any = {
+//       f(a, i, toProduct(x0).productElement(0)) match {
+//         case Complete(r) => r
+//         case Continue(acc) => acc
+//       }
+//     }
+
+//     def erasedFoldLeft2(x0: Any, y0: Any)(a: Any)(f: (Any, Any, Any, Any) => CompleteOr[Any]): Any = {
+//       f(a, i, toProduct(x0).productElement(0), toProduct(y0).productElement(0)) match {
+//         case Complete(r) => r
+//         case Continue(acc) => acc
+//       }
+//     }
+//   }
+
+//   final class ErasedProductInstancesN[FT](val mirror: Mirror.Product, mkIs: => Array[Any]) extends ErasedProductInstances[FT] {
+//     import ErasedProductInstances.ArrayProduct
+
+//     lazy val is = mkIs
+
+//     inline def toProduct(x: Any): Product = x.asInstanceOf[Product]
+
+//     def erasedConstruct(f: Any => Any): Any = {
+//       val n = is.length
+//       val arr = new Array[Any](n)
+//       var i = 0
+//       while(i < n) {
+//         arr(i) = f(is(i))
+//         i = i+1
+//       }
+//       mirror.fromProduct(ArrayProduct(arr))
+//     }
+
+//     def erasedUnfold(a: Any)(f: (Any, Any) => (Any, Option[Any])): (Any, Option[Any]) = {
+//       val n = is.length
+//       val arr = new Array[Any](n)
+//       var acc = a
+//       var i = 0
+//       while(i < n) {
+//         val (acc0, e0) = f(acc, is(i))
+//         e0 match {
+//           case Some(e) =>
+//             acc = acc0
+//             arr(i) = e
+//           case None =>
+//             return (acc0, None)
+//         }
+//         i = i+1
+//       }
+//       (acc, Some(mirror.fromProduct(ArrayProduct(arr))))
+//     }
+
+//     def erasedMap(x0: Any)(f: (Any, Any) => Any): Any = {
+//       val x = toProduct(x0)
+//       val n = is.length
+//       val arr = new Array[Any](n)
+//       var i = 0
+//       while(i < n) {
+//         arr(i) = f(is(i), x.productElement(i))
+//         i = i+1
+//       }
+//       mirror.fromProduct(ArrayProduct(arr))
+//     }
+
+//     def erasedMap2(x0: Any, y0: Any)(f: (Any, Any, Any) => Any): Any = {
+//       val x = toProduct(x0)
+//       val y = toProduct(y0)
+//       val n = is.length
+//       val arr = new Array[Any](n)
+//       var i = 0
+//       while(i < n) {
+//         arr(i) = f(is(i), x.productElement(i), y.productElement(i))
+//         i = i+1
+//       }
+//       mirror.fromProduct(ArrayProduct(arr))
+//     }
+
+//     def erasedFoldLeft(x0: Any)(i: Any)(f: (Any, Any, Any) => CompleteOr[Any]): Any = {
+//       val x = toProduct(x0)
+//       val n = x.productArity
+//       @tailrec
+//       def loop(i: Int, acc: Any): Any =
+//         if(i >= n) acc
+//         else
+//           f(acc, is(i), x.productElement(i)) match {
+//             case Complete(r) => r
+//             case Continue(acc) =>
+//               loop(i+1, acc)
+//           }
+
+//       loop(0, i)
+//     }
+
+//     def erasedFoldLeft2(x0: Any, y0: Any)(i: Any)(f: (Any, Any, Any, Any) => CompleteOr[Any]): Any = {
+//       val x = toProduct(x0)
+//       val y = toProduct(y0)
+//       val n = x.productArity
+//       @tailrec
+//       def loop(i: Int, acc: Any): Any =
+//         if(i >= n) acc
+//         else
+//           f(acc, is(i), x.productElement(i), y.productElement(i)) match {
+//             case Complete(r) => r
+//             case Continue(acc) =>
+//               loop(i+1, acc)
+//           }
+
+//       loop(0, i)
+//     }
+//   }
+
+//   object ErasedProductInstances {
+//     class ArrayProduct(val elems: Array[Any]) extends Product {
+//       def canEqual(that: Any): Boolean = true
+//       def productElement(n: Int) = elems(n)
+//       def productArity = elems.length
+//       override def productIterator: Iterator[Any] = elems.iterator
+//     }
+
+//     inline def summonOne[T] = inline erasedValue[T] match {
+//       case _: Tuple1[a] => summon[a]
+//     }
+
+//     inline def apply[FT, E <: Tuple](mirror: Mirror.Product) : ErasedProductInstances[FT] =
+//       inline erasedValue[Tuple.Size[E]] match {
+//         case 0 => new ErasedProductInstances0[FT](mirror)
+//         case 1 => new ErasedProductInstances1[FT](mirror, summonOne[E])
+//         case _ => new ErasedProductInstancesN[FT](mirror, summonAsArray[E])
+//       }
+//   }
+
+//   final class ErasedCoproductInstances[FT](mirror: Mirror.Sum, mkIs: => Array[Any]) extends ErasedInstances[FT] {
+//     lazy val is = mkIs
+
+//     def ordinal(x: Any): Any = is(mirror.ordinal(x.asInstanceOf))
+
+//     def erasedMap(x: Any)(f: (Any, Any) => Any): Any = {
+//       val i = ordinal(x)
+//       f(i, x)
+//     }
+
+//     def erasedProject(p: Int)(i: Any)(f: (Any, Any) => (Any, Option[Any])): (Any, Option[Any]) =
+//       f(i, is(p))
+
+//     def erasedFold(x: Any)(f: (Any, Any) => Any): Any = {
+//       val i = ordinal(x)
+//       f(i, x)
+//     }
+
+//     def erasedFold2(x: Any, y: Any)(a: => Any)(f: (Any, Any, Any) => Any): Any = {
+//       val i = mirror.ordinal(x.asInstanceOf)
+//       val j = mirror.ordinal(y.asInstanceOf)
+//       if(i == j) f(is(i), x, y)
+//       else a
+//     }
+//   }
+
+//   object ErasedCoproductInstances {
+//     inline def apply[FT, E <: Tuple](mirror: Mirror.Sum) : ErasedCoproductInstances[FT] =
+//       new ErasedCoproductInstances[FT](mirror, summonAsArray[E])
+//   }
+
+//   object K0 {
+//     type Generic[O] = Mirror { type MirroredType = O ; type MirroredElemTypes }
+//     type ProductGeneric[O] = Mirror.Product { type MirroredType = O ; type MirroredElemTypes }
+//     type CoproductGeneric[O] = Mirror.Sum { type MirroredType = O ; type MirroredElemTypes }
+
+//     def Generic[O] given (gen: Generic[O]): Generic[O] { type MirroredElemTypes = gen.MirroredElemTypes ; type MirroredLabel = gen.MirroredLabel ; type MirroredElemLabels = gen.MirroredElemLabels } = gen
+//     def ProductGeneric[O] given (gen: ProductGeneric[O]): ProductGeneric[O] { type MirroredElemTypes = gen.MirroredElemTypes ; type MirroredLabel = gen.MirroredLabel ; type MirroredElemLabels = gen.MirroredElemLabels } = gen
+//     def CoproductGeneric[O] given (gen: CoproductGeneric[O]): CoproductGeneric[O] { type MirroredElemTypes = gen.MirroredElemTypes ; type MirroredLabel = gen.MirroredLabel ; type MirroredElemLabels = gen.MirroredElemLabels } = gen
+
+//     type Instances[F[_], T] = ErasedInstances[F[T]]
+//     type ProductInstances[F[_], T] = ErasedProductInstances[F[T]]
+//     type CoproductInstances[F[_], T] = ErasedCoproductInstances[F[T]]
+
+//     def Instances[F[_], T] given (inst: Instances[F, T]): inst.type = inst
+//     def ProductInstances[F[_], T] given (inst: ProductInstances[F, T]): inst.type = inst
+//     def CoproductInstances[F[_], T] given (inst: CoproductInstances[F, T]): inst.type = inst
+
+//     type ToUnion[T] = T match {
+//       case Unit => Nothing
+//       case a *: b => a | ToUnion[b]
+//     }
+
+//     type IndexOf[E, X] = IndexOf0[E, X, 0]
+
+//     type IndexOf0[E, X, I <: Int] <: Int = X match {
+//       case Unit => -1
+//       case x *: xs => x match {
+//         case E => I
+//         case _ => IndexOf0[E, xs, S[I]]
+//       }
+//     }
+
+//     type LiftP[F[_], T] <: Tuple = T match {
+//       case Unit => Unit
+//       case a *: b => F[a] *: LiftP[F, b]
+//     }
+
+//     inline def summonFirst[F[_], T, U]: F[U] = summonFirst0[LiftP[F, T]].asInstanceOf[F[U]]
+
+//     inline def summonFirst0[T] <: Any = inline erasedValue[T] match {
+//       case _: (a *: b) => implicit match {
+//         case aa: `a` => aa
+//         case _ => summonFirst0[b]
+//       }
+//     }
+
+//     given Ops {
+//       inline def (gen: ProductGeneric[Obj]) toRepr [Obj] (o: Obj): gen.MirroredElemTypes = Tuple.fromProduct(o.asInstanceOf).asInstanceOf[gen.MirroredElemTypes]
+//       inline def (gen: ProductGeneric[Obj]) fromRepr [Obj] (r: gen.MirroredElemTypes): Obj = gen.fromProduct(r.asInstanceOf).asInstanceOf[Obj]
+
+//       inline def (gen: CoproductGeneric[Obj]) toRepr [Obj] (o: Obj): ToUnion[gen.MirroredElemTypes] = o.asInstanceOf
+//       inline def (gen: CoproductGeneric[Obj]) fromRepr [Obj] (r: ToUnion[gen.MirroredElemTypes]): Obj = r.asInstanceOf
+
+//       inline def (inst: Instances[F, T]) map [F[_], T] (x: T)(f: [t] => (F[t], t) => t): T =
+//         inst.erasedMap(x)(f.asInstanceOf).asInstanceOf
+
+//       inline def (inst: ProductInstances[F, T]) construct [F[_], T] (f: [t] => F[t] => t): T =
+//         inst.erasedConstruct(f.asInstanceOf).asInstanceOf
+//       inline def (inst: ProductInstances[F, T]) unfold [F[_], T, Acc] (i: Acc)(f: [t] => (Acc, F[t]) => (Acc, Option[t])): (Acc, Option[T]) =
+//         inst.erasedUnfold(i)(f.asInstanceOf).asInstanceOf
+//       inline def (inst: ProductInstances[F, T]) map2 [F[_], T] (x: T, y: T)(f: [t] => (F[t], t, t) => t): T =
+//         inst.erasedMap2(x, y)(f.asInstanceOf).asInstanceOf
+//       inline def (inst: ProductInstances[F, T]) foldLeft [F[_], T, Acc] (x: T)(i: Acc)(f: [t] => (Acc, F[t], t) => CompleteOr[Acc]): Acc =
+//         inst.erasedFoldLeft(x)(i)(f.asInstanceOf).asInstanceOf
+//       inline def (inst: ProductInstances[F, T]) foldLeft2 [F[_], T, Acc] (x: T, y: T)(i: Acc)(f: [t] => (Acc, F[t], t, t) => CompleteOr[Acc]): Acc =
+//         inst.erasedFoldLeft2(x, y)(i)(f.asInstanceOf).asInstanceOf
+
+//       inline def (inst: CoproductInstances[F, T]) project [F[_], T, Acc] (p: Int)(i: Acc)(f: [t] => (Acc, F[t]) => (Acc, Option[t])): (Acc, Option[T]) =
+//         inst.erasedProject(p)(i)(f.asInstanceOf).asInstanceOf
+//       inline def (inst: CoproductInstances[F, T]) fold [F[_], T, R] (x: T)(f: [t] => (F[t], t) => R): R =
+//         inst.erasedFold(x)(f.asInstanceOf).asInstanceOf
+//       inline def (inst: CoproductInstances[F, T]) fold2 [F[_], T, R] (x: T, y: T)(a: => R)(f: [t] => (F[t], t, t) => R): R =
+//         inst.erasedFold2(x, y)(a.asInstanceOf)(f.asInstanceOf).asInstanceOf
+//     }
+
+//     type ProductGenericR[O, R] = Mirror.Product { type MirroredType = O ; type MirroredElemTypes = R }
+//     type CoproductGenericR[O, R] = Mirror.Sum { type MirroredType = O ; type MirroredElemTypes = R }
+
+//     inline given mkInstances[F[_], T] as ErasedInstances[F[T]] given (gen: Generic[T]) =
+//       inline gen match {
+//         case p: ProductGeneric[T]   => mkProductInstances[F, T] given p
+//         case c: CoproductGeneric[T] => mkCoproductInstances[F, T] given c
+//       }
+
+//     inline given mkProductInstances[F[_], T] as ErasedProductInstances[F[T]] given (gen: ProductGeneric[T]) =
+//       ErasedProductInstances[F[T], LiftP[F, gen.MirroredElemTypes]](gen)
+
+//     inline given mkCoproductInstances[F[_], T] as ErasedCoproductInstances[F[T]] given (gen: CoproductGeneric[T]) =
+//       ErasedCoproductInstances[F[T], LiftP[F, gen.MirroredElemTypes]](gen)
+//   }
+
+//   object K1 {
+//     type Generic[O[_]] = Mirror { type MirroredType = O ; type MirroredElemTypes[_] }
+//     type ProductGeneric[O[_]] = Mirror.Product { type MirroredType = O ; type MirroredElemTypes[_] }
+//     type CoproductGeneric[O[_]] = Mirror.Sum { type MirroredType = O ; type MirroredElemTypes[_] }
+
+//     def Generic[O[_]] given (gen: Generic[O]): gen.type = gen
+//     def ProductGeneric[O[_]] given (gen: ProductGeneric[O]): gen.type = gen
+//     def CoproductGeneric[O[_]] given (gen: CoproductGeneric[O]): gen.type = gen
+
+//     type Instances[F[_[_]], T[_]] = ErasedInstances[F[T]]
+//     type ProductInstances[F[_[_]], T[_]] = ErasedProductInstances[F[T]]
+//     type CoproductInstances[F[_[_]], T[_]] = ErasedCoproductInstances[F[T]]
+
+//     def Instances[F[_[_]], T[_]] given (inst: Instances[F, T]): inst.type = inst
+//     def ProductInstances[F[_[_]], T[_]] given (inst: ProductInstances[F, T]): inst.type = inst
+//     def CoproductInstances[F[_[_]], T[_]] given (inst: CoproductInstances[F, T]): inst.type = inst
+
+//     class Dummy
+//     type Apply[T[_]] = T[Dummy]
+//     type Unapply[F[_[_]], T] = T match {
+//       case Wrap[Apply[a]] => F[a]
+//       case Wrap[Dummy] => F[Id]
+//       case Wrap[c] => F[Const[c]]
+//     }
+
+//     type LiftP[F[_[_]], T[_]] = LiftP0[F, Apply[T]]
+
+//     type LiftP0[F[_[_]], T] <: Tuple = T match {
+//       case Unit => Unit
+//       case (a *:  b) => Unapply[F, Wrap[a]] *: LiftP0[F, b]
+//     }
+
+//     inline def summonFirst[F[_[_]], T[_], U[_]]: F[U] = summonFirst0[LiftP[F, T]].asInstanceOf[F[U]]
+
+//     inline def summonFirst0[T] <: Any = inline erasedValue[T] match {
+//       case _: (a *: b) => implicit match {
+//         case aa: `a` => aa
+//         case _ => summonFirst0[b]
+//       }
+//     }
+
+//     given Ops {
+//       inline def (gen: ProductGeneric[Obj]) toRepr [Obj[_], A] (o: Obj[A]): gen.MirroredElemTypes[A] = Tuple.fromProduct(o.asInstanceOf).asInstanceOf[gen.MirroredElemTypes[A]]
+//       inline def (gen: ProductGeneric[Obj]) fromRepr [Obj[_], A] (r: gen.MirroredElemTypes[A]): Obj[A] = gen.fromProduct(r.asInstanceOf).asInstanceOf[Obj[A]]
+
+//       inline def (gen: CoproductGeneric[Obj]) toRepr [Obj[_], A] (o: Obj[A]): K0.ToUnion[gen.MirroredElemTypes[A]] = o.asInstanceOf
+//       inline def (gen: CoproductGeneric[Obj]) fromRepr [Obj[_], A] (r: K0.ToUnion[gen.MirroredElemTypes[A]]): Obj[A] = r.asInstanceOf
+
+//       inline def (inst: Instances[F, T]) map[F[_[_]], T[_], A, R](x: T[A])(f: [t[_]] => (F[t], t[A]) => t[R]): T[R] =
+//         inst.erasedMap(x)(f.asInstanceOf).asInstanceOf
+
+//       inline def (inst: ProductInstances[F, T]) construct [F[_[_]], T[_], R] (f: [t[_]] => F[t] => t[R]): T[R] =
+//         inst.erasedConstruct(f.asInstanceOf).asInstanceOf
+//       inline def (inst: ProductInstances[F, T]) map2 [F[_[_]], T[_], A, B, R] (x: T[A], y: T[B])(f: [t[_]] => (F[t], t[A], t[B]) => t[R]): T[R] =
+//         inst.erasedMap2(x, y)(f.asInstanceOf).asInstanceOf
+//       inline def (inst: ProductInstances[F, T]) foldLeft [F[_[_]], T[_], A, Acc] (x: T[A])(i: Acc)(f: [t[_]] => (Acc, F[t], t[A]) => CompleteOr[Acc]): Acc =
+//         inst.erasedFoldLeft(x)(i)(f.asInstanceOf).asInstanceOf
+//       inline def (inst: ProductInstances[F, T]) foldLeft2 [F[_[_]], T[_], A, B, Acc] (x: T[A], y: T[B])(i: Acc)(f: [t[_]] => (Acc, F[t], t[A], t[B]) => CompleteOr[Acc]): Acc =
+//         inst.erasedFoldLeft2(x, y)(i)(f.asInstanceOf).asInstanceOf
+
+//       inline def (inst: CoproductInstances[F, T]) fold [F[_[_]], T[_], A, R] (x: T[A])(f: [t[_]] => (F[t], t[A]) => R): R =
+//         inst.erasedFold(x)(f.asInstanceOf).asInstanceOf
+//       inline def (inst: CoproductInstances[F, T]) fold2 [F[_[_]], T[_], A, B, R] (x: T[A], y: T[B])(a: => R)(f: [t[_]] => (F[t], t[A], t[B]) => R): R =
+//         inst.erasedFold2(x, y)(a.asInstanceOf)(f.asInstanceOf).asInstanceOf
+//     }
+
+//     inline given mkInstances[F[_[_]], T[_]] as ErasedInstances[F[T]] given (gen: Generic[T]) =
+//       inline gen match {
+//         case p: ProductGeneric[T] => mkProductInstances[F, T] given p
+//         case c: CoproductGeneric[T] => mkCoproductInstances[F, T] given c
+//       }
+
+//     inline given mkProductInstances[F[_[_]], T[_]] as ErasedProductInstances[F[T]] given (gen: ProductGeneric[T]) =
+//       ErasedProductInstances[F[T], LiftP[F, gen.MirroredElemTypes]](gen)
+
+//     inline given mkCoproductInstances[F[_[_]], T[_]] as ErasedCoproductInstances[F[T]] given (gen: CoproductGeneric[T]) =
+//       ErasedCoproductInstances[F[T], LiftP[F, gen.MirroredElemTypes]](gen)
+
+//     type LiftProductGeneric[O, E] = ProductGeneric[Const[O]] { type MirroredElemTypes = Const[E] }
+
+//     given mkK1_0[O] as LiftProductGeneric[O, k0.MirroredElemTypes] given (k0: K0.ProductGeneric[O]) = k0.asInstanceOf
+//   }
+
+//   trait Eq[A] {
+//     def eqv(x: A, y: A): Boolean
+//   }
+
+//   object Eq {
+//     inline def apply[A] given (ea: Eq[A]): Eq[A] = ea
+
+//     given as Eq[Unit] {
+//       def eqv(x: Unit, y: Unit): Boolean = true
+//     }
+//     given as Eq[Boolean] {
+//       def eqv(x: Boolean, y: Boolean): Boolean = x == y
+//     }
+//     given as Eq[Int] {
+//       def eqv(x: Int, y: Int): Boolean = x == y
+//     }
+//     given as Eq[String] {
+//       def eqv(x: String, y: String): Boolean = x == y
+//     }
+
+//     import K0.Ops._
+
+//     given eqGen[A] as Eq[A] given (inst: K0.ProductInstances[Eq, A]) {
+//       def eqv(x: A, y: A): Boolean = inst.foldLeft2(x, y)(true: Boolean)(
+//         [t] => (acc: Boolean, eqt: Eq[t], t0: t, t1: t) => Complete(!eqt.eqv(t0, t1))(false)(true)
+//       )
+//     }
+
+//     given eqGenC[A] as Eq[A] given (inst: => K0.CoproductInstances[Eq, A]) {
+//       def eqv(x: A, y: A): Boolean = inst.fold2(x, y)(false)(
+//         [t] => (eqt: Eq[t], t0: t, t1: t) => eqt.eqv(t0, t1)
+//       )
+//     }
+
+//     inline def derived[A] given (gen: K0.Generic[A]): Eq[A] = inline gen match {
+//       case p: K0.ProductGeneric[A]   => eqGen  given (K0.mkProductInstances given p)
+//       case c: K0.CoproductGeneric[A] => eqGenC given (K0.mkCoproductInstances given c)
+//     }
+//   }
+
+//   trait Functor[F[_]] {
+//     def map[A, B](fa: F[A])(f: A => B): F[B]
+//   }
+
+//   object Functor {
+//     inline def apply[F[_]] given (ff: Functor[F]): Functor[F] = ff
+
+//     given as Functor[Id] {
+//       def map[A, B](a: A)(f: A => B): B = f(a)
+//     }
+
+//     given [F[_], G[_]] as Functor[[t] =>> F[G[t]]] given (ff: Functor[F], fg: Functor[G]) {
+//       def map[A, B](fga: F[G[A]])(f: A => B): F[G[B]] = ff.map(fga)(ga => fg.map(ga)(f))
+//     }
+
+//     import K1.Ops._
+
+//     given functorGen[F[_]] as Functor[F] given (inst: => K1.Instances[Functor, F]) {
+//       def map[A, B](fa: F[A])(f: A => B): F[B] = inst.map(fa)([t[_]] => (ft: Functor[t], ta: t[A]) => ft.map(ta)(f))
+//     }
+
+//     given [T] as Functor[Const[T]] {
+//       def map[A, B](t: T)(f: A => B): T = t
+//     }
+
+//     inline def derived[F[_]] given (gen: K1.Generic[F]): Functor[F] =
+//       functorGen given (K1.mkInstances given gen)
+//   }
+// }
+
+// object Inlined {
+//   trait Eq[T] {
+//     def eqv(x: T, y: T): Boolean
+//   }
+
+//   object Eq {
+//     import scala.compiletime.erasedValue
+//     import compiletime._
+//     import scala.deriving._
+
+//     inline def tryEql[TT](x: TT, y: TT): Boolean = delegate match {
+//       case eq: Eq[TT] => eq.eqv(x, y)
+//     }
+
+//     inline def eqlElemv[Elems <: Tuple](n: Int)(x: Any, y: Any): Boolean =
+//       inline erasedValue[Elems] match {
+//         case _: (elem *: elems1) =>
+//           tryEql[elem](productElement[elem](x, n), productElement[elem](y, n)) &&
+//           eqlElemv[elems1](n + 1)(x, y)
+//         case _: Unit =>
+//           true
+//       }
+
+//     inline def eqlProducv[T](m: Mirror.ProductOf[T])(x: Any, y: Any): Boolean =
+//       eqlElemv[m.MirroredElemTypes](0)(x, y)
+
+//     inline def eqlCasev[Alts](n: Int)(x: Any, y: Any, ord: Int): Boolean =
+//       inline erasedValue[Alts] match {
+//         case _: (alt *: alts1) =>
+//           if (ord == n)
+//             delegate match {
+//               case m: Mirror.ProductOf[`alt`] => eqlElemv[m.MirroredElemTypes](0)(x, y)
+//             }
+//           else eqlCasev[alts1](n + 1)(x, y, ord)
+//         case _: Unit =>
+//           false
+//       }
+
+//     inline def derived[T](implicit ev: Mirror.Of[T]): Eq[T] = new Eq[T] {
+//       def eqv(x: T, y: T): Boolean =
+//         inline ev match {
+//           case m: Mirror.SumOf[T] =>
+//             val ord = m.ordinal(x)
+//             ord == m.ordinal(y) && eqlCasev[m.MirroredElemTypes](0)(x, y, ord)
+//           case m: Mirror.ProductOf[T] =>
+//             eqlElemv[m.MirroredElemTypes](0)(x, y)
+//         }
+//     }
+
+//     implicit object IntEq extends Eq[Int] {
+//       def eqv(x: Int, y: Int) = x == y
+//     }
+
+//     implicit object BooleanEq extends Eq[Boolean] {
+//       def eqv(x: Boolean, y: Boolean) = x == y
+//     }
+//   }
+// }
 
 object Staged {
   type RE[X] = given QuoteContext => E[X]
@@ -573,39 +573,43 @@ object Staged {
     // { def map(x: T)(f: [t] => (F[t], t) => t): T }
 
     trait StagedProductInstances[F[_], T] extends StagedInstances[F, T] {
-      implicit val tag: Type[T]
+      // implicit val tag: Type[T]
       def instances: List[Any]
       def accessorsE(value: E[T])(implicit q: QuoteContext): List[E[Any]]
       def constructorE(fields: List[E[Any]])(implicit q: QuoteContext): E[T]
 
-      def foldLeft2E[Acc: Type](x0: E[T], y0: E[T])(i: E[Acc])(f: [t] => (E[Acc], F[t], E[t], E[t]) => E[Acc]): RE[Acc] = {
-        def re(x: E[T], y: E[T]) =
-          accessorsE(x).safeZip(accessorsE(y)).safeZip(instances).foldLeft(i) {
-            case (acc, ((xn, yn), in)) =>
-              f(acc, in.asInstanceOf, xn, yn)
-          }
-        // val instanceOrRecurse = null
-        '{
-          def foo(x: T, y: T) =
-            ${ re('x, 'y) }
-          foo($x0, $y0)
-        }
-         //   def merge(a: E[T], b: E[T]): E[Acc] = {
-         //     $re
-         //   }
-         //   ${ merge(x, y) }
-         // }
-      }
+      def foldLeft2E[Acc](x: E[T], y: E[T])(i: E[Acc])(f: [t] => (E[Acc], F[t], E[t],
+        accessorsE(x).safeZip(accessorsE(y)).safeZip(instances).foldLeft(i) {
+          case (acc, ((xn, yn), in)) => f(acc, in.asInstanceOf, xn, yn)
+
+      // def foldLeft2E[Acc: Type](x0: E[T], y0: E[T])(i: E[Acc])(f: [t] => (E[Acc], F[t], E[t], E[t]) => E[Acc]): RE[Acc] = {
+      //   def re(x: E[T], y: E[T]) =
+      //     accessorsE(x).safeZip(accessorsE(y)).safeZip(instances).foldLeft(i) {
+      //       case (acc, ((xn, yn), in)) =>
+      //         f(acc, in.asInstanceOf, xn, yn)
+      //     }
+      //   // val instanceOrRecurse = null
+      //   '{
+      //     def foo(x: T, y: T) =
+      //       ${ re('x, 'y) }
+      //     foo($x0, $y0)
+      //   }
+      //    //   def merge(a: E[T], b: E[T]): E[Acc] = {
+      //    //     $re
+      //    //   }
+      //    //   ${ merge(x, y) }
+      //    // }
+      // }
     }
 
     object StagedProductInstances {
       implicit def apply[F[_], T]
-        given erased (m: Mirror.ProductOf[T])
+        given (m: Mirror.ProductOf[T])
         given (
           t: Type[T],
           s: SummonInstances[F, m.MirroredElemTypes]
         ): StagedProductInstances[F, T] = new StagedProductInstances[F, T] {
-          val tag = t
+          // val tag = t
 
           def instances: List[Any] = s.instances
 
