@@ -10,7 +10,7 @@ import TastyBuffer._
 import ast._
 import ast.Trees._
 import ast.Trees.WithLazyField
-import util.{SourceFile, NoSource}
+import util.{SourceFile, NoSource, SourcePosition}
 import core._
 import Contexts._, Symbols._, Annotations._, Decorators._
 import collection.mutable
@@ -28,9 +28,19 @@ class PositionPickler(pickler: TastyPickler, addrOfTree: untpd.Tree => Addr) {
     (addrDelta << 3) | (toInt(hasStartDelta) << 2) | (toInt(hasEndDelta) << 1) | toInt(hasPoint)
   }
 
+  /** Change the representation of Span from offsets to lines */
+  private def offsetToLineSpan(span: Span, source: SourceFile): Span = {
+    val start = source.offsetToLine(span.start)
+    val end = source.offsetToLine(span.end)
+    val point = source.offsetToLine(span.point)
+    if span.isSynthetic then Span(start, end, isLine = true)
+    else Span(start, end, point, isLine = true)
+  }
+
   def picklePositions(roots: List[Tree])(implicit ctx: Context): Unit = {
     var lastIndex = 0
-    var lastSpan = Span(0, 0)
+    var lastSpan = Span(0, 0, isLine = true)
+    assert(lastSpan != NoSpan)
     def pickleDeltas(index: Int, span: Span) = {
       val addrDelta = index - lastIndex
       val startDelta = span.start - lastSpan.start
@@ -76,16 +86,17 @@ class PositionPickler(pickler: TastyPickler, addrOfTree: untpd.Tree => Addr) {
         if (x.span.exists) {
           val addr = addrOfTree(x)
           if (addr != NoAddr) {
+            val span = offsetToLineSpan(x.span, x.source)
             if (x.source != current) {
               // we currently do not share trees when unpickling, so if one path to a tree contains
               // a source change while another does not, we have to record the position of the tree twice
               // in order not to miss the source change. Test case is t3232a.scala.
-              pickleDeltas(addr.index, x.span)
+              pickleDeltas(addr.index, span)
               pickleSource(x.source)
             }
             else if (!pickledIndices.contains(addr.index) &&
                      (x.span.toSynthetic != x.envelope(x.source) || alwaysNeedsPos(x)))
-              pickleDeltas(addr.index, x.span)
+              pickleDeltas(addr.index, span)
           }
         }
         x match {

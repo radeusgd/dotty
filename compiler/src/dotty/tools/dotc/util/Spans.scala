@@ -3,21 +3,30 @@ package util
 import language.implicitConversions
 
 /** The offsets part of a full position, consisting of 2 or 3 entries:
+ *    - tag  :  whether the start/end/point stores offset or line numbers
  *    - start:  the start offset of the span, in characters from start of file
  *    - end  :  the end offset of the span
- *    - point:  if given, the offset where a sing;le `^` would be logically placed
+ *    - point:  if given, the offset where a single `^` would be logically placed
  *
- &  Spans are encoded according to the following format in little endian:
- *  Start: unsigned 26 Bits (works for source files up to 64M)
- *  End: unsigned 26 Bits
+ *  Spans are encoded according to the following format in little endian:
+ *  Tag  : unsigned 2 Bits
+ *  Start: unsigned 25 Bits (works for source files up to 64M)
+ *  End: unsigned 25 Bits
  *  Point: unsigned 12 Bits relative to start
  *  NoSpan encoded as -1L (this is a normally invalid span because point would lie beyond end).
  */
 object Spans {
 
-  private final val StartEndBits = 26
+  private final val TagBits  = 2
+  private final val TagMask  = (1L << TagBits) - 1
+  private final val StartEndBits = 25
   private final val StartEndMask = (1L << StartEndBits) - 1
-  private final val SyntheticPointDelta = (1 << (64 - StartEndBits * 2)) - 1
+  private final val SyntheticPointDelta = (1 << (64 - StartEndBits * 2 - TagBits)) - 1
+
+  /** Tag to indicate whether the span stores offset or line numbers */
+  private final val OffsetTag = 0
+  private final val LineTag   = 1
+  private final val NoSpanTag = 3
 
   /** The maximal representable offset in a span */
   final val MaxOffset = StartEndMask.toInt
@@ -37,7 +46,15 @@ object Spans {
   class Span(val coords: Long) extends AnyVal {
 
     /** Is this span different from NoSpan? */
-    def exists: Boolean = this != NoSpan
+    def exists: Boolean = tag == NoSpanTag
+
+    /** Is this a line span, i.e. start/end/point represent lines ? */
+    def isLine: Boolean = tag == LineTag
+
+    /** Is this an offset span, i.e. start/end/point represent offsets ? */
+    def isOffset: Boolean = tag == OffsetTag
+
+    def tag: Int = (coords & TagMask).toInt
 
     /** The start of this span. */
     def start: Int = {
@@ -71,7 +88,7 @@ object Spans {
     def union(that: Span): Span =
       if (!this.exists) that
       else if (!that.exists) this
-      else Span(this.start min that.start, this.end max that.end, this.point)
+      else Span(this.start min that.start, this.end max that.end, this.point, isLine)
 
     /** Does the range of this span contain the one of that span? */
     def contains(that: Span): Boolean =
@@ -101,35 +118,37 @@ object Spans {
      *  relative to this span.
      */
     def shift(offset: Int): Span =
-      if (exists) fromOffsets(start + offset, end + offset, pointDelta)
+      if (exists) fromOffsets(start + offset, end + offset, pointDelta, isLine)
       else this
 
     /** The zero-extent span with start and end at the point of this span */
-    def focus: Span = if (exists) Span(point) else NoSpan
+    def focus: Span = if (exists) Span(point, isLine) else NoSpan
 
     /** The zero-extent span with start and end at the start of this span */
-    def startPos: Span = if (exists) Span(start) else NoSpan
+    def startPos: Span = if (exists) Span(start, isLine) else NoSpan
 
     /** The zero-extent span with start and end at the end of this span */
-    def endPos: Span = if (exists) Span(end) else NoSpan
+    def endPos: Span = if (exists) Span(end, isLine) else NoSpan
 
     /** A copy of this span with a different start */
     def withStart(start: Int): Span =
-      if (exists) fromOffsets(start, this.end, if (isSynthetic) SyntheticPointDelta else this.point - start)
+      if exists then
+        val point = if (isSynthetic) SyntheticPointDelta else this.point - start
+        fromOffsets(start, this.end, point, isLine)
       else this
 
     /** A copy of this span with a different end */
     def withEnd(end: Int): Span =
-      if (exists) fromOffsets(this.start, end, pointDelta)
+      if (exists) fromOffsets(this.start, end, pointDelta, isLine)
       else this
 
     /** A copy of this span with a different point */
     def withPoint(point: Int): Span =
-      if (exists) fromOffsets(this.start, this.end, point - this.start)
+      if (exists) fromOffsets(this.start, this.end, point - this.start, isLine)
       else this
 
     /** A synthetic copy of this span */
-    def toSynthetic: Span = if (isSynthetic) this else Span(start, end)
+    def toSynthetic: Span = if (isSynthetic) this else Span(start, end, isLine)
 
     override def toString: String = {
       val (left, right) = if (isSynthetic) ("<", ">") else ("[", "]")
@@ -143,28 +162,35 @@ object Spans {
     def !=(that: Span): Boolean = this.coords != that.coords
   }
 
-  private def fromOffsets(start: Int, end: Int, pointDelta: Int) =
+  private def fromOffsets(start: Int, end: Int, pointDelta: Int, isLine: Boolean) =
     //assert(start <= end || start == 1 && end == 0, s"$start..$end")
     new Span(
+      (if isLine then LineTag else OffsetTag).toLong |
       (start & StartEndMask).toLong |
       ((end & StartEndMask).toLong << StartEndBits) |
       (pointDelta.toLong << (StartEndBits * 2)))
 
   /** A synthetic span with given start and end */
-  def Span(start: Int, end: Int): Span =
-    fromOffsets(start, end, SyntheticPointDelta)
+  def Span(start: Int, end: Int, isLine: Boolean): Span =
+    fromOffsets(start, end, SyntheticPointDelta, isLine)
+
+  def Span(start: Int, end: Int): Span = Span(start, end, isLine = false)
 
   /** A source-derived span with given start, end, and point delta */
-  def Span(start: Int, end: Int, point: Int): Span = {
+  def Span(start: Int, end: Int, point: Int, isLine: Boolean): Span = {
     val pointDelta = (point - start) max 0
-    fromOffsets(start, end, if (pointDelta >= SyntheticPointDelta) 0 else pointDelta)
+    fromOffsets(start, end, if (pointDelta >= SyntheticPointDelta) 0 else pointDelta, isLine)
   }
 
+  def Span(start: Int, end: Int, point: Int): Span = Span(start, end, point, isLine = false)
+
   /** A synthetic zero-extent span that starts and ends at given `start`. */
-  def Span(start: Int): Span = Span(start, start)
+  def Span(start: Int, isLine: Boolean): Span = Span(start, start, isLine)
+
+  def Span(start: Int): Span = Span(start, isLine = false)
 
   /** A sentinel for a non-existing span */
-  val NoSpan: Span = Span(1, 0)
+  val NoSpan: Span = new Span(NoSpanTag.toLong)
 
   /** The coordinate of a symbol. This is either an index or
    *  a zero-range span.
@@ -178,7 +204,7 @@ object Spans {
     }
     def toSpan: Span = {
       assert(isSpan)
-      if (this == NoCoord) NoSpan else Span(-1 - encoding)
+      if (this == NoCoord) NoSpan else Span(-1 - encoding, isLine = false)
     }
   }
 

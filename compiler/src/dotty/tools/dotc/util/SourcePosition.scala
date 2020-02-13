@@ -11,6 +11,11 @@ import scala.annotation.internal.sharable
 case class SourcePosition(source: SourceFile, span: Span, outer: SourcePosition = NoSourcePosition)
 extends interfaces.SourcePosition with Showable {
 
+  private def offsetToLine(offset: Int): Int =
+    if span.isLine then offset
+    else if source.exists then source.offsetToLine(offset)
+    else -1
+
   /** Is `that` a source position contained in this source position ?
    *  `outer` is not taken into account. */
   def contains(that: SourcePosition): Boolean =
@@ -22,7 +27,7 @@ extends interfaces.SourcePosition with Showable {
 
   def point: Int = span.point
 
-  def line: Int = if (source.exists) source.offsetToLine(point) else -1
+  def line: Int = offsetToLine(point)
 
   /** Extracts the lines from the underlying source file as `Array[Char]`*/
   def linesSlice: Array[Char] =
@@ -30,8 +35,8 @@ extends interfaces.SourcePosition with Showable {
 
   /** The lines of the position */
   def lines: Range = {
-    val startOffset = source.offsetToLine(start)
-    val endOffset = source.offsetToLine(end - 1) // -1 to drop a line if no chars in it form part of the position
+    val startOffset = offsetToLine(start)
+    val endOffset = offsetToLine(end - 1) // -1 to drop a line if no chars in it form part of the position
     if (startOffset >= endOffset) line to line
     else startOffset to endOffset
   }
@@ -45,12 +50,12 @@ extends interfaces.SourcePosition with Showable {
   def column: Int = if (source.exists) source.column(point) else -1
 
   def start: Int = span.start
-  def startLine: Int = if (source.exists) source.offsetToLine(start) else -1
+  def startLine: Int = offsetToLine(start)
   def startColumn: Int = if (source.exists) source.column(start) else -1
   def startColumnPadding: String = source.startColumnPadding(start)
 
   def end: Int = span.end
-  def endLine: Int = if (source.exists) source.offsetToLine(end) else -1
+  def endLine: Int = source.offsetToLine(end)
   def endColumn: Int = if (source.exists) source.column(end) else -1
 
   def withOuter(outer: SourcePosition): SourcePosition = SourcePosition(source, span, outer)

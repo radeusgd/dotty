@@ -42,8 +42,8 @@ class PositionUnpickler(reader: TastyReader, nameAtRef: NameRef => TermName) {
           if (hasStart) curStart += readInt()
           if (hasEnd) curEnd += readInt()
           mySpans(Addr(curIndex)) =
-            if (hasPoint) Span(curStart, curEnd, curStart + readInt())
-            else Span(curStart, curEnd)
+            if (hasPoint) Span(curStart, curEnd, curStart + readInt(), isLine = true)
+            else Span(curStart, curEnd, isLine = true)
         }
       }
       isDefined = true
