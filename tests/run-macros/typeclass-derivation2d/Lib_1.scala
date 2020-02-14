@@ -139,15 +139,28 @@ object Eq {
         '{ false }
     }
 
-  inline def derived[T](implicit ev: Mirror.Of[T]): Eq[T] = new Eq[T] {
-    def eql(x: T, y: T): Boolean =
-      inline ev match {
-        case m: Mirror.SumOf[T] =>
-          val ord = m.ordinal(x)
-          ord == m.ordinal(y) && eqlCases[m.ElemTypes](0)(x, y, ord)
-        case m: Mirror.ProductOf[T] =>
-          eqlElems[m.ElemTypes](0)(x, y)
+  inline def derived[T](implicit inline ev: Mirror.Of[T]): Eq[T] =
+    ${ derivedExpr[T]('ev) }
+
+  private def derivedExpr[T: Type](using QuoteContext)(ev: Expr[Mirror.Of[T]]): Expr[Eq[T]] = '{
+    new Eq[T] {
+      def eql(x: T, y: T): Boolean = ${
+        ev match
+          case '{ $ev: Mirror.SumOf[T] } =>
+            '{
+              val m = $ev
+              val ord = m.ordinal(x)
+              type ElemTypes = m.ElemTypes
+              ord == m.ordinal(y) && ${ eqlCasesExpr[ElemTypes]('{0})('x, 'y, 'ord)(using '[ElemTypes]) }
+            }
+          case '{ $ev: Mirror.ProductOf[T] } =>
+            '{
+              val m = $ev
+              type ElemTypes = m.ElemTypes
+              ${ eqlElemsExpr[ElemTypes]('{0})('x, 'y)(using '[ElemTypes]) }
+            }
       }
+    }
   }
 
   implicit object IntEq extends Eq[Int] {
