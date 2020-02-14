@@ -11,9 +11,14 @@ import scala.annotation.internal.sharable
 case class SourcePosition(source: SourceFile, span: Span, outer: SourcePosition = NoSourcePosition)
 extends interfaces.SourcePosition with Showable {
 
-  private def offsetToLine(offset: Int): Int =
-    if span.isLine then offset
-    else if source.exists then source.offsetToLine(offset)
+  private def repToLine(rep: Int): Int =
+    if span.isLine then rep
+    else if source.exists then source.offsetToLine(rep)
+    else -1
+
+  private def repToOffset(rep: Int): Int =
+    if span.isOffset then rep
+    else if source.exists then source.lineToOffset(rep)
     else -1
 
   /** Is `that` a source position contained in this source position ?
@@ -27,16 +32,20 @@ extends interfaces.SourcePosition with Showable {
 
   def point: Int = span.point
 
-  def line: Int = offsetToLine(point)
+  def line: Int = repToLine(point)
 
   /** Extracts the lines from the underlying source file as `Array[Char]`*/
   def linesSlice: Array[Char] =
-    source.content.slice(source.startOfLine(start), source.nextLine(end))
+    if source.exists then
+      val from = source.nextLine(repToOffset(start))
+      val to   = source.nextLine(repToOffset(end))
+      source.content.slice(from, to)
+    else Array()
 
   /** The lines of the position */
   def lines: Range = {
-    val startOffset = offsetToLine(start)
-    val endOffset = offsetToLine(end - 1) // -1 to drop a line if no chars in it form part of the position
+    val startOffset = repToLine(start)
+    val endOffset = repToLine(end - 1) // -1 to drop a line if no chars in it form part of the position
     if (startOffset >= endOffset) line to line
     else startOffset to endOffset
   }
@@ -47,16 +56,16 @@ extends interfaces.SourcePosition with Showable {
   def beforeAndAfterPoint: (List[Int], List[Int]) =
     lineOffsets.partition(_ <= point)
 
-  def column: Int = if (source.exists) source.column(point) else -1
+  def column: Int = if (span.isOffset && source.exists) source.column(point) else -1
 
   def start: Int = span.start
-  def startLine: Int = offsetToLine(start)
-  def startColumn: Int = if (source.exists) source.column(start) else -1
+  def startLine: Int = repToLine(start)
+  def startColumn: Int = if (span.isOffset && source.exists) source.column(start) else -1
   def startColumnPadding: String = source.startColumnPadding(start)
 
   def end: Int = span.end
-  def endLine: Int = source.offsetToLine(end)
-  def endColumn: Int = if (source.exists) source.column(end) else -1
+  def endLine: Int = source.repToLine(end)
+  def endColumn: Int = if (span.isOffset && source.exists) source.column(end) else -1
 
   def withOuter(outer: SourcePosition): SourcePosition = SourcePosition(source, span, outer)
   def withSpan(range: Span) = SourcePosition(source, range, outer)
