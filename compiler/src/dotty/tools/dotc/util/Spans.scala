@@ -17,16 +17,19 @@ import language.implicitConversions
  */
 object Spans {
 
-  private final val TagBits  = 2
-  private final val TagMask  = (1L << TagBits) - 1
-  private final val StartEndBits = 25
-  private final val StartEndMask = (1L << StartEndBits) - 1
+  private final val TagBits             = 2
+  private final val TagMask             = (1L << TagBits) - 1
+  private final val StartEndBits        = 25
+  private final val StartShift          = TagBits
+  private final val EndShift            = TagBits + StartEndBits
+  private final val PointShift          = TagBits + 2 * StartEndBits
+  private final val StartEndMask        = (1L << StartEndBits) - 1
   private final val SyntheticPointDelta = (1 << (64 - StartEndBits * 2 - TagBits)) - 1
 
   /** Tag to indicate whether the span stores offset or line numbers */
   private final val OffsetTag = 0
   private final val LineTag   = 1
-  private final val NoSpanTag = 3
+  private final val NoSpanTag = 2
 
   /** The maximal representable offset in a span */
   final val MaxOffset = StartEndMask.toInt
@@ -59,13 +62,13 @@ object Spans {
     /** The start of this span. */
     def start: Int = {
       assert(exists)
-      (coords & StartEndMask).toInt
+      ((coords >>> StartShift) & StartEndMask).toInt
     }
 
     /** The end of this span */
     def end: Int = {
       assert(exists)
-      ((coords >>> StartEndBits) & StartEndMask).toInt
+      ((coords >>> EndShift) & StartEndMask).toInt
     }
 
     /** The point of this span, returns start for synthetic spans */
@@ -77,7 +80,7 @@ object Spans {
 
     /** The difference between point and start in this span */
     def pointDelta: Int =
-      (coords >>> (StartEndBits * 2)).toInt
+      (coords >>> PointShift).toInt
 
     def orElse(that: Span): Span =
       if (this.exists) this else that
@@ -166,9 +169,9 @@ object Spans {
     //assert(start <= end || start == 1 && end == 0, s"$start..$end")
     new Span(
       (if isLine then LineTag else OffsetTag).toLong |
-      (start & StartEndMask).toLong |
-      ((end & StartEndMask).toLong << StartEndBits) |
-      (pointDelta.toLong << (StartEndBits * 2)))
+      ((start & StartEndMask).toLong << StartShift) |
+      ((end & StartEndMask).toLong << EndShift) |
+      (pointDelta.toLong << PointShift))
 
   /** A synthetic span with given start and end */
   def Span(start: Int, end: Int, isLine: Boolean): Span =

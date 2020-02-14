@@ -64,7 +64,7 @@ extends interfaces.SourcePosition with Showable {
   def startColumnPadding: String = source.startColumnPadding(start)
 
   def end: Int = span.end
-  def endLine: Int = source.repToLine(end)
+  def endLine: Int = repToLine(end)
   def endColumn: Int = if (span.isOffset && source.exists) source.column(end) else -1
 
   def withOuter(outer: SourcePosition): SourcePosition = SourcePosition(source, span, outer)
