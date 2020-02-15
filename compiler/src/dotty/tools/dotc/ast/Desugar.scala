@@ -860,20 +860,21 @@ object desugar {
    *
    *  where every definition in `body` is expanded to an extension method
    *  taking type parameters `tparams` and a leading paramter `(x: T)`.
-   *  See: makeExtensionDef
+   *  See: collectiveExtensionBody
    */
   def moduleDef(mdef: ModuleDef)(implicit ctx: Context): Tree = {
     val impl = mdef.impl
     val mods = mdef.mods
     impl.constr match {
-      case DefDef(_, tparams, (vparams @ (vparam :: Nil)) :: givenParamss, _, _) =>
+      case DefDef(_, tparams, vparamss @ (vparam :: Nil) :: givenParamss, _, _) =>
+        // Transform collective extension
         assert(mods.is(Given))
         return moduleDef(
           cpy.ModuleDef(mdef)(
             mdef.name,
             cpy.Template(impl)(
               constr = emptyConstructor,
-              body = impl.body.map(makeExtensionDef(_, tparams, vparams, givenParamss)))))
+              body = collectiveExtensionBody(impl.body, tparams, vparamss))))
       case _ =>
     }
 
@@ -916,38 +917,40 @@ object desugar {
     }
   }
 
-  /** Given tpe parameters `Ts` (possibly empty) and a leading value parameter `(x: T)`,
-   *  map a method definition
+  /** Transform the statements of a collective extension
+   *   @param stats    the original statements as they were parsed
+   *   @param tparams  the collective type parameters
+   *   @param vparamss the collective value parameters, consisting
+   *                   of a single leading value parameter, followed by
+   *                   zero or more context parameter clauses
    *
-   *     def foo [Us] paramss ...
+   *  Note: It is already assured by Parser.checkExtensionMethod that all
+   *  statements conform to requirements.
    *
-   *  to
+   *  Each method in stats is transformed into an extension method. Example:
    *
-   *     <extension> def foo[Ts ++ Us](x: T) parammss ...
+   *    extension on [Ts](x: T)(using C):
+   *      def f(y: T) = ???
+   *      def g(z: T) = f(z)
    *
-   *  If the given member `mdef` is not of this form, flag it as an error.
+   *  is turned into
+   *
+   *    extension:
+   *      <extension> def f[Ts](x: T)(using C)(y: T) = ???
+   *      <extension> def g[Ts](x: T)(using C)(z: T) = f(z)
    */
-
-  def makeExtensionDef(mdef: Tree, tparams: List[TypeDef], leadingParams: List[ValDef],
-                       givenParamss: List[List[ValDef]])(using ctx: Context): Tree = {
-    val allowed = "allowed here, since collective parameters are given"
-    mdef match {
-      case mdef: DefDef =>
-        if (mdef.mods.is(Extension)) {
-          ctx.error(em"No extension method $allowed", mdef.sourcePos)
+  def collectiveExtensionBody(stats: List[Tree],
+      tparams: List[TypeDef], vparamss: List[List[ValDef]])(using ctx: Context): List[Tree] =
+    for stat <- stats yield
+      stat match
+        case mdef: DefDef =>
+          cpy.DefDef(mdef)(
+            tparams = tparams ++ mdef.tparams,
+            vparamss = vparamss ::: mdef.vparamss,
+          ).withMods(mdef.mods | Extension)
+        case mdef =>
           mdef
-        }
-        else cpy.DefDef(mdef)(
-          tparams = tparams ++ mdef.tparams,
-          vparamss = leadingParams :: givenParamss ::: mdef.vparamss
-        ).withMods(mdef.mods | Extension)
-      case mdef: Import =>
-        mdef
-      case mdef =>
-        ctx.error(em"Only methods $allowed", mdef.sourcePos)
-        mdef
-    }
-  }
+  end collectiveExtensionBody
 
   /** Transforms
    *
