@@ -1,7 +1,6 @@
-package scala
+package foo
 
 import scala.quoted.{Expr => E, _}
-import Staged._
 
 object Test {
   // Eq.derived[ISB]
