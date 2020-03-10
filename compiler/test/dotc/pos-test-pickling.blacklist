@@ -20,7 +20,6 @@ seqtype-cycle
 i939.scala
 
 # Match types
-typelevel0.scala
 matchtype.scala
 6322.scala
 i7087.scala
