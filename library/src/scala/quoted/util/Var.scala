@@ -42,7 +42,7 @@ object Var {
       body(
         new Var[T] {
           def get(using qctx: QuoteContext): Expr[T] = 'x
-          def update(e: Expr[T])(using qctx: QuoteContext): Expr[Unit] = '{ x = $e }
+          def update(e: Expr[T])(using qctx: QuoteContext): Expr[Unit] = ??? // '{ x = $e }
         }
       )
     }

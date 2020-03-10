@@ -10,8 +10,7 @@ class Expr[+T] private[scala] {
     this.unseal.showWith(SyntaxHighlight.plain)
 
   /** Show a source code like representation of this expression */
-  def show(syntaxHighlight: SyntaxHighlight)(using qctx: QuoteContext): String =
-    this.unseal.showWith(syntaxHighlight)
+  // def show(syntaxHighlight: SyntaxHighlight)(using qctx: QuoteContext): String = qctx.show(this, syntaxHighlight)
 
   /** Return the value of this expression.
    *
@@ -94,24 +93,24 @@ object Expr {
     tg.untupled(args => qctx.tasty.internal.betaReduce(f.unseal, args.toArray.toList.map(_.asInstanceOf[QuoteContext => Expr[_]](qctx).unseal)).seal.asInstanceOf[Expr[R]])
 
   /** Returns a null expresssion equivalent to `'{null}` */
-  def nullExpr: QuoteContext ?=> Expr[Null] = qctx ?=> {
+  def nullExpr: (qctx: QuoteCtx) ?=> qctx.Expr[Null] = qctx ?=> {
     import qctx.tasty._
-    Literal(Constant(null)).seal.asInstanceOf[Expr[Null]]
+    Literal(Constant(null)).seal.asInstanceOf[qctx.Expr[Null]]
   }
 
   /** Returns a unit expresssion equivalent to `'{}` or `'{()}` */
-  def unitExpr: QuoteContext ?=> Expr[Unit] = qctx ?=> {
+  def unitExpr: (qctx: QuoteCtx) ?=> qctx.Expr[Unit] = qctx ?=> {
     import qctx.tasty._
-    Literal(Constant(())).seal.asInstanceOf[Expr[Unit]]
+    Literal(Constant(())).seal.asInstanceOf[qctx.Expr[Unit]]
   }
 
   /** Returns an expression containing a block with the given statements and ending with the expresion
    *  Given list of statements `s1 :: s2 :: ... :: Nil` and an expression `e` the resulting expression
    *  will be equivalent to `'{ $s1; $s2; ...; $e }`.
    */
-  def block[T](statements: List[Expr[_]], expr: Expr[T])(using qctx: QuoteContext): Expr[T] = {
+  def block[T](using qctx: QuoteCtx)(statements: List[qctx.Expr[Any]], expr: qctx.Expr[T]): qctx.Expr[T] = {
     import qctx.tasty._
-    Block(statements.map(_.unseal), expr.unseal).seal.asInstanceOf[Expr[T]]
+    Block(statements.map(_.unseal), expr.unseal).seal.asInstanceOf[qctx.Expr[T]]
   }
 
   /** Lift a value into an expression containing the construction of that value */
@@ -211,7 +210,7 @@ object Expr {
    *  @param tpe quoted type of the implicit parameter
    *  @param qctx current context
    */
-  def summon[T](using tpe: Type[T])(using qctx: QuoteContext): Option[Expr[T]] = {
+  def summon[T](using qctx: QuoteContext)(using tpe: Type[T]): Option[Expr[T]] = {
     import qctx.tasty._
     searchImplicit(tpe.unseal.tpe) match {
       case iss: ImplicitSearchSuccess => Some(iss.tree.seal.asInstanceOf[Expr[T]])
