@@ -1255,6 +1255,30 @@ class Typer extends Namer
             if (bounds != null) sym.info = bounds
           }
           b
+        case t: UnApply =>
+
+          println()
+          println(t.show)
+          println(t)
+          println()
+          println(Inliner.isInlineable(t))
+          println(!ctx.settings.YnoInline.value)
+          println(!suppressInline)
+          println()
+          println()
+          println()
+         if (Inliner.isInlineable(t) &&
+               !ctx.settings.YnoInline.value &&
+               !suppressInline) {
+            // t.tpe <:< wildApprox(pt)
+            val errorCount = ctx.reporter.errorCount
+            val inlined = Inliner.inlineCall(t)
+            if ((inlined ne t) && errorCount == ctx.reporter.errorCount)
+              // readapt(simplify(inlined, pt???, locked))
+              inlined
+
+            else inlined
+          } else t
         case t => t
       }
   }
