@@ -151,8 +151,11 @@ class PlainPrinter(_ctx: Context) extends Printer {
         ParamRefNameString(tp) ~ lambdaHash(tp.binder)
       case tp: SingletonType =>
         toTextSingleton(tp)
-      case AppliedType(tycon, args) =>
-        (toTextLocal(tycon) ~ "[" ~ argsText(args) ~ "]").close
+      case at @ AppliedType(tycon, args) =>
+        (toTextLocal(tycon) ~ s"[${at.uniqId}A" ~ {
+          if (at.uniqId == 6560) println("UUID: " + args)
+          argsText(args)
+        } ~ "]").close
       case tp: RefinedType =>
         val parent :: (refined: List[RefinedType @unchecked]) =
           refinementChain(tp).reverse
@@ -200,11 +203,11 @@ class PlainPrinter(_ctx: Context) extends Printer {
         changePrec(GlobalPrec) { "=> " ~ toText(tp.resultType) }
       case tp: HKTypeLambda =>
         changePrec(GlobalPrec) {
-          "[" ~ paramsText(tp) ~ "]" ~ lambdaHash(tp) ~ Str(" =>> ") ~ toTextGlobal(tp.resultType)
+          "[B" ~ paramsText(tp) ~ "]" ~ lambdaHash(tp) ~ Str(" =>> ") ~ toTextGlobal(tp.resultType)
         }
       case tp: PolyType =>
         changePrec(GlobalPrec) {
-          "[" ~ paramsText(tp) ~ "]" ~ lambdaHash(tp) ~
+          "[C" ~ paramsText(tp) ~ "]" ~ lambdaHash(tp) ~
           (Str(" => ") provided !tp.resultType.isInstanceOf[MethodType]) ~
           toTextGlobal(tp.resultType)
         }
@@ -305,7 +308,7 @@ class PlainPrinter(_ctx: Context) extends Printer {
         else "{...}.this" // TODO move underlying type to an addendum, e.g. ... z3 ... where z3: ...
       case tp: SkolemType =>
         if (homogenizedView) toText(tp.info)
-        else if (ctx.settings.XprintTypes.value) "<" ~ toText(tp.repr) ~ ":" ~ toText(tp.info) ~ ">"
+        else if (ctx.settings.XprintTypes.value) "<" ~ toText(tp.repr) ~ ":" ~ toText(tp.info) ~ "(" ~ tp.info.uniqId.toString ~ ")>"
         else toText(tp.repr)
     }
   }
@@ -341,7 +344,7 @@ class PlainPrinter(_ctx: Context) extends Printer {
             lam.paramNames.lazyZip(lam.declaredVariances).map((name, v) =>
               varianceSign(v) + name)
           else lam.paramNames
-        (names.mkString("[", ", ", "]"), lam.resType)
+        (names.mkString("[D", ", ", "]"), lam.resType)
       case _ =>
         ("", tp)
     bounds match
@@ -370,7 +373,7 @@ class PlainPrinter(_ctx: Context) extends Printer {
         val preText = toTextLocal(pre)
         val (tparams, otherDecls) = decls.toList partition treatAsTypeParam
         val tparamsText =
-          if (tparams.isEmpty) Text() else ("[" ~ dclsText(tparams) ~ "]").close
+          if (tparams.isEmpty) Text() else ("[E" ~ dclsText(tparams) ~ "]").close
         val selfText: Text = selfInfo match {
           case NoType => Text()
           case sym: Symbol if !sym.isCompleted => "this: ? =>"

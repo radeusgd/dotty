@@ -270,7 +270,7 @@ class RefinedPrinter(_ctx: Context) extends PlainPrinter(_ctx) {
 
   protected def typeApplyText[T >: Untyped](tree: TypeApply[T]): Text = {
     val isQuote = !printDebug && tree.fun.hasType && tree.fun.symbol == defn.InternalQuoted_typeQuote
-    val (open, close) = if (isQuote) (keywordStr("'["), keywordStr("]")) else ("[", "]")
+    val (open, close) = if (isQuote) (keywordStr("'[§"), keywordStr("]")) else ("[1", "]")
     val funText = toTextLocal(tree.fun).provided(!isQuote)
     tree.fun match {
       case Select(New(tpt), nme.CONSTRUCTOR) if tpt.typeOpt.dealias.isInstanceOf[AppliedType] =>
@@ -377,7 +377,7 @@ class RefinedPrinter(_ctx: Context) extends PlainPrinter(_ctx) {
       case tree: This =>
         optDotPrefix(tree) ~ keywordStr("this") ~ idText(tree)
       case Super(qual: This, mix) =>
-        optDotPrefix(qual) ~ keywordStr("super") ~ optText(mix)("[" ~ _ ~ "]")
+        optDotPrefix(qual) ~ keywordStr("super") ~ optText(mix)("[2" ~ _ ~ "]")
       case app @ Apply(fun, args) =>
         if (fun.hasType && fun.symbol == defn.throwMethod)
           changePrec (GlobalPrec) {
@@ -443,7 +443,7 @@ class RefinedPrinter(_ctx: Context) extends PlainPrinter(_ctx) {
       case CaseDef(pat, guard, body) =>
         keywordStr("case ") ~ inPattern(toText(pat)) ~ optText(guard)(keywordStr(" if ") ~ _) ~ " => " ~ caseBlockText(body)
       case Labeled(bind, expr) =>
-        changePrec(GlobalPrec) { toText(bind.name) ~ keywordStr("[") ~ toText(bind.symbol.info) ~ keywordStr("]: ") ~ toText(expr) }
+        changePrec(GlobalPrec) { toText(bind.name) ~ keywordStr("[3") ~ toText(bind.symbol.info) ~ keywordStr("]: ") ~ toText(expr) }
       case Return(expr, from) =>
         val sym = from.symbol
         if (sym.is(Label))
@@ -461,7 +461,7 @@ class RefinedPrinter(_ctx: Context) extends PlainPrinter(_ctx) {
           keywordStr("throw ") ~ toText(expr)
         }
       case SeqLiteral(elems, elemtpt) =>
-        "[" ~ toTextGlobal(elems, ",") ~ " : " ~ toText(elemtpt) ~ "]"
+        "[4" ~ toTextGlobal(elems, ",") ~ " : " ~ toText(elemtpt) ~ "]"
       case tree @ Inlined(call, bindings, body) =>
         (("/* inlined from " ~ (if (call.isEmpty) "outside" else toText(call)) ~ " */ ") `provided`
           !homogenizedView && ctx.settings.XprintInline.value) ~
@@ -480,7 +480,7 @@ class RefinedPrinter(_ctx: Context) extends PlainPrinter(_ctx) {
         else if (tpt.symbol == defn.andType && args.length == 2)
           changePrec(AndTypePrec) { toText(args(0)) ~ " & " ~ atPrec(AndTypePrec + 1) { toText(args(1)) } }
         else
-          toTextLocal(tpt) ~ "[" ~ Text(args map argText, ", ") ~ "]"
+          toTextLocal(tpt) ~ "[5" ~ Text(args map argText, ", ") ~ "]"
       case LambdaTypeTree(tparams, body) =>
         changePrec(GlobalPrec) {
           tparamsText(tparams) ~ " =>> " ~ toText(body)
@@ -545,7 +545,7 @@ class RefinedPrinter(_ctx: Context) extends PlainPrinter(_ctx) {
       case EmptyTree =>
         "<empty>"
       case TypedSplice(t) =>
-        if (printDebug) "[" ~ toText(t) ~ "]#TS#"
+        if (printDebug) "[6" ~ toText(t) ~ "]#TS#"
         else toText(t)
       case tree @ ModuleDef(name, impl) =>
         withEnclosingDef(tree) {
@@ -586,7 +586,7 @@ class RefinedPrinter(_ctx: Context) extends PlainPrinter(_ctx) {
         }
         argsText ~ " " ~ arrow(isGiven) ~ " " ~ toText(body)
       case PolyFunction(targs, body) =>
-        val targsText = "[" ~ Text(targs.map((arg: Tree) => toText(arg)), ", ") ~ "]"
+        val targsText = "[7" ~ Text(targs.map((arg: Tree) => toText(arg)), ", ") ~ "]"
         changePrec(GlobalPrec) {
           targsText ~ " => " ~ toText(body)
         }
@@ -624,7 +624,7 @@ class RefinedPrinter(_ctx: Context) extends PlainPrinter(_ctx) {
       case Number(digits, kind) =>
         digits
       case Quote(tree) =>
-        if (tree.isType) keywordStr("'[") ~ toTextGlobal(dropBlock(tree)) ~ keywordStr("]")
+        if (tree.isType) keywordStr("'[!") ~ toTextGlobal(dropBlock(tree)) ~ keywordStr("]")
         else keywordStr("'{") ~ toTextGlobal(dropBlock(tree)) ~ keywordStr("}")
       case Splice(tree) =>
         keywordStr("${") ~ toTextGlobal(dropBlock(tree)) ~ keywordStr("}")
@@ -688,7 +688,7 @@ class RefinedPrinter(_ctx: Context) extends PlainPrinter(_ctx) {
         else tp2
 
       if (!suppressTypes)
-        txt = ("<" ~ txt ~ ":" ~ toText(tp3) ~ ">").close
+        txt = ("<" ~ txt ~ ":" ~ toText(tp3) ~ "(" ~ tp3.uniqId.toString ~ ")>").close
       else if (tree.isType && !homogenizedView)
         txt = toText(tp3)
     }
@@ -757,7 +757,7 @@ class RefinedPrinter(_ctx: Context) extends PlainPrinter(_ctx) {
     }
 
   def tparamsText[T >: Untyped](params: List[Tree[T]]): Text =
-    "[" ~ toText(params, ", ") ~ "]" provided params.nonEmpty
+    "[8" ~ toText(params, ", ") ~ "]" provided params.nonEmpty
 
   def addVparamssText[T >: Untyped](leading: Text, vparamss: List[List[ValDef[T]]]): Text =
     vparamss.foldLeft(leading)((txt, params) => txt ~ paramsText(params))

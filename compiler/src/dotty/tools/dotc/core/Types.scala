@@ -94,13 +94,20 @@ object Types {
 
 // ----- Tests -----------------------------------------------------
 
-//    // debug only: a unique identifier for a type
-//    val uniqId = {
-//      nextId = nextId + 1
-//      if (nextId == 19555)
-//        println("foo")
-//      nextId
-//    }
+    val uniqId = {
+      nextId = nextId + 1
+      if (nextId == 6614)
+      ()
+      nextId
+    }
+
+    // try {
+    //   if (toString.contains("type Concat),List(TermRef(ThisType(TypeRef(NoPrefix,module class <empty>)),module HNil)")) {
+    //     println(uniqId)
+    //   }
+    // } catch {
+    //   case e => ()
+    // }
 
     /** A cache indicating whether the type was still provisional, last time we checked */
     @sharable private var mightBeProvisional = true
@@ -3113,9 +3120,16 @@ object Types {
       else paramInfos
 
     /** Like `resultType` but substitute parameter references with the given arguments */
-    final def instantiate(argTypes: => List[Type])(implicit ctx: Context): Type =
-      if (isResultDependent) resultType.substParams(this, argTypes)
-      else resultType
+    final def instantiate(argTypes: => List[Type])(implicit ctx: Context): Type = {
+      val out = if (isResultDependent) resultType.substParams(this, argTypes).normalized
+      else resultType.normalized
+      if (out.show.contains("Test.Concat[HNil.type, HNil.type]")) {
+        // println(out.getClass)
+        // println(out.show)
+        // Thread.dumpStack
+      }
+      out
+    }
 
     def companion: LambdaTypeCompanion[ThisName, PInfo, This]
 
@@ -3287,7 +3301,11 @@ object Types {
     type This = MethodType
 
     val paramInfos: List[Type] = paramInfosExp(this)
-    val resType: Type = resultTypeExp(this)
+    val resType: Type = {
+      val r = resultTypeExp(this)
+      // if (r.toString.contains("type Concat),List(TermRef(ThisType(TypeRef(NoPrefix,module class <empty>)),module HNil)"))
+      r
+    }
     assert(resType.exists)
 
     def companion: MethodTypeCompanion
@@ -3714,8 +3732,13 @@ object Types {
   }
 
   /** A type application `C[T_1, ..., T_n]` */
-  abstract case class AppliedType(tycon: Type, args: List[Type])
-  extends CachedProxyType with ValueType {
+  abstract case class AppliedType(tycon: Type, args: List[Type]) extends CachedProxyType with ValueType {
+
+    if (uniqId == 6560) println(toString)
+    // if (toString.contains("TypeRef(ThisType(TypeRef(ThisType(TypeRef(NoPrefix,module class <empty>)),module class Test$)),type Concat")) {
+      // ???
+      // println(uniqId)
+    // }
 
     private var validSuper: Period = Nowhere
     private var cachedSuper: Type = _
@@ -3754,21 +3777,29 @@ object Types {
         superType
     }
 
-    override def tryNormalize(implicit ctx: Context): Type = tycon match {
-      case tycon: TypeRef =>
-        def tryMatchAlias = tycon.info match {
-          case MatchAlias(alias) =>
-            trace(i"normalize $this", typr, show = true) {
-              alias.applyIfParameterized(args).tryNormalize
-            }
-          case _ =>
-            NoType
-        }
+    override def tryNormalize(implicit ctx: Context): Type = {
+      tycon match {
+        case tycon: TypeRef =>
+          def tryMatchAlias = tycon.info match {
+            case MatchAlias(alias) =>
+              trace(i"normalize $this", typr, show = true) {
+                val out = alias.applyIfParameterized(args).tryNormalize
+                if (this.uniqId == 6560) println("-------------")
+                if (this.uniqId == 6560) println("AA: " + alias.applyIfParameterized(args).show)
+                if (this.uniqId == 6560) println("AA: " + alias.applyIfParameterized(args))
+                if (this.uniqId == 6560) println("AA: " + alias.applyIfParameterized(args).uniqId)
+                if (this.uniqId == 6560) ???
+                out
+              }
+            case _ =>
+              NoType
+          }
 
-        tryCompiletimeConstantFold.orElse(tryMatchAlias)
+          tryCompiletimeConstantFold.orElse(tryMatchAlias)
 
-      case _ =>
-        NoType
+        case _ =>
+          NoType
+      }
     }
 
     def tryCompiletimeConstantFold(implicit ctx: Context): Type = tycon match {
@@ -4887,6 +4918,8 @@ object Types {
             variance = if (defn.MatchCase.isInstance(restpe)) 0 else -variance
             val ptypes1 = tp.paramInfos.mapConserve(this).asInstanceOf[List[tp.PInfo]]
             variance = saved
+            if (restpe.toString.contains("type Concat),List(TermRef(ThisType(TypeRef(NoPrefix,module class <empty>)),module HNil)"))
+              ???
             derivedLambdaType(tp)(ptypes1, this(restpe))
           }
           mapOverLambda

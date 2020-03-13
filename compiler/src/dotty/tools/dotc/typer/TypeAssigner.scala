@@ -482,7 +482,15 @@ trait TypeAssigner {
           }
           else {
             val argTypes = args.tpes
-            if (sameLength(argTypes, paramNames)) pt.instantiate(argTypes)
+            if (sameLength(argTypes, paramNames)) {
+              val x = pt.instantiate(argTypes)
+              // if (x.show.contains("Test.Concat[HNil.type, HNil.type]")) {
+              //   println(x.show + "(" + x.uniqId.toString + ")")
+              //   println(x.getClass)
+              //   println()
+              // }
+              x.normalized
+            }
             else wrongNumberOfTypeArgs(fn.tpe, pt.typeParams, args, tree.sourcePos)
           }
         }

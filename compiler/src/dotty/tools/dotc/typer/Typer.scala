@@ -2278,7 +2278,11 @@ class Typer extends Namer
       if (!tree.tpe.widen.isInstanceOf[MethodOrPoly] // wait with simplifying until method is fully applied
           || tree.isDef) {                             // ... unless tree is a definition
         interpolateTypeVars(tree, pt, locked)
-        tree.overwriteType(tree.tpe.simplified)
+        val tt = tree.tpe.simplified.normalized
+        if (tt.show.contains("Test.Concat[HNil.type, HNil.type]"))
+          tree.overwriteType(defn.AnyType)
+        else
+          tree.overwriteType(tt)
       }
     tree
   }

@@ -1,0 +1,303 @@
+<package <empty>.type {
+  @<
+    <
+      <new scala.annotation.internal.SourceFile:scala.annotation.internal.SourceFile(2632)>@
+        tests/pos/typelevel0.scala<no position>
+    :((path: scala.Predef.String): scala.annotation.internal.SourceFile)(4473)>@tests/pos/typelevel0.scala<no position>
+  (<"tests/pos/typelevel0.scala":("tests/pos/typelevel0.scala" : String)(4452)>@tests/pos/typelevel0.scala<no position>)
+    :
+  scala.annotation.internal.SourceFile(4461)>@tests/pos/typelevel0.scala<no position> case class ::[
+    H >: scala.Nothing <: scala.Any@tests/pos/typelevel0.scala<83..83>@tests/pos/typelevel0.scala[83..84..85]@@(H=
+      tests/pos/typelevel0.scala:<84..84>
+    )
+  , 
+    T >: scala.Nothing <: HList@tests/pos/typelevel0.scala<93..98>@tests/pos/typelevel0.scala<90..98>@
+      tests/pos/typelevel0.scala[87..88..98]
+    @@(T=tests/pos/typelevel0.scala:<88..88>)
+  ](
+    hd: H@tests/pos/typelevel0.scala<105..106>@tests/pos/typelevel0.scala[101..106]@@(hd=
+      tests/pos/typelevel0.scala:<101..101>
+    )
+  , 
+    tl: T@tests/pos/typelevel0.scala<112..113>@tests/pos/typelevel0.scala[108..113]@@(tl=
+      tests/pos/typelevel0.scala:<108..108>
+    )
+  ) extends <
+    <<new java.lang.Object:java.lang.Object(2648)>@tests/pos/typelevel0.scala<79..79>:((): java.lang.Object)(1739)>@
+      tests/pos/typelevel0.scala<79..79>
+  ():java.lang.Object(1738)>@tests/pos/typelevel0.scala<79..79>, HList@tests/pos/typelevel0.scala<123..128>, <
+    <_root_:<root>(7)>@tests/pos/typelevel0.scala<128..128>
+  .scala:scala(40)>@tests/pos/typelevel0.scala<128..128>.Product@tests/pos/typelevel0.scala<128..128>, <
+    <_root_:<root>(7)>@tests/pos/typelevel0.scala<128..128>
+  .scala:scala(40)>@tests/pos/typelevel0.scala<128..128>.Serializable@tests/pos/typelevel0.scala<128..128> {
+    +H@tests/pos/typelevel0.scala[83..84..85]@@(H=tests/pos/typelevel0.scala:<84..84>)
+    +T <: HList@tests/pos/typelevel0.scala[87..88..98]@@(T=tests/pos/typelevel0.scala:<88..88>)
+    val hd: H@tests/pos/typelevel0.scala[101..106]@@(hd=tests/pos/typelevel0.scala:<101..101>)
+    val tl: T@tests/pos/typelevel0.scala[108..113]@@(tl=tests/pos/typelevel0.scala:<108..108>)
+    override def hashCode(): scala.Int = 
+      <<scala.runtime.ScalaRunTime._hashCode:((x: scala.Product): scala.Int)(5442)>@tests/pos/typelevel0.scala<79..79>(
+        <this:(::.this : H :: T)(10921)>@tests/pos/typelevel0.scala<79..79>
+      ):scala.Int(1774)>@tests/pos/typelevel0.scala<79..79>
+    @tests/pos/typelevel0.scala<79..79>@@(hashCode=tests/pos/typelevel0.scala:<79..79>)
+    override def equals(x$0: scala.Any@tests/pos/typelevel0.scala<79..79>@@(x$0=tests/pos/typelevel0.scala:<79..79>)): 
+      scala.Boolean
+     = 
+      <
+        <
+          <
+            <<this:(::.this : H :: T)(10921)>@tests/pos/typelevel0.scala<79..79>.eq:
+              ((x$0: java.lang.Object): scala.Boolean)
+            (2429)>@tests/pos/typelevel0.scala<79..79>
+          (
+            <
+              <<x$0:scala.Any(3120)>@tests/pos/typelevel0.scala<79..79>.$asInstanceOf$:([X0] => X0)(2427)>@
+                tests/pos/typelevel0.scala<79..79>
+            [java.lang.Object]:java.lang.Object(2648)>@tests/pos/typelevel0.scala<79..79>
+          ):scala.Boolean(1770)>@tests/pos/typelevel0.scala<79..79>
+        .||:((x: scala.Boolean): scala.Boolean)(5466)>@tests/pos/typelevel0.scala<79..79>
+      (
+        <<x$0:scala.Any(3120)>@tests/pos/typelevel0.scala<79..79> match 
+          {
+            <case 
+              x$0 @ _@tests/pos/typelevel0.scala<79..79> :(H :: T) @unchecked@tests/pos/typelevel0.scala<79..79>@
+                tests/pos/typelevel0.scala<79..79>
+              @@(x$0=tests/pos/typelevel0.scala:<79..79>)
+             => 
+              <
+                <
+                  <
+                    <
+                      <<this:(::.this : H :: T)(10921)>@tests/pos/typelevel0.scala<79..79>.hd:H(10922)>@
+                        tests/pos/typelevel0.scala<79..79>
+                    .==:((x$0: scala.Any): scala.Boolean)(1771)>@tests/pos/typelevel0.scala<79..79>
+                  (
+                    <<x$0:(H :: T)(11099)>@tests/pos/typelevel0.scala<79..79>.hd:H(10922)>@
+                      tests/pos/typelevel0.scala<79..79>
+                  ):scala.Boolean(1770)>@tests/pos/typelevel0.scala<79..79>
+                .&&:((x: scala.Boolean): scala.Boolean)(5460)>@tests/pos/typelevel0.scala<79..79>
+              (
+                <
+                  <
+                    <<this:(::.this : H :: T)(10921)>@tests/pos/typelevel0.scala<79..79>.tl:T(10925)>@
+                      tests/pos/typelevel0.scala<79..79>
+                  .==:((x$0: scala.Any): scala.Boolean)(1771)>@tests/pos/typelevel0.scala<79..79>
+                (
+                  <<x$0:(H :: T)(11099)>@tests/pos/typelevel0.scala<79..79>.tl:T(10925)>@
+                    tests/pos/typelevel0.scala<79..79>
+                ):scala.Boolean(1770)>@tests/pos/typelevel0.scala<79..79>
+              ):scala.Boolean(1770)>@tests/pos/typelevel0.scala<79..79>
+            :scala.Boolean(1770)>@tests/pos/typelevel0.scala<79..79>
+            <case _@tests/pos/typelevel0.scala<79..79> => 
+              <false:(false : scala.Boolean)(5463)>@tests/pos/typelevel0.scala<79..79>
+            :(false : scala.Boolean)(5463)>@tests/pos/typelevel0.scala<79..79>
+          }
+        :scala.Boolean(1770)>@tests/pos/typelevel0.scala<79..79>
+      ):scala.Boolean(1770)>@tests/pos/typelevel0.scala<79..79>
+    @tests/pos/typelevel0.scala<79..79>@@(equals=tests/pos/typelevel0.scala:<79..79>)
+    override def toString(): String = 
+      <
+        <scala.runtime.ScalaRunTime._toString:((x: scala.Product): scala.Predef.String)(5470)>@
+          tests/pos/typelevel0.scala<79..79>
+      (<this:(::.this : H :: T)(10921)>@tests/pos/typelevel0.scala<79..79>):scala.Predef.String(5192)>@
+        tests/pos/typelevel0.scala<79..79>
+    @tests/pos/typelevel0.scala<79..79>@@(toString=tests/pos/typelevel0.scala:<79..79>)
+    override def canEqual(that: scala.Any@tests/pos/typelevel0.scala<79..79>@@(that=tests/pos/typelevel0.scala:<79..79>)
+      )
+    : scala.Boolean = 
+      <
+        <<that:scala.Any(3120)>@tests/pos/typelevel0.scala<79..79>.isInstanceOf:([X0] => scala.Boolean)(2420)>@
+          tests/pos/typelevel0.scala<79..79>
+      [(H :: T) @unchecked]:scala.Boolean(1770)>@tests/pos/typelevel0.scala<79..79>
+    @tests/pos/typelevel0.scala<79..79>@@(canEqual=tests/pos/typelevel0.scala:<79..79>)
+    override def productArity: scala.Int = <2:(2 : scala.Int)(5478)>@tests/pos/typelevel0.scala<79..79>@
+      tests/pos/typelevel0.scala<79..79>
+    @@(productArity=tests/pos/typelevel0.scala:<79..79>)
+    override def productPrefix: scala.Predef.String = <"::":("::" : String)(5480)>@tests/pos/typelevel0.scala<79..79>@
+      tests/pos/typelevel0.scala<79..79>
+    @@(productPrefix=tests/pos/typelevel0.scala:<79..79>)
+    override def productElement(n: scala.Int@tests/pos/typelevel0.scala<79..79>@@(n=tests/pos/typelevel0.scala:<79..79>)
+      )
+    : scala.Any = 
+      <<n:scala.Int(5213)>@tests/pos/typelevel0.scala<79..79> match 
+        {
+          <case 0@tests/pos/typelevel0.scala<79..79> => 
+            <<this:(::.this : H :: T)(10921)>@tests/pos/typelevel0.scala<79..79>._1:=> H(11077)>@
+              tests/pos/typelevel0.scala<79..79>
+          :(::.this._1 : => H)(11131)>@tests/pos/typelevel0.scala<79..79>
+          <case 1@tests/pos/typelevel0.scala<79..79> => 
+            <<this:(::.this : H :: T)(10921)>@tests/pos/typelevel0.scala<79..79>._2:=> T(11079)>@
+              tests/pos/typelevel0.scala<79..79>
+          :(::.this._2 : => T)(11135)>@tests/pos/typelevel0.scala<79..79>
+          <case _@tests/pos/typelevel0.scala<79..79> => 
+            <throw 
+              <
+                <<new IndexOutOfBoundsException:IndexOutOfBoundsException(11136)>@tests/pos/typelevel0.scala<79..79>:
+                  ((x$0: String): IndexOutOfBoundsException)
+                (5309)>@tests/pos/typelevel0.scala<79..79>
+              (
+                <
+                  <<n:scala.Int(5213)>@tests/pos/typelevel0.scala<79..79>.toString:((): String)(1777)>@
+                    tests/pos/typelevel0.scala<79..79>
+                ():String(1776)>@tests/pos/typelevel0.scala<79..79>
+              ):IndexOutOfBoundsException(5307)>@tests/pos/typelevel0.scala<79..79>
+            :scala.Nothing(1743)>@tests/pos/typelevel0.scala<79..79>
+          :scala.Nothing(1743)>@tests/pos/typelevel0.scala<79..79>
+        }
+      :H | T(11140)>@tests/pos/typelevel0.scala<79..79>
+    @tests/pos/typelevel0.scala<79..79>@@(productElement=tests/pos/typelevel0.scala:<79..79>)
+    override def productElementName(
+      n: scala.Int@tests/pos/typelevel0.scala<79..79>@@(n=tests/pos/typelevel0.scala:<79..79>)
+    ): scala.Predef.String = 
+      <<n:scala.Int(5213)>@tests/pos/typelevel0.scala<79..79> match 
+        {
+          <case 0@tests/pos/typelevel0.scala<79..79> => <"hd":("hd" : String)(5492)>@tests/pos/typelevel0.scala<79..79>:
+            ("hd" : String)
+          (5492)>@tests/pos/typelevel0.scala<79..79>
+          <case 1@tests/pos/typelevel0.scala<79..79> => <"tl":("tl" : String)(5494)>@tests/pos/typelevel0.scala<79..79>:
+            ("tl" : String)
+          (5494)>@tests/pos/typelevel0.scala<79..79>
+          <case _@tests/pos/typelevel0.scala<79..79> => 
+            <throw 
+              <
+                <<new IndexOutOfBoundsException:IndexOutOfBoundsException(11136)>@tests/pos/typelevel0.scala<79..79>:
+                  ((x$0: String): IndexOutOfBoundsException)
+                (5309)>@tests/pos/typelevel0.scala<79..79>
+              (
+                <
+                  <<n:scala.Int(5213)>@tests/pos/typelevel0.scala<79..79>.toString:((): String)(1777)>@
+                    tests/pos/typelevel0.scala<79..79>
+                ():String(1776)>@tests/pos/typelevel0.scala<79..79>
+              ):IndexOutOfBoundsException(5307)>@tests/pos/typelevel0.scala<79..79>
+            :scala.Nothing(1743)>@tests/pos/typelevel0.scala<79..79>
+          :scala.Nothing(1743)>@tests/pos/typelevel0.scala<79..79>
+        }
+      :("hd" : String) | ("tl" : String)(5496)>@tests/pos/typelevel0.scala<79..79>
+    @tests/pos/typelevel0.scala<79..79>@@(productElementName=tests/pos/typelevel0.scala:<79..79>)
+    def copy[H@tests/pos/typelevel0.scala[83..84..85]@@(H=tests/pos/typelevel0.scala:<84..84>), 
+      T <: HList@tests/pos/typelevel0.scala[87..88..98]@@(T=tests/pos/typelevel0.scala:<88..88>)
+    ](hd: H@tests/pos/typelevel0.scala[101..106]@@(hd=tests/pos/typelevel0.scala:<101..101>), 
+      tl: T@tests/pos/typelevel0.scala[108..113]@@(tl=tests/pos/typelevel0.scala:<108..108>)
+    ): H :: T = 
+      <
+        <
+          <<new :::::(10920)>@tests/pos/typelevel0.scala<68..68>:([H, T <: HList](hd: H, tl: T): H :: T)(10962)>@
+            tests/pos/typelevel0.scala<68..68>
+        [H@tests/pos/typelevel0.scala<68..68>, T@tests/pos/typelevel0.scala<68..68>]:((hd: H, tl: T): H :: T)(11163)>@
+          tests/pos/typelevel0.scala<68..68>
+      (<hd:H(11032)>@tests/pos/typelevel0.scala<68..68>, <tl:T(11037)>@tests/pos/typelevel0.scala<68..68>):H :: T(11162
+        )>
+      @tests/pos/typelevel0.scala<68..68>
+    @tests/pos/typelevel0.scala<68..113>@@(copy=tests/pos/typelevel0.scala:<68..68>)
+    def copy$default$1[H@tests/pos/typelevel0.scala[83..84..85]@@(H=tests/pos/typelevel0.scala:<84..84>), 
+      T <: HList@tests/pos/typelevel0.scala[87..88..98]@@(T=tests/pos/typelevel0.scala:<88..88>)
+    ]: H = 
+      <<::.this.hd:H(10922)>@tests/pos/typelevel0.scala<106..106> :(::.this.hd : H) @uncheckedVariance:
+        (::.this.hd : H) @uncheckedVariance
+      (11167)>@tests/pos/typelevel0.scala<106..106>
+    @tests/pos/typelevel0.scala<83..106>@@(copy$default$1=tests/pos/typelevel0.scala:<83..83>)
+    def copy$default$2[H@tests/pos/typelevel0.scala[83..84..85]@@(H=tests/pos/typelevel0.scala:<84..84>), 
+      T <: HList@tests/pos/typelevel0.scala[87..88..98]@@(T=tests/pos/typelevel0.scala:<88..88>)
+    ]: T = 
+      <<::.this.tl:T(10925)>@tests/pos/typelevel0.scala<113..113> :(::.this.tl : T) @uncheckedVariance:
+        (::.this.tl : T) @uncheckedVariance
+      (11169)>@tests/pos/typelevel0.scala<113..113>
+    @tests/pos/typelevel0.scala<83..113>@@(copy$default$2=tests/pos/typelevel0.scala:<83..83>)
+    def _1: H = 
+      <<this:(::.this : H :: T)(10921)>@tests/pos/typelevel0.scala<106..106>.hd:H(10922)>@
+        tests/pos/typelevel0.scala<106..106>
+    @tests/pos/typelevel0.scala<105..106>@@(_1=tests/pos/typelevel0.scala:<105..105>)
+    def _2: T = 
+      <<this:(::.this : H :: T)(10921)>@tests/pos/typelevel0.scala<113..113>.tl:T(10925)>@
+        tests/pos/typelevel0.scala<113..113>
+    @tests/pos/typelevel0.scala<112..113>@@(_2=tests/pos/typelevel0.scala:<112..112>)
+  }@tests/pos/typelevel0.scala[68..79..128]@@(::=tests/pos/typelevel0.scala:<79..79>)
+  final lazy module val ::: ::$@tests/pos/typelevel0.scala<68..68> = 
+    <
+      <<new ::$@tests/pos/typelevel0.scala<68..68>:::$(10969)>@tests/pos/typelevel0.scala<68..68>:((): ::$)(10989)>@
+        tests/pos/typelevel0.scala<68..68>
+    ():::$(10988)>@tests/pos/typelevel0.scala<68..68>
+  @tests/pos/typelevel0.scala[68..79..128]@@(::=tests/pos/typelevel0.scala:<79..79>)
+  @<
+    <
+      <new scala.annotation.internal.SourceFile:scala.annotation.internal.SourceFile(2632)>@
+        tests/pos/typelevel0.scala<no position>
+    :((path: scala.Predef.String): scala.annotation.internal.SourceFile)(4473)>@tests/pos/typelevel0.scala<no position>
+  (<"tests/pos/typelevel0.scala":("tests/pos/typelevel0.scala" : String)(4452)>@tests/pos/typelevel0.scala<no position>)
+    :
+  scala.annotation.internal.SourceFile(4461)>@tests/pos/typelevel0.scala<no position> final module class ::$() extends <
+    <<new scala.AnyRef:scala.AnyRef(10978)>@tests/pos/typelevel0.scala<68..68>:((): java.lang.Object)(1739)>@
+      tests/pos/typelevel0.scala<68..68>
+  ():java.lang.Object(1738)>@tests/pos/typelevel0.scala<68..68>, <<_root_:<root>(7)>@tests/pos/typelevel0.scala<68..68>.
+    scala
+  :scala(40)>@tests/pos/typelevel0.scala<68..68>.Serializable@tests/pos/typelevel0.scala<68..68>, scala.deriving.Mirror.
+    Product
+   { this: <:::::$(10969)>@tests/pos/typelevel0.scala<68..68>.type@tests/pos/typelevel0.scala<68..68> =>
+    private def writeReplace(): scala.AnyRef = 
+      <
+        <
+          <new scala.runtime.ModuleSerializationProxy:scala.runtime.ModuleSerializationProxy(11231)>@
+            tests/pos/typelevel0.scala<79..79>
+        :((x$0: Class[?]): scala.runtime.ModuleSerializationProxy)(5167)>@tests/pos/typelevel0.scala<79..79>
+      (<classOf[::.type]:(classOf[::.type] : Class[::.type])(11234)>@tests/pos/typelevel0.scala<79..79>):
+        scala.runtime.ModuleSerializationProxy
+      (5160)>@tests/pos/typelevel0.scala<79..79>
+    @tests/pos/typelevel0.scala<79..79>@@(writeReplace=tests/pos/typelevel0.scala:<79..79>)
+    def apply[H@tests/pos/typelevel0.scala[83..84..85]@@(H=tests/pos/typelevel0.scala:<84..84>), 
+      T <: HList@tests/pos/typelevel0.scala[87..88..98]@@(T=tests/pos/typelevel0.scala:<88..88>)
+    ](hd: H@tests/pos/typelevel0.scala[101..106]@@(hd=tests/pos/typelevel0.scala:<101..101>), 
+      tl: T@tests/pos/typelevel0.scala[108..113]@@(tl=tests/pos/typelevel0.scala:<108..108>)
+    ): H :: T = 
+      <
+        <
+          <<new :::::(10920)>@tests/pos/typelevel0.scala<68..68>:([H, T <: HList](hd: H, tl: T): H :: T)(10962)>@
+            tests/pos/typelevel0.scala<68..68>
+        [H@tests/pos/typelevel0.scala<68..68>, T@tests/pos/typelevel0.scala<68..68>]:((hd: H, tl: T): H :: T)(11239)>@
+          tests/pos/typelevel0.scala<68..68>
+      (<hd:H(11181)>@tests/pos/typelevel0.scala<68..68>, <tl:T(11184)>@tests/pos/typelevel0.scala<68..68>):H :: T(11238
+        )>
+      @tests/pos/typelevel0.scala<68..68>
+    @tests/pos/typelevel0.scala<68..113>@@(apply=tests/pos/typelevel0.scala:<68..68>)
+    def unapply[H@tests/pos/typelevel0.scala[83..84..85]@@(H=tests/pos/typelevel0.scala:<84..84>), 
+      T <: HList@tests/pos/typelevel0.scala[87..88..98]@@(T=tests/pos/typelevel0.scala:<88..88>)
+    ](
+      x$1: 
+        ::[H@tests/pos/typelevel0.scala<68..68>, T@tests/pos/typelevel0.scala<68..68>]@
+          tests/pos/typelevel0.scala<68..68>
+      @tests/pos/typelevel0.scala<68..68>@@(x$1=tests/pos/typelevel0.scala:<68..68>)
+    ): H :: T = <x$1:H :: T(11208)>@tests/pos/typelevel0.scala<98..98>@tests/pos/typelevel0.scala<68..98>@@(unapply=
+      tests/pos/typelevel0.scala:<68..68>
+    )
+    type MirroredMonoType = ? :: ?@tests/pos/typelevel0.scala<79..79>@@(MirroredMonoType=
+      tests/pos/typelevel0.scala:<79..79>
+    )
+    def fromProduct(x$0: scala.Product@tests/pos/typelevel0.scala<79..79>@@(x$0=tests/pos/typelevel0.scala:<79..79>)): 
+      ::.MirroredMonoType
+     = 
+      <
+        <
+          <<new :::::(10920)>@tests/pos/typelevel0.scala<79..79>:([H, T <: HList](hd: H, tl: T): H :: T)(10962)>@
+            tests/pos/typelevel0.scala<79..79>
+        [scala.Any, HList]:((hd: scala.Any, tl: HList): scala.Any :: HList)(11242)>@tests/pos/typelevel0.scala<79..79>
+      (
+        <
+          <<x$0:scala.Product(11224)>@tests/pos/typelevel0.scala<79..79>.productElement:((n: scala.Int): scala.Any)(5195
+            )>
+          @tests/pos/typelevel0.scala<79..79>
+        (<0:(0 : scala.Int)(5246)>@tests/pos/typelevel0.scala<79..79>):scala.Any(1736)>@
+          tests/pos/typelevel0.scala<79..79>
+      , 
+        <
+          <
+            <
+              <<x$0:scala.Product(11224)>@tests/pos/typelevel0.scala<79..79>.productElement:((n: scala.Int): scala.Any)(
+                5195
+              )>@tests/pos/typelevel0.scala<79..79>
+            (<1:(1 : scala.Int)(5485)>@tests/pos/typelevel0.scala<79..79>):scala.Any(1736)>@
+              tests/pos/typelevel0.scala<79..79>
+          .$asInstanceOf$:([X0] => X0)(2427)>@tests/pos/typelevel0.scala<79..79>
+        [HList]:HList(10915)>@tests/pos/typelevel0.scala<79..79>
+      ):scala.Any :: HList(11241)>@tests/pos/typelevel0.scala<79..79>
+    @tests/pos/typelevel0.scala<79..79>@@(fromProduct=tests/pos/typelevel0.scala:<79..79>)
+  }
+  @tests/pos/typelevel0.scala[68..79..128]@@(::$=tests/pos/typelevel0.scala:<79..79>)
+}:<empty>.type(2501)>@tests/pos/typelevel0.scala<1..415>
