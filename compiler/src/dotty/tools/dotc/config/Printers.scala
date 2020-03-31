@@ -21,6 +21,7 @@ object Printers {
   val derive: Printer = noPrinter
   val desugar: Printer = noPrinter
   val dottydoc: Printer = noPrinter
+  val effect: Printer = noPrinter
   val exhaustivity: Printer = noPrinter
   val gadts: Printer = noPrinter
   val gadtsConstr: Printer = noPrinter
