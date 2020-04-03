@@ -56,7 +56,7 @@ object PickledQuotes {
     val unpickled = unpickle(tastyBytes, splices, isType = false)(ctx.addMode(Mode.ReadPositions))
     val Inlined(call, Nil, expnasion) = unpickled
     val inlineCtx = inlineContext(call)
-    val expansion1 = spliceTypes(expnasion, splices)(using inlineCtx)
+    val expansion1 = spliceTypesAndNames(expnasion, splices)(using inlineCtx)
     val expansion2 = spliceTerms(expansion1, splices)(using inlineCtx)
     cpy.Inlined(unpickled)(call, Nil, expansion2)
   }
@@ -65,7 +65,7 @@ object PickledQuotes {
   def unpickleType(tasty: PickledQuote, args: PickledArgs)(implicit ctx: Context): Tree = {
     val tastyBytes = TastyString.unpickle(tasty)
     val unpickled = unpickle(tastyBytes, args, isType = true)(ctx.addMode(Mode.ReadPositions))
-    spliceTypes(unpickled, args)
+    spliceTypesAndNames(unpickled, args)
   }
 
   /** Replace all term holes with the spliced terms */
@@ -123,9 +123,29 @@ object PickledQuotes {
     tree1
   }
 
-  /** Replace all type holes generated with the spliced types */
-  private def spliceTypes(tree: Tree, splices: PickledArgs)(using Context): Tree = {
-    tree match
+  /** Replace all type holes generated with the spliced types and renames the spliced local definitions */
+  private def spliceTypesAndNames(tree: Tree, splices: PickledArgs)(using ctx: Context): Tree = {
+    val localSyms = new TreeAccumulator[List[Symbol]] {
+      def apply(acc: List[Symbol], tree: Tree)(implicit ctx: Context): List[Symbol] =
+        val acc1 = tree match
+          case tree: ValDef if !tree.rhs.isEmpty && !tree.symbol.owner.isClass =>
+            tree.symbol :: acc
+          case _ => acc
+        foldOver(acc1, tree)
+    }.apply(Nil, tree)
+    val newSymbols = localSyms.map { sym =>
+      val newName = NameKinds.UniqueQuotedName.fresh(sym.name.toTypeName).toTermName
+      ctx.newSymbol(sym.owner, newName, sym.flags, sym.info, sym.privateWithin, sym.coord)
+    }
+    val symMap = localSyms.zip(newSymbols).toMap
+    def treeMap(tree: Tree): Tree = tree match
+      case tree: Ident if symMap.contains(tree.symbol) =>
+        tpd.ref(symMap(tree.symbol))
+      case tree: ValDef if !tree.rhs.isEmpty && !tree.symbol.owner.isClass =>
+        cpy.ValDef(tree)(symMap(tree.symbol).name.toTermName, tree.tpt, tree.rhs)
+      case _ => tree
+
+    val (tree1, typeMap) = tree match
       case Block(stat :: rest, expr1) if stat.symbol.hasAnnotation(defn.InternalQuoted_QuoteTypeTagAnnot) =>
         val typeSpliceMap = (stat :: rest).iterator.map {
           case tdef: TypeDef =>
@@ -150,11 +170,14 @@ object PickledQuotes {
             mapOver(tp1)
           }
         }
-        val expansion2 = new TreeTypeMap(new ReplaceSplicedTyped).transform(expr1)
-        quotePickling.println(i"**** typed quote\n${expansion2.show}")
-        expansion2
+        (expr1, new ReplaceSplicedTyped)
       case _ =>
-        tree
+        (tree, IdentityTypeMap)
+
+    val treeTypeMap = new TreeTypeMap(typeMap, treeMap, substFrom = localSyms, substTo = newSymbols)
+    val tree2 = treeTypeMap.transform(tree1)
+    quotePickling.println(i"**** typed and renamed quote\n${tree2.show}")
+    tree2
   }
 
   // TASTY picklingtests/pos/quoteTest.scala

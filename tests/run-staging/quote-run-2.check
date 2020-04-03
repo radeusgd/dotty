@@ -1,21 +1,21 @@
 1.0
 5.0
 {
-  val y: scala.Double = 5.0.*(5.0)
-  y
+  val y_1: scala.Double = 5.0.*(5.0)
+  y_1
 }
 5.0.*({
-  val y: scala.Double = 5.0.*(5.0)
-  y
+  val y_2: scala.Double = 5.0.*(5.0)
+  y_2
 })
 {
-  val y: scala.Double = 5.0.*(5.0)
-  y.*({
-    val y: scala.Double = y.*(y)
-    y.*({
-      val y: scala.Double = y.*(y)
-      val y: scala.Double = y.*(y)
-      y
+  val y_3: scala.Double = 5.0.*(5.0)
+  y_3.*({
+    val y_4: scala.Double = y_3.*(y_3)
+    y_4.*({
+      val y_5: scala.Double = y_4.*(y_4)
+      val y_6: scala.Double = y_5.*(y_5)
+      y_6
     })
   })
 }

@@ -1,5 +1,5 @@
 evaluating inner quote
 {
-  val b: scala.Int = 3
-  b.+(3)
+  val b_1: scala.Int = 3
+  b_1.+(3)
 }

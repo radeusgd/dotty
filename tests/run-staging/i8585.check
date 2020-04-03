@@ -1,0 +1,7 @@
+The following would not compile:
+((x: scala.Double) => {
+  val y_1: scala.Double = x.*(x)
+  val y_2: scala.Double = y_1.*(y_1)
+  y_2.*(y_2)
+})
+3^8 = 6561.0

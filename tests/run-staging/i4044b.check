@@ -1,5 +1,5 @@
 {
-  var x: scala.Int = 4
-  x = 3
-  x
+  var x_1: scala.Int = 4
+  x_1 = 3
+  x_1
 }

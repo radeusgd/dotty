@@ -1,4 +1,4 @@
 {
-  lazy val f: scala.Function1[scala.Int, scala.Int] = ((x: scala.Int) => scala.Predef.identity[scala.Int](x))
+  lazy val f_1: scala.Function1[scala.Int, scala.Int] = ((x: scala.Int) => scala.Predef.identity[scala.Int](x))
   ()
 }
