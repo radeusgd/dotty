@@ -1,93 +1,93 @@
 ((arr: scala.Array[scala.Int], f: scala.Function1[scala.Int, scala.Unit]) => {
-  val size: scala.Int = arr.length
-  var i: scala.Int = 0
-  while (i.<(size)) {
-    val element: scala.Int = arr.apply(i)
-    f.apply(element)
-    i = i.+(1)
+  val size_1: scala.Int = arr.length
+  var i_1: scala.Int = 0
+  while (i_1.<(size_1)) {
+    val element_1: scala.Int = arr.apply(i_1)
+    f.apply(element_1)
+    i_1 = i_1.+(1)
   }
 })
 
 ((arr: scala.Array[scala.Predef.String], f: scala.Function1[scala.Predef.String, scala.Unit]) => {
-  val size: scala.Int = arr.length
-  var i: scala.Int = 0
-  while (i.<(size)) {
-    val element: java.lang.String = arr.apply(i)
-    f.apply(element)
-    i = i.+(1)
+  val size_2: scala.Int = arr.length
+  var i_2: scala.Int = 0
+  while (i_2.<(size_2)) {
+    val element_2: java.lang.String = arr.apply(i_2)
+    f.apply(element_2)
+    i_2 = i_2.+(1)
   }
 })
 
 ((arr: scala.Array[scala.Predef.String], f: scala.Function1[scala.Predef.String, scala.Unit]) => {
-  val size: scala.Int = arr.length
-  var i: scala.Int = 0
-  while (i.<(size)) {
-    val element: java.lang.String = arr.apply(i)
-    f.apply(element)
-    i = i.+(1)
+  val size_3: scala.Int = arr.length
+  var i_3: scala.Int = 0
+  while (i_3.<(size_3)) {
+    val element_3: java.lang.String = arr.apply(i_3)
+    f.apply(element_3)
+    i_3 = i_3.+(1)
   }
 })
 
 ((arr: scala.Array[scala.Int]) => {
-  val size: scala.Int = arr.length
-  var i: scala.Int = 0
-  while (i.<(size)) {
-    val element: scala.Int = arr.apply(i)
-    ((i: scala.Int) => java.lang.System.out.println(i)).apply(element)
-    i = i.+(1)
+  val size_4: scala.Int = arr.length
+  var i_4: scala.Int = 0
+  while (i_4.<(size_4)) {
+    val element_4: scala.Int = arr.apply(i_4)
+    ((i: scala.Int) => java.lang.System.out.println(i)).apply(element_4)
+    i_4 = i_4.+(1)
   }
 })
 
 ((arr: scala.Array[scala.Int], f: scala.Function1[scala.Int, scala.Unit]) => {
-  val size: scala.Int = arr.length
-  var i: scala.Int = 0
-  if (size.%(3).!=(0)) throw new scala.Exception("...") else ()
-  while (i.<(size)) {
-    f.apply(arr.apply(i))
-    f.apply(arr.apply(i.+(1)))
-    f.apply(arr.apply(i.+(2)))
-    i = i.+(3)
+  val size_5: scala.Int = arr.length
+  var i_5: scala.Int = 0
+  if (size_5.%(3).!=(0)) throw new scala.Exception("...") else ()
+  while (i_5.<(size_5)) {
+    f.apply(arr.apply(i_5))
+    f.apply(arr.apply(i_5.+(1)))
+    f.apply(arr.apply(i_5.+(2)))
+    i_5 = i_5.+(3)
   }
 })
 
 ((arr: scala.Array[scala.Int], f: scala.Function1[scala.Int, scala.Unit]) => {
-  val size: scala.Int = arr.length
-  var i: scala.Int = 0
-  if (size.%(4).!=(0)) throw new scala.Exception("...") else ()
-  while (i.<(size)) {
-    f.apply(arr.apply(i.+(0)))
-    f.apply(arr.apply(i.+(1)))
-    f.apply(arr.apply(i.+(2)))
-    f.apply(arr.apply(i.+(3)))
-    i = i.+(4)
+  val size_6: scala.Int = arr.length
+  var i_6: scala.Int = 0
+  if (size_6.%(4).!=(0)) throw new scala.Exception("...") else ()
+  while (i_6.<(size_6)) {
+    f.apply(arr.apply(i_6.+(0)))
+    f.apply(arr.apply(i_6.+(1)))
+    f.apply(arr.apply(i_6.+(2)))
+    f.apply(arr.apply(i_6.+(3)))
+    i_6 = i_6.+(4)
   }
 })
 
 {
-  val array: scala.Array[scala.Int] = new scala.Array[scala.Int](4)
-  array.update(0, 1)
-  array.update(1, 2)
-  array.update(2, 3)
-  array.update(3, 4)
+  val array_1: scala.Array[scala.Int] = new scala.Array[scala.Int](4)
+  array_1.update(0, 1)
+  array_1.update(1, 2)
+  array_1.update(2, 3)
+  array_1.update(3, 4)
 
-  (array: scala.Array[scala.Int])
+  (array_1: scala.Array[scala.Int])
 }
 
 {
-  val arr1: scala.Array[scala.Int] = {
-    val array: scala.Array[scala.Int] = new scala.Array[scala.Int](4)
-    array.update(0, 1)
-    array.update(1, 3)
-    array.update(2, 4)
-    array.update(3, 5)
+  val arr1_1: scala.Array[scala.Int] = {
+    val array_2: scala.Array[scala.Int] = new scala.Array[scala.Int](4)
+    array_2.update(0, 1)
+    array_2.update(1, 3)
+    array_2.update(2, 4)
+    array_2.update(3, 5)
 
-    (array: scala.Array[scala.Int])
+    (array_2: scala.Array[scala.Int])
   }
-  val size: scala.Int = arr1.length
-  var i: scala.Int = 0
-  while (i.<(size)) {
-    val element: scala.Int = arr1.apply(i)
-    ((x: scala.Int) => scala.Predef.println(x)).apply(element)
-    i = i.+(1)
+  val size_7: scala.Int = arr1_1.length
+  var i_7: scala.Int = 0
+  while (i_7.<(size_7)) {
+    val element_5: scala.Int = arr1_1.apply(i_7)
+    ((x: scala.Int) => scala.Predef.println(x)).apply(element_5)
+    i_7 = i_7.+(1)
   }
 }

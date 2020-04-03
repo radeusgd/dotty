@@ -7,14 +7,14 @@ Complex(4,3)
 
 ((arr1: scala.Array[scala.Int], arr2: scala.Array[scala.Int]) => {
   if (arr1.length.!=(arr2.length)) throw new scala.Exception("...") else ()
-  var sum: scala.Int = 0
-  var i: scala.Int = 0
-  while (i.<(scala.Predef.intArrayOps(arr1).size)) {
-    sum = sum.+(arr1.apply(i).*(arr2.apply(i)))
-    i = i.+(1)
+  var sum_1: scala.Int = 0
+  var i_1: scala.Int = 0
+  while (i_1.<(scala.Predef.intArrayOps(arr1).size)) {
+    sum_1 = sum_1.+(arr1.apply(i_1).*(arr2.apply(i_1)))
+    i_1 = i_1.+(1)
   }
 
-  (sum: scala.Int)
+  (sum_1: scala.Int)
 })
 10
 

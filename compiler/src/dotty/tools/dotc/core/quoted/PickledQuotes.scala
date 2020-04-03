@@ -130,6 +130,8 @@ object PickledQuotes {
         val acc1 = tree match
           case tree: ValDef if !tree.rhs.isEmpty && !tree.symbol.owner.isClass =>
             tree.symbol :: acc
+          case tree: DefDef if !tree.rhs.isEmpty && !tree.symbol.owner.isClass =>
+            tree.symbol :: acc
           case _ => acc
         foldOver(acc1, tree)
     }.apply(Nil, tree)
@@ -142,7 +144,9 @@ object PickledQuotes {
       case tree: Ident if symMap.contains(tree.symbol) =>
         tpd.ref(symMap(tree.symbol))
       case tree: ValDef if !tree.rhs.isEmpty && !tree.symbol.owner.isClass =>
-        cpy.ValDef(tree)(symMap(tree.symbol).name.toTermName, tree.tpt, tree.rhs)
+        ValDef(symMap(tree.symbol), tree.rhs)
+      case tree: DefDef if !tree.rhs.isEmpty && !tree.symbol.owner.isClass =>
+        DefDef(symMap(tree.symbol), tree.rhs)
       case _ => tree
 
     val (tree1, typeMap) = tree match
@@ -174,7 +178,7 @@ object PickledQuotes {
       case _ =>
         (tree, IdentityTypeMap)
 
-    val treeTypeMap = new TreeTypeMap(typeMap, treeMap, substFrom = localSyms, substTo = newSymbols)
+    val treeTypeMap = new TreeTypeMap(typeMap, oldOwners = localSyms, newOwners = newSymbols, substFrom = localSyms, substTo = newSymbols)
     val tree2 = treeTypeMap.transform(tree1)
     quotePickling.println(i"**** typed and renamed quote\n${tree2.show}")
     tree2

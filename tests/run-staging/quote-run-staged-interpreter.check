@@ -7,7 +7,7 @@
 9
 ---
 {
-  val y: scala.Int = 3
-  2.+(y).+(4)
+  val y_1: scala.Int = 3
+  2.+(y_1).+(4)
 }
 9

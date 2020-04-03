@@ -1,13 +1,13 @@
 ((x1: scala.Double) => x1.*({
-   val x2: scala.Double = x1.*(x1)
-   val x4: scala.Double = x2.*(x2)
-  x4.*({
-     val x8: scala.Double = x4.*(x4)
-    x8.*({
-       val x16: scala.Double = x8.*(x8)
-       val x32: scala.Double = x16.*(x16)
-       val x64: scala.Double = x32.*(x32)
-      x64
+  val y_1: scala.Double = x1.*(x1)
+  val y_2: scala.Double = y_1.*(y_1)
+  y_2.*({
+    val y_3: scala.Double = y_2.*(y_2)
+    y_3.*({
+      val y_4: scala.Double = y_3.*(y_3)
+      val y_5: scala.Double = y_4.*(y_4)
+      val y_6: scala.Double = y_5.*(y_5)
+      y_6
     })
   })
 }))
