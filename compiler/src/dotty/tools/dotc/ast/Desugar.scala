@@ -335,6 +335,40 @@ object desugar {
     adaptToExpectedTpt(tree)
   }
 
+  def quotedPattern2(quote: Quote)(implicit ctx: Context): (List[Tree], List[Tree], Tree) = {
+    val typeSplices = List.newBuilder[Tree]
+    val termSplices = List.newBuilder[Tree]
+    val splicedTypes = List.newBuilder[Tree]
+    val quoted1 = new UntypedTreeMap {
+      override def transform(tree: Tree)(using Context): Tree =
+        tree match
+          case tree: Splice =>
+            termSplices += tree.expr
+            untpd.ref(defn.InternalQuoted_patternHole.termRef)
+          case tree: TypSplice =>
+            tree.expr match
+              case expr: Ident =>
+                typeSplices += expr
+                val name = expr.name.toTypeName //("$" + expr.name).toTypeName
+                val patternBindHoleAnnot = New(ref(defn.InternalQuoted_patternBindHoleAnnot.typeRef)).withSpan(tree.span)
+                val tdef = TypeDef(name, TypeBoundsTree(EmptyTree, EmptyTree))
+                val mods = tdef.mods.withAddedAnnotation(patternBindHoleAnnot)
+                splicedTypes += tdef.withMods(mods)
+                cpy.Ident(expr)(name)
+              case expr =>
+                ctx.error("Expected identifier", expr.sourcePos)
+                ref(defn.NothingType)
+          case tree =>
+            super.transform(tree)
+    }.transform(quote.quoted)
+
+    val quoted2 = splicedTypes.result() match
+      case Nil => quoted1
+      case _ => Block(splicedTypes.result, quoted1).withSpan(quoted1.span)
+
+    (typeSplices.result(), termSplices.result(), cpy.Quote(quote)(quoted2))
+  }
+
   // Add all evidence parameters in `params` as implicit parameters to `meth` */
   private def addEvidenceParams(meth: DefDef, params: List[ValDef])(implicit ctx: Context): DefDef =
     params match {
@@ -941,6 +975,7 @@ object desugar {
    *
    *  if the type is a type splice.
    */
+   // TODO remove
   def quotedPatternTypeDef(tree: TypeDef)(implicit ctx: Context): TypeDef = {
     assert(ctx.mode.is(Mode.QuotedPattern))
     if (tree.name.startsWith("$") && !tree.isBackquoted) {

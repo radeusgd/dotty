@@ -13,29 +13,29 @@ object Test {
     case '{ ((a: Int) => 3)($y) } => y
     case '{ 1 + ($y: Int)} => y
     case '{ val a = 1 + ($y: Int); 3 } => y
-    case '{ val $y: Int = $z; println(`$y`); 1 } =>
-      val a: String = y
-      z
-    case '{ (($y: Int) => 1 + `$y` + ($z: Int))(2) } =>
-      val a: String = y
-      z
-    case '{ def $ff: Int = $z; `$ff` } =>
-      val a: String = ff
-      z
-    case '{ def $ff(i: Int): Int = $z; 2 } =>
-      val a: String = ff
-      z
-    case '{ def $ff(i: Int)(j: Int): Int = $z; 2 } =>
-      val a: String = ff
-      z
-    case '{ def $ff[T](i: T): Int = $z; 2 } =>
-      val a: String = ff
-      z
+    // case '{ val $y: Int = $z; println(`$y`); 1 } =>
+    //   val a: String = y
+    //   z
+    // case '{ (($y: Int) => 1 + `$y` + ($z: Int))(2) } =>
+    //   val a: String = y
+    //   z
+    // case '{ def $ff: Int = $z; `$ff` } =>
+    //   val a: String = ff
+    //   z
+    // case '{ def $ff(i: Int): Int = $z; 2 } =>
+    //   val a: String = ff
+    //   z
+    // case '{ def $ff(i: Int)(j: Int): Int = $z; 2 } =>
+    //   val a: String = ff
+    //   z
+    // case '{ def $ff[T](i: T): Int = $z; 2 } =>
+    //   val a: String = ff
+    //   z
     case '{ poly[$t]($x); 4 } => ???
-    case '{ type $X; poly[`$X`]($x); 4 } => ???
-    case '{ type $T; val x: `$T` = $a; val y: `$T` = x;  1 } => ???
-    case '{ type $t <: AnyRef; val x: `$t` = $a; val y: `$t` = x;  1 } => ???
-    case _ => '{1}
+    // case '{ type $X; poly[`$X`]($x); 4 } => ???
+    // case '{ type $T; val x: `$T` = $a; val y: `$T` = x;  1 } => ???
+    // case '{ type $t <: AnyRef; val x: `$t` = $a; val y: `$t` = x;  1 } => ???
+    // case _ => '{1}
   }
 
   def poly[T](x: T): Unit = ()
@@ -43,4 +43,13 @@ object Test {
   object Foo {
     def unapply[T](arg: quoted.Type[T]): Option[quoted.Type[T]] = Some(arg)
   }
+}
+
+given Tuple2_delegate[T1, T2](using Type[T1], Type[T2], Unliftable[T1], Unliftable[T2]) as Unliftable[Tuple2[T1, T2]] = new {
+  def apply(x: Expr[Tuple2[T1, T2]])(using qctx: QuoteContext): Option[Tuple2[T1, T2]] = x match {
+    case '{ new Tuple2[T1, T2](${Unlifted(y1)}, ${Unlifted(y2)}) } => Some(Tuple2(y1, y2))
+    case '{     Tuple2[T1, T2](${Unlifted(y1)}, ${Unlifted(y2)}) } => Some(Tuple2(y1, y2))
+    case _ => None
+  }
+  override def toString(): String = "scala.quoted.Unliftable.Tuple2_delegate"
 }
