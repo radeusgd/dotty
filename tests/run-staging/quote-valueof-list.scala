@@ -26,7 +26,7 @@ object Test {
 
     implicit def UnliftableList[T: Unliftable: Type]: Unliftable[List[T]] = new {
       def apply(xs: Expr[List[T]])(using QuoteContext): Option[List[T]] = (xs: Expr[Any]) match {
-        case '{ ($xs1: List[T]).::($x) } =>
+        case '{ ($xs1: List[T]).::($x: T) } =>
           for { head <- x.unlift; tail <- xs1.unlift }
           yield head :: tail
         case '{ Nil } => Some(Nil)

@@ -454,6 +454,42 @@ trait QuotesAndSplices {
         case shape => shape
     }
 
+
+    println("==============================")
+    println(tree.quoted.show)
+    println()
+    println(quoted00.show)
+    println()
+    println(shape.show)
+    println()
+    println()
+    println()
+    println()
+    object variancer extends tpd.TreeTraverser {
+      private var variance: Int = 1
+
+      inline private def atVariance[T](v: Int)(op: => T): T = {
+        val saved = variance
+        variance = v
+        val res = op
+        variance = saved
+        res
+      }
+
+      def traverse(tree: Tree)(using Context): Unit = tree match {
+        case tree: Ident if variance == -1 && tree.symbol.hasAnnotation(defn.InternalQuoted_patternBindHoleAnnot) =>
+          tree.symbol.addAnnotation(Annotation(defn.InternalQuoted_fromAboveAnnot))
+        case tree @ AppliedTypeTree(tpt, args) =>
+          for (arg, v) <- args.lazyZip(tpt.tpe.typeParams.map(_.paramVarianceSign)) do
+            arg.tpe match
+              case _: TypeBounds => traverse(arg)
+              case _ => atVariance(variance * v)(traverse(arg))
+        case _ =>
+          traverseChildren(tree)
+      }
+    }
+    variancer.traverse(shape)
+
     def extractTypeHoleSymbols(tree: Tree): List[Symbol] = {
       val extract =
         new TreeAccumulator[List[Symbol]]:

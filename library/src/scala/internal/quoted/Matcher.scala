@@ -213,6 +213,7 @@ private[quoted] object Matcher {
 
           case (scrutinee, Block(typeBindings, expr2)) if typeBindings.forall(isTypeBinding) =>
             val bindingSymbols = typeBindings.map(_.symbol)
+
             qctx.tasty.internal.Context_GADT_addToConstraint(summon[Context])(bindingSymbols)
             bindingSymbols.foldRight(scrutinee =?= expr2)((x, acc) => matched(new SymBinding(x, hasFromAboveAnnotation(x))) && acc)
 

@@ -308,37 +308,41 @@ object desugar {
    *  Note that the splice `$t: T` will be typed as `${t: Expr[T]}`
    */
   def quotedPattern(tree: untpd.Tree, expectedTpt: untpd.Tree)(implicit ctx: Context): untpd.Tree = {
-    def adaptToExpectedTpt(tree: untpd.Tree): untpd.Tree = tree match {
+    def adaptToExpectedTpt(tree: untpd.Tree, etpt: untpd.Tree): untpd.Tree = tree match {
       // Add the expected type as an ascription
       case _: untpd.Splice =>
-        untpd.Typed(tree, expectedTpt).withSpan(tree.span)
+        untpd.Typed(tree, etpt).withSpan(tree.span)
       case Typed(expr: untpd.Splice, tpt) =>
-        cpy.Typed(tree)(expr, untpd.makeAndType(tpt, expectedTpt).withSpan(tpt.span))
+        cpy.Typed(tree)(expr, untpd.makeAndType(tpt, etpt).withSpan(tpt.span))
+
+      // case Typed(expr, tpt) =>
+      //   adaptToExpectedTpt(expr, tpt)
 
       // Propagate down the expected type to the leafs of the expression
       case Block(stats, expr) =>
-        cpy.Block(tree)(stats, adaptToExpectedTpt(expr))
+        cpy.Block(tree)(stats, adaptToExpectedTpt(expr, etpt))
       case If(cond, thenp, elsep) =>
-        cpy.If(tree)(cond, adaptToExpectedTpt(thenp), adaptToExpectedTpt(elsep))
+        cpy.If(tree)(cond, adaptToExpectedTpt(thenp, etpt), adaptToExpectedTpt(elsep, etpt))
       case untpd.Parens(expr) =>
-        cpy.Parens(tree)(adaptToExpectedTpt(expr))
+        cpy.Parens(tree)(adaptToExpectedTpt(expr, etpt))
       case Match(selector, cases) =>
-        val newCases = cases.map(cdef => cpy.CaseDef(cdef)(body = adaptToExpectedTpt(cdef.body)))
+        val newCases = cases.map(cdef => cpy.CaseDef(cdef)(body = adaptToExpectedTpt(cdef.body, etpt)))
         cpy.Match(tree)(selector, newCases)
       case untpd.ParsedTry(expr, handler, finalizer) =>
-        cpy.ParsedTry(tree)(adaptToExpectedTpt(expr), adaptToExpectedTpt(handler), finalizer)
+        cpy.ParsedTry(tree)(adaptToExpectedTpt(expr, etpt), adaptToExpectedTpt(handler, etpt), finalizer)
 
       // Tree does not need to be ascribed
       case _ =>
         tree
     }
-    adaptToExpectedTpt(tree)
+    adaptToExpectedTpt(tree, expectedTpt)
   }
 
   def quotedPattern2(quoted: Tree, expectedTpt: untpd.Tree)(implicit ctx: Context): (List[Tree], List[Tree], Tree) = {
     val typeSplices = List.newBuilder[Tree]
     val termSplices = List.newBuilder[Tree]
     val splicedTypes = List.newBuilder[Tree]
+    val splicedTypeNames = collection.mutable.Set.empty[Name]
     val quoted1 = new UntypedTreeMap {
       override def transform(tree: Tree)(using Context): Tree =
         tree match
@@ -351,13 +355,14 @@ object desugar {
           case tree: TypSplice =>
             tree.expr match
               case expr: Ident =>
-                typeSplices += expr
-                val name = expr.name.toTypeName //("$" + expr.name).toTypeName
-                val patternBindHoleAnnot = New(ref(defn.InternalQuoted_patternBindHoleAnnot.typeRef)).withSpan(tree.span)
-                val tdef = TypeDef(name, TypeBoundsTree(EmptyTree, EmptyTree))
-                val mods = tdef.mods.withAddedAnnotation(patternBindHoleAnnot)
-                splicedTypes += tdef.withMods(mods)
-                cpy.Ident(expr)(name)
+                if !splicedTypeNames(expr.name) then
+                  splicedTypeNames += expr.name
+                  typeSplices += expr
+                  val patternBindHoleAnnot = New(ref(defn.InternalQuoted_patternBindHoleAnnot.typeRef)).withSpan(tree.span)
+                  val tdef = TypeDef(expr.name.toTypeName, TypeBoundsTree(EmptyTree, EmptyTree))
+                  val mods = tdef.mods.withAddedAnnotation(patternBindHoleAnnot)
+                  splicedTypes += tdef.withMods(mods)
+                expr
               case expr =>
                 ctx.error("Expected identifier", expr.sourcePos)
                 ref(defn.NothingType)
