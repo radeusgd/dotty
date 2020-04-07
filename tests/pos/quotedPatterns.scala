@@ -44,12 +44,3 @@ object Test {
     def unapply[T](arg: quoted.Type[T]): Option[quoted.Type[T]] = Some(arg)
   }
 }
-
-given Tuple2_delegate[T1, T2](using Type[T1], Type[T2], Unliftable[T1], Unliftable[T2]) as Unliftable[Tuple2[T1, T2]] = new {
-  def apply(x: Expr[Tuple2[T1, T2]])(using qctx: QuoteContext): Option[Tuple2[T1, T2]] = x match {
-    case '{ new Tuple2[T1, T2](${Unlifted(y1)}, ${Unlifted(y2)}) } => Some(Tuple2(y1, y2))
-    case '{     Tuple2[T1, T2](${Unlifted(y1)}, ${Unlifted(y2)}) } => Some(Tuple2(y1, y2))
-    case _ => None
-  }
-  override def toString(): String = "scala.quoted.Unliftable.Tuple2_delegate"
-}

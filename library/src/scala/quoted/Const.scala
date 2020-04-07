@@ -16,7 +16,7 @@ object Const {
    */
   def unapply[T](expr: Expr[T])(using qctx: QuoteContext): Option[T] = {
     import qctx.tasty._
-    def rec(tree: Term): Option[T] = tree match {
+    def rec(tree: Term): Option[T] = tree match { // TODO match if tree.tpe is a literal type
       case Literal(c) => Some(c.value.asInstanceOf[T])
       case Block(Nil, e) => rec(e)
       case Typed(e, _) => rec(e)

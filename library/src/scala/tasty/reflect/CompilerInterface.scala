@@ -1494,6 +1494,9 @@ trait CompilerInterface {
   /** Symbol of scala.internal.Quoted.patternHole */
   def Definitions_InternalQuoted_patternHole: Symbol
 
+  /** Symbol of scala.internal.Quoted.patternSeqHole */
+  def Definitions_InternalQuoted_patternSeqHole: Symbol
+
   /** Symbol of scala.internal.Quoted.patternBindHole */
   def Definitions_InternalQuoted_patternBindHoleAnnot: Symbol
 

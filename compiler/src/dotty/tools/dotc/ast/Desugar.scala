@@ -335,7 +335,7 @@ object desugar {
     adaptToExpectedTpt(tree)
   }
 
-  def quotedPattern2(quote: Quote)(implicit ctx: Context): (List[Tree], List[Tree], Tree) = {
+  def quotedPattern2(quoted: Tree, expectedTpt: untpd.Tree)(implicit ctx: Context): (List[Tree], List[Tree], Tree) = {
     val typeSplices = List.newBuilder[Tree]
     val termSplices = List.newBuilder[Tree]
     val splicedTypes = List.newBuilder[Tree]
@@ -345,6 +345,9 @@ object desugar {
           case tree: Splice =>
             termSplices += tree.expr
             untpd.ref(defn.InternalQuoted_patternHole.termRef)
+          case tree @ Typed(Splice(expr), Ident(tpnme.WILDCARD_STAR)) =>
+            termSplices += expr
+            untpd.ref(defn.InternalQuoted_patternSeqHole.termRef)
           case tree: TypSplice =>
             tree.expr match
               case expr: Ident =>
@@ -360,13 +363,13 @@ object desugar {
                 ref(defn.NothingType)
           case tree =>
             super.transform(tree)
-    }.transform(quote.quoted)
+    }.transform(quotedPattern(quoted, expectedTpt))
 
     val quoted2 = splicedTypes.result() match
       case Nil => quoted1
       case _ => Block(splicedTypes.result, quoted1).withSpan(quoted1.span)
 
-    (typeSplices.result(), termSplices.result(), cpy.Quote(quote)(quoted2))
+    (typeSplices.result(), termSplices.result(), quoted2)
   }
 
   // Add all evidence parameters in `params` as implicit parameters to `meth` */

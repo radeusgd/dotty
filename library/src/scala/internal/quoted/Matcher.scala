@@ -138,9 +138,9 @@ private[quoted] object Matcher {
         (scrutinee, pattern) match {
 
           // Match a scala.internal.Quoted.patternHole typed as a repeated argument and return the scrutinee tree
-          case (scrutinee @ Typed(s, tpt1), Typed(TypeApply(patternHole, tpt :: Nil), tpt2))
-              if patternHole.symbol == internal.Definitions_InternalQuoted_patternHole &&
-                 s.tpe <:< tpt.tpe &&
+          case (scrutinee @ Typed(s, tpt1), Typed(s2 @ Repeated(TypeApply(patternHole, tpt :: Nil) :: Nil, _), tpt2))
+              if patternHole.symbol == internal.Definitions_InternalQuoted_patternSeqHole &&
+                 s.tpe <:< s2.tpe &&
                  tpt2.tpe.derivesFrom(defn.RepeatedParamClass) =>
             matched(scrutinee.seal)
 

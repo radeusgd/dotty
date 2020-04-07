@@ -54,7 +54,23 @@ trait QuotesAndSplices {
 
     val tree1 =
       if ctx.mode.is(Mode.Pattern) && level == 0 then
-        typedQuotePattern(tree, pt, qctx)
+        val b = typedQuotePattern2(tree, pt, qctx)
+        // val a = typedQuotePattern(tree, pt, qctx)
+        // println("++++++++++++++++++++++")
+        // println(a.show)
+        // println(a.tpe.show)
+        // println()
+        // println()
+        // println(b.show)
+        // println(b.tpe.show)
+        // println()
+        // println()
+        // println()
+        // println()
+        // println()
+        // println()
+        // println()
+        b
       else if (tree.quoted.isType)
         typedTypeApply(untpd.TypeApply(untpd.ref(defn.InternalQuoted_typeQuote.termRef), tree.quoted :: Nil), pt)(using quoteContext)
       else
@@ -360,86 +376,6 @@ trait QuotesAndSplices {
       case _ => defn.AnyType
     }
     val quoted0 = desugar.quotedPattern(quoted, untpd.TypedSplice(TypeTree(quotedPt)))
-    val (tpats, pats, quoted00) = desugar.quotedPattern2(tree)
-
-    val quoted00t = typed(quoted00)(using ctx.retractMode(Mode.Pattern))
-
-    def extractTypeHoleSymbols(tree: Tree): List[Symbol] = {
-      val extract =
-        new TreeAccumulator[List[Symbol]]:
-          def apply(x: List[Symbol], tree: Tree)(implicit ctx: Context): List[Symbol] =
-            tree match
-              case Block(stats, _) =>
-                stats match
-                  case (hd: TypeDef) :: tl if hd.symbol.hasAnnotation(defn.InternalQuoted_patternBindHoleAnnot) =>
-                    hd.symbol :: tl.map(_.symbol)
-                  case _ => x
-              case _ => foldOver(x, tree)
-
-      extract(Nil, tree)
-    }
-
-    def extractTermHoleTypes(tree: Tree): List[Type] = {
-      val extract =
-        new TreeAccumulator[List[Type]]:
-          def apply(x: List[Type], tree: Tree)(implicit ctx: Context): List[Type] =
-            if tree.symbol == defn.InternalQuoted_patternHole then tree.tpe.stripTypeVar :: x else foldOver(x, tree)
-      extract(Nil, tree).reverse
-    }
-
-    val typeHoleSymbols = extractTypeHoleSymbols(quoted00t)
-    val termHoleTypes = extractTermHoleTypes(quoted00t)
-
-    val typeBindingsSymbols = typeHoleSymbols.map { sym =>
-      val newInfo = sym.info // TODO?
-      ctx.newSymbol(ctx.owner, ("_" + sym.name).toTypeName, Case, newInfo, sym.privateWithin, sym.coord)
-    }
-    object replaceBindings2 extends TypeMap() {
-      private[this] val map = typeHoleSymbols.lazyZip(typeBindingsSymbols).toMap
-      override def apply(tp: Type): Type = tp match {
-        case tp: TypeRef if tp.typeSymbol.hasAnnotation(defn.InternalQuoted_patternBindHoleAnnot) =>
-          map(tp.symbol).typeRef
-        case tp => mapOver(tp)
-      }
-    }
-
-    val typeBindings2 = typeBindingsSymbols.map { sym =>
-      Bind(sym, untpd.Ident(nme.WILDCARD).withType(sym.info)).withSpan(sym.span)
-    }
-    val quotedTypeBindings3 = typeBindingsSymbols.map { sym =>
-      val bindingTypeTpe = AppliedType(defn.QuotedTypeClass.typeRef, sym.typeRef :: Nil)
-      val termSym = ctx.newPatternBoundSymbol(sym.name.toTermName, bindingTypeTpe, sym.span, flags = ImplicitTerm)
-      Bind(termSym, untpd.Ident(nme.WILDCARD).withType(bindingTypeTpe)).withSpan(termSym.span)
-    }
-
-    val typeHolePatternsTypes = typeBindingsSymbols.map(x => defn.QuotedTypeClass.typeRef.appliedTo(x.typeRef))
-    val termHolePatternsTypes = termHoleTypes.map(replaceBindings2).map(defn.QuotedExprClass.typeRef.appliedTo)
-    val termHolePatterns = quotedTypeBindings3 ::: pats.lazyZip(termHolePatternsTypes).map { (pat, tp) =>
-      typed(untpd.Typed(pat, untpd.TypedSplice(TypeTree(tp))).withSpan(pat.span), tp)
-    }.toList
-
-
-    val unapp = {
-      val unapplySym = if (tree.quoted.isTerm) defn.InternalQuotedExpr_unapply else defn.InternalQuotedType_unapply
-      val quoteClass = if (tree.quoted.isTerm) defn.QuotedExprClass else defn.QuotedTypeClass
-      val typeBindingsTuple = tpd.tupleTypeTree(typeBindings2)
-      val patternTupleType = tpd.tupleTypeTree((typeHolePatternsTypes ::: termHolePatternsTypes).map(TypeTree))
-      val splicePat = typed(untpd.Tuple(termHolePatterns.map(x => untpd.TypedSplice(x))).withSpan(quoted.span), patternTupleType.tpe)
-
-      UnApply(
-        fun = ref(unapplySym.termRef).appliedToTypeTrees(typeBindingsTuple :: patternTupleType :: Nil),
-        implicits = quoted00t :: Literal(Constant(false)) :: qctx :: Nil,
-        patterns = splicePat :: Nil,
-        proto = quoted00t.tpe & quotedPt)
-    }
-      // Apply(Apply(ref(defn.InternalQuotedExpr_unapply.termRef).appliedToTypes(List(defn.NothingType, defn.NothingType)), pats2),
-      //   List(quoted00t, Literal(Constant(true)), Literal(Constant(null))))
-    // val unapp1 =
-    //   typed(unapp, pt)
-
-
-    // return unapp
-
 
     val quoteCtx = quoteContext.addMode(Mode.QuotedPattern)
     val quoted1 =
@@ -489,25 +425,110 @@ trait QuotesAndSplices {
     val quotedPattern =
       if (tree.quoted.isTerm) ref(defn.InternalQuoted_exprQuote.termRef).appliedToType(defn.AnyType).appliedTo(shape).select(nme.apply).appliedTo(qctx)
       else ref(defn.InternalQuoted_typeQuote.termRef).appliedToTypeTree(shape)
-    val unap0 = UnApply(
+    UnApply(
       fun = ref(unapplySym.termRef).appliedToTypeTrees(typeBindingsTuple :: TypeTree(patType) :: Nil),
       implicits = quotedPattern :: Literal(Constant(typeBindings.nonEmpty)) :: qctx :: Nil,
       patterns = splicePat :: Nil,
       proto = quoteClass.typeRef.appliedTo(replaceBindings(quoted1.tpe) & quotedPt))
+  }
 
-    // println("====================")
-    // println(unap0.show)
-    // println()
-    // println()
-    // println()
-    // println(unapp.show)
-    // println()
-    // println()
-    // println()
-    // println()
-    // println()
-    // println()
-    unapp
-    // unap0
+  private def typedQuotePattern2(tree: untpd.Quote, pt: Type, qctx: Tree)(using Context): Tree = {
+    if tree.quoted.isTerm && !pt.derivesFrom(defn.QuotedExprClass) then
+      ctx.error("Quote pattern can only match scrutinees of type scala.quoted.Expr", tree.sourcePos)
+    else if tree.quoted.isType && !pt.derivesFrom(defn.QuotedTypeClass) then
+      ctx.error("Quote pattern can only match scrutinees of type scala.quoted.Type", tree.sourcePos)
+
+    val quoted = tree.quoted
+    val exprPt = pt.baseType(if quoted.isType then defn.QuotedTypeClass else defn.QuotedExprClass)
+    val quotedPt = exprPt.argInfos.headOption match {
+      case Some(argPt: ValueType) => argPt // excludes TypeBounds
+      case _ => defn.AnyType
+    }
+
+    val (tpats, pats, quoted00) = desugar.quotedPattern2(tree.quoted, untpd.TypedSplice(TypeTree(quotedPt)))
+
+    val shape = inContext(ctx.retractMode(Mode.Pattern)) {
+      if quoted.isTerm then typedExpr(quoted00, WildcardType)
+      else typedType(quoted00, WildcardType) match
+        case shape @ Block(aliases, Typed(tpt, _)) => cpy.Block(shape)(aliases, tpt) // Cleanup type avoidance artefact
+        case shape => shape
+    }
+
+    def extractTypeHoleSymbols(tree: Tree): List[Symbol] = {
+      val extract =
+        new TreeAccumulator[List[Symbol]]:
+          def apply(x: List[Symbol], tree: Tree)(implicit ctx: Context): List[Symbol] =
+            tree match
+              case Block(stats, _) =>
+                stats match
+                  case (hd: TypeDef) :: tl if hd.symbol.hasAnnotation(defn.InternalQuoted_patternBindHoleAnnot) =>
+                    hd.symbol :: tl.map(_.symbol)
+                  case _ => x
+              case _ => foldOver(x, tree)
+
+      extract(Nil, tree)
+    }
+
+    def extractTermHoleTypes(tree: Tree): List[Type] = {
+      val extract =
+        new TreeAccumulator[List[Type]]:
+          def apply(x: List[Type], tree: Tree)(implicit ctx: Context): List[Type] = tree match
+            case tree: SeqLiteral if tree.elems.size == 1 && tree.elems.head.symbol == defn.InternalQuoted_patternSeqHole =>
+              tree.tpe.stripTypeVar :: x
+            case _: TypeApply if tree.symbol == defn.InternalQuoted_patternHole =>
+              tree.tpe.stripTypeVar :: x
+            case _ =>
+              foldOver(x, tree)
+      extract(Nil, tree).reverse
+    }
+
+    val typeHoleSymbols = extractTypeHoleSymbols(shape)
+    val termHoleTypes = extractTermHoleTypes(shape)
+
+    val typeBindingsSymbols = typeHoleSymbols.map { sym =>
+      val newInfo = sym.info // TODO?
+      ctx.newSymbol(ctx.owner, sym.name, Case, newInfo, sym.privateWithin, sym.coord)
+    }
+    object replaceBindings2 extends TypeMap() {
+      private[this] val map = typeHoleSymbols.lazyZip(typeBindingsSymbols).toMap
+      override def apply(tp: Type): Type = tp match {
+        case tp: TypeRef if tp.typeSymbol.hasAnnotation(defn.InternalQuoted_patternBindHoleAnnot) =>
+          map(tp.symbol).typeRef
+        case tp => mapOver(tp)
+      }
+    }
+
+    val typeBindings2 = typeBindingsSymbols.map { sym =>
+      Bind(sym, untpd.Ident(nme.WILDCARD).withType(sym.info)).withSpan(sym.span)
+    }
+    val quotedTypeBindings3 = typeBindingsSymbols.map { sym =>
+      val bindingTypeTpe = AppliedType(defn.QuotedTypeClass.typeRef, sym.typeRef :: Nil)
+      val termSym = ctx.newPatternBoundSymbol(sym.name.toTermName, bindingTypeTpe, sym.span, flags = ImplicitTerm)
+      Bind(termSym, untpd.Ident(nme.WILDCARD).withType(bindingTypeTpe)).withSpan(termSym.span)
+    }
+
+    val typeHolePatternsTypes = typeBindingsSymbols.map(x => defn.QuotedTypeClass.typeRef.appliedTo(x.typeRef))
+    val termHolePatternsTypes = termHoleTypes.map(replaceBindings2).map(defn.QuotedExprClass.typeRef.appliedTo)
+    val termHolePatterns = quotedTypeBindings3 ::: pats.lazyZip(termHolePatternsTypes).map { (pat, tp) =>
+      typed(untpd.Typed(pat, untpd.TypedSplice(TypeTree(tp))).withSpan(pat.span), tp)
+    }.toList
+
+
+    val unapplySym = if (tree.quoted.isTerm) defn.InternalQuotedExpr_unapply else defn.InternalQuotedType_unapply
+    val quoteClass = if (tree.quoted.isTerm) defn.QuotedExprClass else defn.QuotedTypeClass
+    val typeBindingsTuple = tpd.tupleTypeTree(typeBindings2)
+    val patternTupleType = tpd.tupleTypeTree((typeHolePatternsTypes ::: termHolePatternsTypes).map(TypeTree))
+    val splicePat = typed(untpd.Tuple(termHolePatterns.map(x => untpd.TypedSplice(x))).withSpan(quoted.span), patternTupleType.tpe)
+
+    val quotedPattern =
+      if (tree.quoted.isTerm) ref(defn.InternalQuoted_exprQuote.termRef).appliedToType(defn.AnyType).appliedTo(shape).select(nme.apply).appliedTo(qctx)
+      else ref(defn.InternalQuoted_typeQuote.termRef).appliedToTypeTree(shape)
+
+    UnApply(
+      fun = ref(unapplySym.termRef).appliedToTypeTrees(typeBindingsTuple :: patternTupleType :: Nil),
+      implicits = quotedPattern :: Literal(Constant(typeBindingsSymbols.nonEmpty)) :: qctx :: Nil,
+      patterns = splicePat :: Nil,
+      proto = quoteClass.typeRef.appliedTo(shape.tpe & quotedPt))
+
   }
 }
