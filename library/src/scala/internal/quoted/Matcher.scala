@@ -140,9 +140,11 @@ private[quoted] object Matcher {
           // Match a scala.internal.Quoted.patternHole typed as a repeated argument and return the scrutinee tree
           case (scrutinee @ Typed(s, tpt1), Typed(TypeApply(patternHole, tpt :: Nil), tpt2))
               if patternHole.symbol == internal.Definitions_InternalQuoted_patternHole &&
-                 s.tpe <:< tpt.tpe &&
                  tpt2.tpe.derivesFrom(defn.RepeatedParamClass) =>
-            matched(scrutinee.seal)
+            val expr = s.seal match
+              case '{ $x: Array[$t] } => '{ $x.toSeq }
+              case x => x
+            matched(expr)
 
           // Match a scala.internal.Quoted.patternHole and return the scrutinee tree
           case (ClosedPatternTerm(scrutinee), TypeApply(patternHole, tpt :: Nil))
