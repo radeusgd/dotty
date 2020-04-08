@@ -17,6 +17,7 @@ object Printers {
   val checks: Printer = noPrinter
   val config: Printer = noPrinter
   val cyclicErrors: Printer = noPrinter
+  // val debug = new Printer             // no type annotation here to force inlining
   val debug = noPrinter             // no type annotation here to force inlining
   val derive: Printer = noPrinter
   val desugar: Printer = noPrinter

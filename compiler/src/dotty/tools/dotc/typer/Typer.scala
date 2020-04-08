@@ -3094,6 +3094,7 @@ class Typer extends Namer
         foo = $foo
         pt.isInstanceOf[SelectionProto] = ${pt.isInstanceOf[SelectionProto]}
         ctx.gadt.nonEmpty = ${ctx.gadt.nonEmpty}
+        ctx.gadt = ${ctx.gadt.debugBoundsDescription}
         pt.isMatchedBy = ${
           if (pt.isInstanceOf[SelectionProto])
             pt.asInstanceOf[SelectionProto].isMatchedBy(foo).toString
@@ -3138,20 +3139,33 @@ class Typer extends Namer
       def recover(failure: SearchFailureType) =
         {
           debug.println("recover")
-        if (isFullyDefined(wtp, force = ForceDegree.all) &&
-            ctx.typerState.constraint.ne(prevConstraint)) readapt(tree)
-        // else if ({
-        //   debug.println(i"tryGadtHealing=$tryGadtHealing && \n\tctx.gadt.nonEmpty=${ctx.gadt.nonEmpty}")
-        //   tryGadtHealing && ctx.gadt.nonEmpty
-        // })
-        //  {
-        //    debug.println("here")
-        //    readapt(
-        //    tree = tpd.Typed(tree, TypeTree(Inferencing.approximateGADT(wtp))),
-        //    shouldTryGadtHealing = false,
-        //    )
-        //  }
-        else err.typeMismatch(tree, pt, failure)
+          if (isFullyDefined(wtp, force = ForceDegree.all) &&
+              ctx.typerState.constraint.ne(prevConstraint)) readapt(tree)
+          // TODO this was commented \/
+          else if ({
+            debug.println(i"tryGadtHealing=$tryGadtHealing && \n\tctx.gadt.nonEmpty=${ctx.gadt.nonEmpty}")
+            tryGadtHealing && ctx.gadt.nonEmpty
+          })
+           {
+             debug.println("//try recover with GADT")
+             val nestedCtx = ctx.fresh.setNewTyperState()
+             val res =
+               readapt(
+                 tree = tpd.Typed(tree, TypeTree(Inferencing.approximateGADT(wtp))),
+                 shouldTryGadtHealing = false,
+               )(nestedCtx)
+             if (!nestedCtx.reporter.hasErrors) {
+               nestedCtx.typerState.commit()
+               debug.println("// GADT recovery successful")
+               res
+             } else {
+               // otherwise fail as earlier
+               debug.println("// GADT recovery failed, falling back to original error")
+               err.typeMismatch(tree, pt, failure)
+             }
+           }
+          // TODO this was commented /\
+          else err.typeMismatch(tree, pt, failure)
         }
       if (ctx.mode.is(Mode.ImplicitsEnabled) && tree.typeOpt.isValueType)
         inferView(tree, pt) match {
