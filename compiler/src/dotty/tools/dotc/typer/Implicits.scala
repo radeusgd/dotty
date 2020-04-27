@@ -903,6 +903,7 @@ trait Implicits { self: Typer =>
             result.tstate.commit()
             ctx.gadt.restore(result.gstate)
             implicits.println(i"success: $result")
+            implicits.println(i"arg: ${argument.show}, pt: ${pt.show}") // FIXME remove
             implicits.println(i"committing ${result.tstate.constraint} yielding ${ctx.typerState.constraint} in ${ctx.typerState}")
             result
           case result: SearchFailure if result.isAmbiguous =>

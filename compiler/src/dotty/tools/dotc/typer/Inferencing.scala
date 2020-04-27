@@ -168,6 +168,7 @@ object Inferencing {
     val map = new ApproximateGadtAccumulator
     val res = map(tp)
     assert(!map.failed)
+    gadts.println(i"approximateGADT( $tp )  = $res  //  {${tp.toString}}") // FIXME remove
     res
   }
 

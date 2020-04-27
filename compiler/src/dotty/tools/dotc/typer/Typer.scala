@@ -33,7 +33,7 @@ import collection.mutable
 import annotation.tailrec
 import Implicits._
 import util.Stats.record
-import config.Printers.{gadts, typr}
+import config.Printers.{debug, gadts, typr} // FIXME remove
 import config.Feature._
 import config.SourceVersion._
 import rewrites.Rewrites.patch
@@ -3258,6 +3258,7 @@ class Typer extends Namer
         case _ =>
       }
 
+      debug.println(tree.toString + " try first GADT approx: " + wtp.toString)
       val approximation = Inferencing.approximateGADT(wtp)
       gadts.println(
         i"""GADT approximation {
@@ -3303,12 +3304,25 @@ class Typer extends Namer
       }
 
       // try an implicit conversion
+      debug.println(tree.toString + " try an implicit conversion")
       val prevConstraint = ctx.typerState.constraint
       def recover(failure: SearchFailureType) = {
         if (isFullyDefined(wtp, force = ForceDegree.all) &&
             ctx.typerState.constraint.ne(prevConstraint)) readapt(tree)
         else if (tryGadtHealing && ctx.gadt.nonEmpty) {
           // try recovering with a GADT approximation
+          debug.println(tree.toString + "try recovering with a GADT approximation")
+          debug.println("Because of")
+          debug.println(failure.toString)
+          debug.println(" while adapting to subtype ")
+          debug.println(wtp.toString)
+          debug.println("Tree: " + tree.toString)
+          debug.println(i"while adapting (tryGadtHealing=$tryGadtHealing) $tree to $pt")
+          for (ct <- ctx.outersIterator.take(3)) {
+            if (ct.tree != null) {
+              debug.println(ct.tree.toString)
+            }
+          }
           val nestedCtx = ctx.fresh.setNewTyperState()
           val res =
             readapt(
@@ -3316,10 +3330,12 @@ class Typer extends Namer
               shouldTryGadtHealing = false,
             )(using nestedCtx)
           if (!nestedCtx.reporter.hasErrors) {
+            debug.println("GADT recovery success, committing state")
             // GADT recovery successful
             nestedCtx.typerState.commit()
             res
           } else {
+            debug.println("recovery failed")
             // otherwise fail with the error that would have been reported without the GADT recovery
             err.typeMismatch(tree, pt, failure)
           }

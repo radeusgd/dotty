@@ -17,15 +17,15 @@ object Printers {
   val checks = noPrinter
   val config = noPrinter
   val cyclicErrors = noPrinter
-  val debug = noPrinter
+  val debug = new Printer // noPrinter
   val derive = noPrinter
   val desugar = noPrinter
   val dottydoc = noPrinter
   val exhaustivity = noPrinter
-  val gadts = noPrinter
+  val gadts = new Printer // noPrinter
   val gadtsConstr = noPrinter
   val hk = noPrinter
-  val implicits = noPrinter
+  val implicits = new Printer // noPrinter
   val implicitsDetailed = noPrinter
   val lexical = noPrinter
   val init = noPrinter
@@ -38,7 +38,7 @@ object Printers {
   val quotePickling = noPrinter
   val plugins = noPrinter
   val simplify = noPrinter
-  val staging = noPrinter
+  val staging = new Printer // noPrinter
   val subtyping = noPrinter
   val tailrec = noPrinter
   val transforms = noPrinter
